@@ -364,7 +364,7 @@ the written questions.
   the language of type systems and operational semantics. Can you find a bug
   that the fuzzer cannot detect?
 
-      The "optimization" I made is: when evaluating `Syntax.Literal x`, instead of returning `x` directly, I changed the value of `x` to `x - 1145141919810`. This will restrict that only when the right-hand-side operand of the addition operator will cause the program crashes. This is very hard to find (since 1145141919810 is a magic number which is hard to touch only generating inputs randomly without doing something like bounded model checking or symbolic evaluation). Running on my computer for 10 minutes, the fuzzer didn't find the expected input that will cause the program to crash. 
+      The "optimization" I made is: when evaluating `Syntax.Literal x`, instead of returning `x` directly, I changed the value of `x` to `x - 1145141919810`. This will restrict that only when the right-hand-side operand of the addition operator equals 1145141919810, the program crashes due to division-by-zero. This is very hard to find (since 1145141919810 is a magic number which is hard to touch only by generating inputs randomly without doing something like bounded model checking or symbolic evaluation). Running on my computer for 10 minutes, the fuzzer didn't find the expected input that will cause the program to crash. 
 
 
 ## Problem 4: Adding variables
