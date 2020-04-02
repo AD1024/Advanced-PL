@@ -41,11 +41,11 @@ let eval_and v1 v2 =
 
 let rec eval_expr (denv : Syntax.value Env.t)(e : Syntax.expr) : Syntax.value =
   match e with
-  | Syntax.Literal n -> n
-  | Syntax.Bool n -> n
-  | Syntax.Var x  -> Env.find x denv
-  | Syntax.Add (e1, e2) -> eval_add (eval_expr denv e1) (eval_expr denv e2)
-  | Syntax.And (e1, e2) -> eval_and (eval_expr denv e1) (eval_expr denv e2)
+    | Syntax.Literal n -> n
+    | Syntax.Bool n -> n
+    | Syntax.Var x  -> Env.find x denv
+    | Syntax.Add (e1, e2) -> eval_add (eval_expr denv e1) (eval_expr denv e2)
+    | Syntax.And (e1, e2) -> eval_and (eval_expr denv e1) (eval_expr denv e2)
 
 let eval_binding (denv : Syntax.value Env.t) (b : Syntax.binding)
                        : Syntax.value * Syntax.value Env.t = 
