@@ -1,7 +1,7 @@
 type value = VInt of int | VBool of bool
   [@@deriving show]
 
-type ty = Integer | Boolean
+type ty = TInteger | TBoolean
   [@@deriving show]
 
 type expr =

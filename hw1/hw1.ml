@@ -33,11 +33,11 @@ let type_check (op : string) (t1 : Syntax.ty) (t2 : Syntax.ty) (expected : Synta
 (* Returns : the infered type of exp when exp is a well-formed expression *)
 let rec type_infer_expr (senv : Syntax.ty Env.t) (exp : Syntax.expr) : Syntax.ty =
   match exp with
-    | Syntax.Literal _ -> Syntax.Integer
-    | Syntax.Bool _    -> Syntax.Boolean
+    | Syntax.Literal _ -> Syntax.TInteger
+    | Syntax.Bool _    -> Syntax.TBoolean
     | Syntax.Var x     -> Env.find x senv
-    | Syntax.Add (e1, e2) -> type_check "Add" (type_infer_expr senv e1) (type_infer_expr senv e2) Syntax.Integer
-    | Syntax.And (e1, e2) -> type_check "And" (type_infer_expr senv e1) (type_infer_expr senv e2) Syntax.Boolean
+    | Syntax.Add (e1, e2) -> type_check "Add" (type_infer_expr senv e1) (type_infer_expr senv e2) Syntax.TInteger
+    | Syntax.And (e1, e2) -> type_check "And" (type_infer_expr senv e1) (type_infer_expr senv e2) Syntax.TBoolean
 
 (* Infer the type of a Binding *)
 (* Raise TypeError when the expression of the binding is ill-formed *)
