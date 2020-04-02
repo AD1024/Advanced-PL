@@ -7,7 +7,9 @@
 rule token = parse
 | [' ' '\t']                  { token lexbuf }
 | '\n'                        { Lexing.new_line lexbuf; token lexbuf }
-| ['0'-'9']+ as i             { INT (try int_of_string i with _ -> max_int) }
+| ['0'-'9']+ as i             { INT (try int_of_string i with _ -> 
+                                      let msg = Printf.sprintf "integer overflow %s" i
+                                      in raise (Error (Lexing.lexeme_start_p lexbuf, msg))) }
 | '='                         { ASSIGN }
 | "true"                      { BOOL true }
 | "false"                     { BOOL false }
