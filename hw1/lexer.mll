@@ -7,7 +7,7 @@
 rule token = parse
 | [' ' '\t']             { token lexbuf }
 | '\n'                   { Lexing.new_line lexbuf; token lexbuf }
-| ['0'-'9']+ as i        { INT (int_of_string i) }
+| ['0'-'9']+ as i        { INT (try int_of_string i with _ -> max_int) }
 | "true"                 { BOOL true }
 | "false"                { BOOL false }
 | "&&"                   { AND }

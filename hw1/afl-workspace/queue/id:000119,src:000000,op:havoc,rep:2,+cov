@@ -1,0 +1,21 @@
+1;; 2 +
+
+3
+
+
+;;
+
+13;;
+
+true && true ;;
+
+false && true ;;
+
+1 + 2 + 3 + 4 ;;
+
+false && false && true && false;;
+
+true +11111111111111111111111111111111
+1 && true + false;;
+
+true && false && 1;;

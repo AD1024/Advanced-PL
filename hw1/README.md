@@ -340,12 +340,12 @@ the written questions.
 - Debug this exception by looking at the exception message and by inspecting
   the input file. What is the root cause?
 
-      <Write 1 or 2 sentences of explanation here.>
+      Function `int_of_string` in lexer causes an exception. The root cause is the number represented by the string causes an integer overflow while converting it to an ocaml integer.
 
 - Fix the bug. There is more than one way to do it. Pick the way that seems
   best to you. Describe your fix briefly here.
 
-      <Write ~1 sentence describing the fix here.>
+      Catch the exception. If there is an exception then return the value of `max_int`, otherwise use the value returned by `int_of_string`
 
 - After fixing the bug, rebuild with `dune build` and re-run the fuzzer for
   a few minutes (or more, if you like). In our solution, we did not find any
@@ -356,8 +356,7 @@ the written questions.
   Rerun the fuzzer. Does it find it? Does it take shorter or longer to find than
   the first bug above? Why do you think this might be?
 
-      <Write 1 or 2 sentences of explanation here. Describe the bug you introduced
-      and answer the questions above.>
+      I change the semantic of `ADD e1 e2` to calculate `e1 / e2`. The minimal input to the interpreter that will throw an exception is `1 + 1145141919810`, and the exception is `division_by_zero`. The fuzzer catches the bug very quickly (only took around 5 seconds to find the first input that will cause the exception). I think this is reasonable, since `division_by_zero` is a very common bug a program might have and the fuzzer may try this common inputs first.
 
 - (Extra credit) Try to optimize (pessimize?) the bug you introduce into your type
   checker so that it takes as long as possible for the fuzzer to find it, while
@@ -365,7 +364,7 @@ the written questions.
   the language of type systems and operational semantics. Can you find a bug
   that the fuzzer cannot detect?
 
-      <If you choose to answer this question, write any findings here.>
+      The "optimization" I made is: when evaluating `Syntax.Literal x`, instead of returning `x` directly, I changed the value of `x` to `x - 1145141919810`. This will restrict that only when the right-hand-side operand of the addition operator will cause the program crashes. This is very hard to find (since 1145141919810 is a magic number which is hard to touch only generating inputs randomly without doing something like bounded model checking or symbolic evaluation). Running on my computer for 10 minutes, the fuzzer didn't find the expected input that will cause the program to crash. 
 
 
 ## Problem 4: Adding variables

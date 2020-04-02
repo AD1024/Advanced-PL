@@ -30,7 +30,6 @@ let rec eval (e : Syntax.expr) : Syntax.value =
   | Syntax.Add (e1, e2) -> eval_add (eval e1) (eval e2)
   | Syntax.And (e1, e2) -> eval_and (eval e1) (eval e2)
 
-
 let string_of_lex_pos =
   let open Lexing in
   function {pos_fname; pos_lnum; pos_bol; pos_cnum } ->
