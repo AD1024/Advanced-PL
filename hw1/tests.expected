@@ -1,4 +1,7 @@
-1
-5
-13
+(Syntax.VInt 1)
+(Syntax.VInt 5)
+(Syntax.VInt 13)
+(Syntax.VBool true)
+(Syntax.VBool false)
+(Syntax.VInt 10)
 bye!

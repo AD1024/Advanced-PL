@@ -1,8 +1,21 @@
-(* let rec eval (e : Syntax.expr) : 'a value =
+exception TypeError of string
+
+let eval_add v1 v2 = 
+  match (v1, v2) with
+    | (Syntax.VInt x, Syntax.VInt y) -> Syntax.VInt(x + y)
+    | _ -> raise (TypeError "Adding non-integer values")
+
+let eval_and v1 v2 = 
+  match (v1, v2) with
+    | (Syntax.VBool x, Syntax.VBool y) -> Syntax.VBool (x && y)
+    | _ -> raise (TypeError "AndOp on non-boolean values")
+
+let rec eval (e : Syntax.expr) : Syntax.value =
   match e with
   | Syntax.Literal n -> n
-  | Syntax.Add (e1, e2) -> eval e1 + eval e2
-  | Syntax.And (e1, e2) ->  *)
+  | Syntax.Bool n -> n
+  | Syntax.Add (e1, e2) -> eval_add (eval e1) (eval e2)
+  | Syntax.And (e1, e2) -> eval_and (eval e1) (eval e2)
 
 
 let string_of_lex_pos =
@@ -21,8 +34,7 @@ let () =
     match Parser.main Lexer.token lexbuf with
     | None -> print_endline "bye!"
     | Some e ->
-       (* Printf.printf "%d\n%!" (eval e); *)
-       Printf.printf "%s\n%!" (Syntax.show_expr e);
+       Printf.printf "%s\n%!" (Syntax.show_value (eval e));
        loop ()
   in
   try
