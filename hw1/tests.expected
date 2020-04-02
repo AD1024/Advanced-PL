@@ -4,4 +4,9 @@
 (Syntax.VBool true)
 (Syntax.VBool false)
 (Syntax.VInt 10)
+(Syntax.VBool false)
+Add expression is ill-typed
+And expression is ill-typed
+Add expression is ill-typed
+And expression is ill-typed
 bye!

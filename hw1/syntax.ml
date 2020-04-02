@@ -1,6 +1,9 @@
 type value = VInt of int | VBool of bool
   [@@deriving show]
 
+type ty = Integer | Boolean
+  [@@deriving show]
+
 type expr =
   | Literal of value
   | Bool of value
