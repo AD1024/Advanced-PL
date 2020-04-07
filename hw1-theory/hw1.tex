@@ -1,0 +1,500 @@
+\documentclass{article}
+
+
+\usepackage{concrete}
+\usepackage{eulervm}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{mathpartir}
+\usepackage{stmaryrd}
+\usepackage{xcolor}
+\usepackage[shortlabels]{enumitem}
+
+
+
+\newtheorem{theorem}{Theorem}
+
+\usepackage[margin=1in]{geometry}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead[C]{Homework 1: Theory part}
+\fancyhead[R]{CSE 490P}
+\newcommand{\meta}[1]{{\color{blue}#1}}
+
+\begin{document}
+\noindent The last page of this document contains a reference description of the syntax and semantics of
+two different arithmetic systems, one with only natural numbers, and one with booleans.
+To carefully distinguish between these systems, we will call them System~1 and System~2, respectively.
+Problem~\ref{evalorder} asks you design System~3.
+
+\begin{enumerate}[leftmargin=*,itemindent=*,start=6,label={{\bf Problem \arabic*}.},ref=\arabic*]
+\item
+  Consider the following statement:
+  \begin{quote}
+    For every expression $\meta{e}$, there exists a value $\meta{v}$ such that $\meta{e} \to^* \meta{v}$.
+  \end{quote}
+  \begin{enumerate}[(a)]
+  \item Consider System~1. Explain why the theorem we proved in class, that $\meta{e} \to^* eval(\meta{e})$,
+    implies the statement above.
+
+    \textbf{Since $eval(\meta{e})$ yields a value in meta-language, and $\meta{e} \to^* eval(\meta{e})$, subsequently, we can conclude that for every expression $\meta{e}$, there exists a value $\meta{v}$ such that $\meta{e} \to^* \meta{v}$.}
+
+  \item Now consider System~2. Explain why the statement above is not true in System~2.
+  
+    \textbf{In System~2, the expression can be ill-typed, which will result in a stuck. Therefore the statement might not be true for System~2.}
+
+  \item \label{sys2stmt} Still considering System~2, tweak the statement above to restrict it to well-typed expressions.
+    State your tweaked version in full, using wording as similar to the above statement as possible.
+
+    \textbf{For every well-typed expression $\meta{e}$, there exists a value \meta{v} such that $\meta{e} \to^* \meta{v}$.}
+
+  \item \label{sys2pf} Prove (by induction on a thing of your choice) this modified statement for System~2.
+    
+    \textbf{Since $\meta{e}$ is a well-typed expression, $\vdash \meta{e} : \tau$. Thus we are going to prove if $\vdash \meta{e} : \tau$, then there exists a value $\meta{v}$ such that $\meta{e} \to^* \meta{v}$. Induction on this typing relation.}
+    \begin{proof}
+      \begin{itemize}
+        \item Base case.
+              \begin{mathpar}
+                  \inferrule { } {\vdash \meta{e} : int}
+                  \and
+                  \inferrule { } {\vdash \meta{e} : bool}
+              \end{mathpar}
+              By the definition of $\to^*$, since $\meta{e}$ itself is a value, $\meta{e} \to^* \meta{e}$. Thus if $e$ in this case is well-typed, then exists the value $\meta{e}$ such that $\meta{e} \to^* \meta{e}$.
+        \item Case
+              \begin{mathpar}
+                \inferrule{\vdash \meta{e_1} : int \\ \vdash \meta{e_2} : int} {\vdash \meta{e_1} + \meta{e_2} : int}
+              \end{mathpar}
+              With induction hypothesis that if $\vdash \meta{e_1} : int$, then exists $\meta{v_1}$ such that $\meta{e_1} \to^* \meta{v_1}$; if $\vdash \meta{e_2} : int$, then exists $\meta{v_2}$ such that $\meta{e_2} \to^* \meta{v_2}$. \\
+
+              According to our assumption, $\vdash \meta{e_1} : int$ and $\vdash \meta{e_2} : int$. Then according to the induction hypothesis, exists $\meta{v_1}$ such that $\meta{e_1} \to^* \meta{v_1}$; exists $\meta{v_2}$ such that $\meta{e_2} \to^* \meta{v_2}$. Subsequently, $\meta{e_1} + \meta{e_2} \to^* \meta{v_1} + \meta{e_2}$; $\meta{v_1} + \meta{e_2} \to^* \meta{v_2}$. Since $\meta{v_1}$ and $\meta{v_2}$ are $int$ values, according to the definition of $\to$, $\meta{v_1} + \meta{v_2} \to \meta{v_1 + v_2}$. Therefore, if $\meta{e_1} + \meta{e_2}$ is well-typed, then exists $\meta{v_1 + v_2}$ such that $\meta{e_1} + \meta{e_2} \to^* \meta{v_1 + v_2}$.
+
+        \item Case
+              \begin{mathpar}
+                \inferrule{\vdash \meta{e_1} : bool \\ \vdash \meta{e_2} : bool} {\vdash \meta{e_1} \wedge \meta{e_2} : bool}
+              \end{mathpar}
+              With induction hypothesis that if $\vdash \meta{e_1} : bool$, then exists $\meta{b_1}$ such that $\meta{e_1} \to^* \meta{b_1}$; if $\vdash \meta{e_2} : bool$, then exists $\meta{b_2}$ such that $\meta{e_2} \to^* \meta{b_2}$. \\
+
+              According to our assumption, $\vdash \meta{e_1} : bool$, $\vdash \meta{e_2} : bool$, and the induction hypothesis, exists a value $\meta{b_1}$ such that $\meta{e_1} \to^* \meta{b_1}$; exists a value $\meta{b_2}$ such that $\meta{e_2} \to^* \meta{b_2}$. Subsequently, $\meta{e_1} \wedge \meta{e_2} \to^* \meta{b_1} \wedge \meta{e_2}$, and then $\meta{b_1} \wedge \meta{e_2} \to^* \meta{b_1} \wedge \meta{b_2}$. Since $\meta{b_1}$ and $\meta{b_2}$ are $bool$ values, according to the definition of $\to$, $\meta{b_1} \wedge \meta{b_2} \to \meta{b_2 \wedge b_2}$. Thus if $\meta{e_1} \wedge \meta{e_2}$ is well-typed, exists a value $\meta{b_1 \wedge b_2}$ such that $\meta{e_1} \wedge \meta{e_2} \to^* \meta{b_1 \wedge b_2}$.
+
+      \end{itemize}
+    \end{proof}
+
+  \item Explain informally why your modified statement from part~\ref{sys2stmt} is \emph{not}
+    equivalent to the type safety theorem we proved in class on Friday (April 3rd) about System 2.
+    (Hint: Start by stating type safety using wording as similar as possible to your statement.
+    Could there be a small-step semantics for some programming language
+    that satisfies type safety but not your statement? What about vice versa?)
+    
+    \textbf{It is not equivalent to the type safety theorem because the modified statement from part (c) guarantees termination whereas type safty theorem, applied to some programming languages (e.g. STLC with fixpoint combinator), does not guarantee termination.}
+
+  \item Consider your proof from part~\ref{sys2pf}.
+    List all the (relevant) things you \emph{could} have tried to induct on.
+    For each one, say briefly whether you think it would have worked to induct on that thing
+    (it's ok to be wrong; just say what you think).
+    Finally, say why you chose to induct on what you did.
+
+    \textbf{
+      $\vdash \meta{e} : \tau$, $\meta{e}$. I chose the typing rules because it is related more closely to evaluation, so it is more likely to be a proof without extra efforts. 
+    }
+
+  \end{enumerate}
+\item This problem about the notion of subexpressions, and considers only System~2.
+  \begin{enumerate}[(a)]
+  \item Use long horizontal lines to define a relation $\meta{e_1} \le \meta{e_2}$,
+    which should encode the idea that ``$\meta{e_1}$ is a subexpression of $\meta{e_2}$''.
+
+    Hint: You should have 5 rules. One should be an axiom for reflexivity (everything is a subexpression of itself).
+    Then, there should be two recursive rules for each of the binary operations in the syntax of System~2,
+    one which says ``subexpressions of the left child of an AST node are also subexpressions of the node itself'',
+    and similarly for ``right child''.
+
+    \begin{mathpar}
+      \inferrule{ }{\meta{e} \leq \meta{e}} \\
+      \inferrule{\meta{e_1\prime} \leq \meta{e_1}}{\meta{e_1\prime}\leq \meta{e_1} + \meta{e_2}}
+      \and
+      \inferrule{\meta{e_2\prime} \leq \meta{e_2}}{\meta{e_2\prime} \leq \meta{e_1} + \meta{e_2}} \\
+      \inferrule{\meta{e_1\prime} \leq \meta{e_1}}{\meta{e_1\prime}\leq \meta{e_1} \wedge \meta{e_2}}
+      \and
+      \inferrule{\meta{e_2\prime} \leq \meta{e_2}}{\meta{e_2\prime} \leq \meta{e_1} \wedge \meta{e_2}}
+    \end{mathpar}
+  \item \label{subexppf}Prove (by induction on a thing of your choice) the following statement:
+    \begin{quote}
+      For all expressions $\meta{e_1}$ and $\meta{e_2}$, and for all types $\meta{\tau}$,
+      if $\meta{e_1} \le \meta{e_2}$ and $\vdash \meta{e_2} : \meta{\tau}$,
+      then $\vdash \meta{e_1} : \meta{\tau}$.
+    \end{quote}
+
+    \begin{proof}
+      By induction on the typing rule $\vdash \meta{e_2} : \meta{\tau}$.
+      \begin{enumerate}
+        \item Base Case. $\inferrule{ }{\vdash \meta{e_2} : int}$ and $\inferrule{ }{\vdash \meta{e_2} : bool}$. In this case, the only possible way to get $\meta{e_1} \leq \meta{e_2}$ is $\inferrule{ }{\meta{e} \leq \meta{e}}$.\\
+        Then we know that $\meta{e_1}$ and $\meta{e_2}$ is the same expression, hence have the same type $\tau$. Therefore, $\vdash \meta{e_1} : \meta{\tau}$.
+        
+        \item Case. $\inferrule{\vdash \meta{e_l} : int\\ \vdash \meta{e_r} : int}{\vdash \meta{e_l} + \meta{e_r} : int}$. In this case, the assumption is $\meta{e_1} \leq \meta{e_l} + \meta{e_r}$. By doing case analysis on this subexpression relation:
+          \begin{itemize}
+            \item [1.] $\inferrule{\meta{e_1} \leq \meta{e_l}}{\meta{e_1} \leq \meta{e_l} + \meta{e_r}}$. \\
+            Since $\meta{e_1} \leq \meta{e_l}$ and $\vdash \meta{e_l} : int$, according to the induction hypothesis, $\vdash \meta{e_1} : int$.
+            
+            \item [2.] $\inferrule{\meta{e_1} \leq \meta{e_r}}{\meta{e_1} \leq \meta{e_l} + \meta{e_r}}$. \\
+            Similarly, according to the induction hypothesis, since $\meta{e_1} \leq \meta{e_r}$ and $\vdash \meta{e_r} : int$, we can conclude that $\vdash \meta{e_1} : int$.
+
+            \item [3.\& 4.] The rest cases are not admissible since $\meta{e_1} \leq \meta{e_l} + \meta{e_r}$ does not follow the construction.
+          \end{itemize}
+        \item Case. $\inferrule{\vdash \meta{e_l} : bool\\ \vdash \meta{e_r} : bool}{\vdash \meta{e_l} \wedge \meta{e_r} : int}$. The proof is similar to that of Case ii.
+      \end{enumerate}
+      Therefore, the following conclusion is that for all expressions $\meta{e_1}$ and $\meta{e_2}$, and for all types $\meta{\tau}$, if $\meta{e_1} \leq \meta{e_2}$ and $\vdash \meta{e_2} : \meta{\tau}$, then $\vdash \meta{e_1} : \meta{\tau}$
+    \end{proof}
+
+  \item Consider your proof of part~\ref{subexppf}.
+    List all the (relevant) things you \emph{could} have tried to induct on.
+    For each one, say briefly whether you think it would have worked to induct on that thing
+    (it's ok to be wrong; just say what you think).
+    Finally, say why you chose to induct on what you did.
+
+    \textbf{
+      I could have done induction on $\meta{e_1}$, $\meta{e_2}$, the typing rule $\vdash \meta{e_2} : \meta{\tau}$ and the subexpression rule $\meta{e_1} \leq \meta{e_2}$. I chose the typing rule, since it does not require proofs of other properties of the subexpression relations. I tried to prove the theorem by induction on the subexpression relation, but it turns out that I need to prove things like if $\vdash \meta{e_1} + \meta{e_2} : int$, the $\vdash \meta{e_1} : int$ and $\vdash \meta{e_2} : int$, which requires some extra work to do.
+    }
+
+  \item Consider this modified version of the statement from part~\ref{subexppf},
+    where we have switched $\meta{e_1}$ and $\meta{e_2}$ in a few key places.
+    \begin{quote}
+      For all expressions $\meta{e_1}$ and $\meta{e_2}$, and for all types $\meta{\tau}$,
+      if $\meta{e_1} \le \meta{e_2}$ and $\vdash \meta{e_1} : \meta{\tau}$,
+      then $\vdash \meta{e_2} : \meta{\tau}$.
+    \end{quote}
+    Give an example $\meta{e_1}$, $\meta{e_2}$, and $\meta{\tau}$ that shows this statement is false.
+
+    \textbf{
+      Let $\meta{\tau}$ be $int$. \\Let $\meta{e_1}$ be $1 + 2$. \\Let $\meta{e_2}$ be $1 + 2 \wedge \top$
+    }
+
+  \end{enumerate}
+  \clearpage
+\item\label{completeness} Consider the following statement of ``type completeness'' for System 2.
+  \begin{quote}
+    For every expression $\meta{e}$, value $\meta{v}$, and type $\meta{\tau}$,
+    if $\meta{e} \to^* \meta{v}$ and $\vdash \meta{v} : \meta{\tau}$,
+    then $\vdash \meta{e} : \meta{\tau}$.
+  \end{quote}
+  \begin{enumerate}[(a)]
+  \item Explain informally what this statement means.
+  
+    \textbf{
+      If an expression $\meta{e}$ can take step(s) to a value $\meta{v}$, then the type of $\meta{e}$ must be the same as the type of $\meta{v}$
+    }
+
+  \item List all the (relevant) things you \emph{could} try to induct on in order to prove this statement.
+    For each one, say briefly whether you think it would work to induct on that thing
+    (it's ok to be wrong; just say what you think).
+
+    \textbf{
+      I could try to induct on $\meta{e}$, $\meta{e}\to^* \meta{v}$. For $\meta{e}$, it is related to the structure of the expression so I might be able to get some evidence while steping through the evaluation. For $\meta{e}\to^* \meta{v}$, it is directly related to the semantics, so maybe there are some straightfoward evidences while doing induction.
+    } 
+
+  \item Prove this statement (by induction on a thing of your choice). (Hint: You will need at least one lemma, which
+    itself should be proved by induction. State your lemma as clearly as possible. Also make it clear what you
+    are inducting on in the proof of your lemma.)
+
+    \textbf{
+      Lemma 1. For all expressions $\meta{e}$, $\meta{e^\prime}$ and all types $\meta{\tau}$. If $\meta{e} \to \meta{e^\prime}$ and $\vdash \meta{e^\prime} : \meta{\tau}$, then $\vdash \meta{e} : \meta{\tau}$.
+      \begin{proof}
+        First split cases based on $\meta{\tau}$. \\
+        \textbf{
+          Case: when $\meta{\tau}$ is $int$. By induction on $\vdash \meta{e^\prime} : int$.
+        }
+        \begin{itemize}
+          \item $\inferrule{ }{\vdash \meta{e^\prime} : int}$. Since $\meta{e^\prime}$ in this case is already a value, so the only rule for $\meta{e}\to \meta{e^\prime}$ is $\inferrule{ }{\meta{n_1} + \meta{n_2} \to \meta{n_1 + n_2}}$, hence $\meta{e} = \meta{n_1} + \meta{n_2}$. In this case $\vdash \meta{n_1} : int$ and $\vdash \meta{n_2} : int$, so by applying $\inferrule{\vdash \meta{n_1} : int\\ \vdash \meta{n_2} : int}{\vdash \meta{n_1} + \meta{n_2} : int}$, we get $\vdash \meta{e} : int$ \\
+          \item $\inferrule{\vdash \meta{e_1} : int\\ \vdash \meta{e_2} : int}{\vdash \meta{e_1} + \meta{e_2} : int}$. By case analysis on $\meta{e} \to \meta{e_1} + \meta{e_2}$:
+            \begin{enumerate}
+              \item $\meta{n_1} + \meta{n_2} = \meta{n_1 + n_2}$. Since the right hand side, $\meta{e_1} + \meta{e_2}$ is not a value, which contradicts to our assumption.
+              \item $\inferrule{\meta{e_\alpha} \to \meta{e_1}}{\meta{e_\alpha} + \meta{e_2} \to \meta{e_1} + \meta{e_2}}$. According to assumptions, $\meta{e_\alpha} \to \meta{e_1}$ and $\vdash \meta{e_1} : int$, and the induction hypothesis, we get $\vdash \meta{e_\alpha} : int$. Since $\vdash \meta{e_2} : int$ according to assumption, applying the rule $\inferrule{\vdash \meta{e_\alpha} : int \\ \vdash \meta{e_2} : int}{\vdash \meta{e_\alpha} + \meta{e_2} : int}$. Thus $\vdash \meta{e} : int$. 
+              \item $\inferrule{\meta{e_\beta}\to \meta{e_2}}{\meta{n_1} + \meta{e_\beta} \to \meta{n_1} + \meta{e_2}}$. Similarly by induction hypothesis and assumption that $\meta{e_\beta}\to \meta{e_2}$ and $\vdash \meta{e_2} : int$, we can get $\vdash \meta{e_\beta} : int$. Thus by applying $\inferrule{\inferrule{ }{\vdash \meta{n_1} : int} \\ \inferrule{ }{\vdash \meta{e_\beta} : int}}{\vdash \meta{n_1} + \meta{e_\beta} : int}$, subsequently $\vdash \meta{e} : int$. 
+            \end{enumerate}
+        \end{itemize}
+      \textbf {
+        Case: when $\meta{\tau}$ is $bool$. The proof is similar to that of the case when $\meta{\tau}$ is $int$.
+      }
+      \end{proof}
+    }
+
+    \begin{proof}
+      By induction on $\meta{e} \to^* \meta{v}$.
+      \begin{itemize}
+        \item $\inferrule{ }{\meta{e} \to^* \meta{e}}$. In this case $\meta{e}$ is $\meta{v}$. Since $\vdash \meta{v} : \meta{\tau}$, $\vdash \meta{e} : \meta{\tau}$.
+        \item $\inferrule{\meta{e} \to \meta{e^\prime} \\ \meta{e^\prime} \to^* \meta{v}}{\meta{e} \to^* \meta{v}}$. According to induction hypothesis, and assumptions that $\meta{e^\prime} \to^* \meta{v}$ and $\vdash \meta{v} : \meta{\tau}$, we can get $\vdash \meta{e^\prime} : \meta{\tau}$. According to the assumption that $\meta{e} \to \meta{e^\prime}$ and $\meta{e^\prime} : \meta{\tau}$ and \textit{Lemma 1} proved above, $\meta{e} : \meta{\tau}$ follows.
+      \end{itemize}
+    \end{proof}
+
+  \end{enumerate}
+\item\label{evalorder} This problem asks you to modify System~2 to change the semantics of $\wedge$ slightly.
+  \begin{enumerate}[(a)]
+  \item We mentioned briefly in class that the semantics of $+$ and $\wedge$ enforce a left-to-right
+    evaluation order. In most programming languages, \texttt{\&\&} has ``short-circuiting'' semantics,
+    where the right subexpression is evaluated only if the left subexpression evaluates to true. Explain
+    informally why the rules of System~2 do \emph{not} allow short-circuiting evaluation.
+
+    \textbf{
+      Because System~2 enforces that the reduction from an expresion to a value in meta-language can be done only when both left hand side and right hand side are $bool$ values, right hand side will always be evaluated before the expression reduces to a value.
+    }
+
+  \item Design a modified version of System~2 (call it System~3!) that changes the semantics of $\wedge$ to be short-circuiting.
+    Clearly state which rules relating to $\wedge$ you are deleting from the system (they have been given little names on the last page),
+    and which rules you are adding.
+
+    \textbf {
+      Delete the rule \texttt{$And_2$}. Add following two rules:
+      \begin{mathpar}
+        \inferrule*[right=AndShortCircuiting]{ }{\meta{\bot} \wedge \meta{e} \to \meta{\bot}}\and
+        \inferrule*[right=AndCont]{\meta{e}
+         \to \meta{e^\prime}}{ \meta{\top} \wedge \meta{e} \to \meta{\top} \wedge \meta{e^\prime} }
+      \end{mathpar}
+    }
+
+  \item Give an example of a program that exercises the short-circuiting semantics of $\wedge$.
+      \textbf{\\
+        Let the program be $\meta{\top} \wedge (\meta{\bot} \wedge (\meta{\top} \wedge \meta{\top}))$\\
+        Then the evaluation becomes:
+      }
+        \begin{mathpar}
+          \inferrule{
+            \inferrule{
+              \inferrule{ }{\bot \wedge (\top \wedge \top) \to \bot}
+            }{\top \wedge (\bot \wedge (\top \wedge \top)) \to \top \wedge \bot}
+            \and
+            \inferrule{
+              \inferrule{ }{\top \wedge \bot \to \bot}
+              \and
+              \inferrule{ }{\bot \to^* \bot}
+            }{\top \wedge \bot \to^* \bot}
+          }{\top \wedge (\bot \wedge (\top \wedge \top)) \to^* \bot}
+        \end{mathpar}
+
+  \item\label{claim23stmt} Consider the informal statement:
+    \begin{quote}
+      If a program evaluates to a value in System~2, then it evaluates to the same value in System~3.
+    \end{quote}
+    State this claim more formally by introducing (meta-)variables and using $\to^*$.
+    (There is more than one way to state it formally; choose the way that seems simplest and clearest to you.
+    Whatever you do, be sure to clearly distinguish
+    which uses of $\to$ refer to System~2 as opposed to System~3, perhaps by using $\to_2$ and $\to_3$.)
+
+    \textbf{
+      For all expressions $\meta{e}$. If $\meta{e} \to_2^* \meta{v}$, then $\meta{e} \to_3^* \meta{v}$ for some value $\meta{v}$
+    }
+
+  \item\label{claim23pf} Prove (by induction on a thing of your choice) your formalized claim.
+  
+    \textbf{Lemma 9-0.1: $\forall \meta{e_1}, \meta{e_2}.\ \inferrule{
+      \meta{e_1} \to_3^* \meta{e_1^\prime}
+    }{\meta{e_1} \wedge \meta{e_2} \to_3^* \meta{e_1^\prime} \wedge \meta{e_2}}$} for some expression $\meta{e_1^\prime}$.
+    \begin{proof}
+      By induction on the steping rule $\meta{e_1} \to_3^* \meta{e_1^\prime}$
+      \begin{enumerate}
+        \item $\meta{e_1} \to_3^* \meta{e_1}$. $\meta{e_1^\prime}$ is $\meta{e_1}$. Thus $\meta{e_1} \wedge \meta{e_2} \to_3^* \meta{e_1^\prime} \wedge \meta{e_2}$ holds by the reflexivity rule.
+        \item $\inferrule{\meta{e_1} \to_3 \meta{e^\prime}\and \meta{e^\prime} \to_3^* \meta{e_1^\prime}}{\meta{e_1} \wedge \meta{e_2} \to_3^* \meta{e_1^\prime} \wedge \meta{e_2}}$. By using the steping rule and the induction hypothesis, we can conclude $$\inferrule{
+          \inferrule{
+            \meta{e_1} \to_3 \meta{e^\prime}
+          }{\meta{e_1} \wedge \meta{e_2} \to_3 \meta{e^\prime} \wedge \meta{e_2}}
+          \and
+          \inferrule{\meta{e^\prime} \to_3^* \meta{e_1^\prime}}{\meta{e^\prime} \wedge \meta{e_2} \to_3^* \meta{e_1^\prime} \wedge \meta{e_2}}
+        }{\meta{e_1} \wedge \meta{e_2} \to_3^* \meta{e_1^\prime} \wedge \meta{e_2}}$$
+      \end{enumerate}
+    \end{proof}
+    
+    \textbf{Lemma 9-1: $\forall \meta{e}, \meta{\tau}.\ \inferrule{\vdash \meta{e} : \meta{\tau}}{\exists \meta{v}.\ \meta{e} \to_2^* \meta{v} \wedge \meta{e} \to_3^* \meta{v}}$}.
+    \begin{proof}
+      By case analysis on $\tau$.
+      \begin{enumerate}
+        \item $\tau$ is \texttt{int}. For all rules that related to \texttt{int}, System~2 and System~3 are identical. Thus the claim holds by the type safety theorem.
+        \item $\tau$ is \texttt{bool}. By induction on the typing rule $\vdash \meta{e} : bool$.
+          \begin{itemize}
+            \item $\inferrule{ }{\meta{e} : bool}$. In this case, $\meta{v}$ is $\meta{e}$; therefore $\meta{e} \to_2^* \meta{e}$ and $\meta{e} \to_3^* \meta{e}$.
+            \item $\inferrule{\vdash \meta{e_1} : bool \and \vdash \meta{e_2} : bool}{\vdash \meta{e_1} \wedge \meta{e_2} : bool}$.
+              By the induction hypothesis, $$\exists \meta{v_1}.\ \meta{e_1}\to_2^* \meta{v_1} \wedge \meta{e_1} \to_3^* \meta{v_1}$$ $$\exists \meta{v_2}.\ \meta{e_2} \to_2^* \meta{v_2} \wedge \meta{e_2} \to_3^* \meta{v_2}$$
+              Therefore, we can rewrite the expression to $\inferrule{ \vdash \meta{v_1} : bool \and \vdash \meta{e_2} : bool }{\vdash \meta{v_1} \wedge \meta{e_2} : bool}$ by \textit{Lemma 9-0.1}. By case analysis on $\meta{v_1}$:
+                \begin{enumerate}
+                  \item $\meta{v_1}$ is $\meta{\top}$. The expression becomes $\meta{\top} \wedge \meta{e_2}$. According to the induction hypothesis, the expression can be rewritten to $\meta{\top} \wedge \meta{v_2}$. Since the evaluation of base case is the same in System~2 and System~3, therefore the expression evaluates to the same value under System~2 and System~3.
+                  \item $\meta{v_1}$ is $\meta{\bot}$. In this case, under System~3, the expression immediately evaluates to $\meta{\bot}$. Under System~2, the expression can be rewritten to $\meta{\bot}\wedge \meta{v_2}$. In System~2, this evaluates to $\meta{\bot \wedge v_2}$. According to the definition of $\wedge$ in meta-language, the expression evaluates to $\meta{\bot}$. Thus exists the value $\bot$ such that the expression evaluates to this value in System~2 and System~3.
+                \end{enumerate}
+          \end{itemize}
+          Therefore, if $\meta{e}$ is well-typed, there exists a value $\meta{v}$ such that $\meta{e} \to_2^* \meta{v}$ and $\meta{e} \to_3^* \meta{v}$.
+      \end{enumerate}
+    \end{proof}
+
+    \textbf{
+      Theorem. For all expressions $\meta{e}$. If $\meta{e} \to_2^* \meta{v}$, then $\meta{e} \to_3^* \meta{v}$ for some value $\meta{v}$
+    }
+    \begin{proof}
+      Since $\meta{e} \to_2^* \meta{v}$, according to the type completeness theorem, we only need to consider well-typed expressions. Therefore, assume $\meta{e}$ to be a well-typed expression, hence $\vdash \meta{e} : \meta{\tau}$ for some type $\meta{\tau}$. According to \textit{Lemma 9-1}, we know that $\meta{e} \to_2^* \meta{v}$ and $\meta{e} \to_3^* \meta{v}$ for some value $\meta{v}$. This conclusion implies this theorem, which is $\meta{e}\to_2^* \meta{v} \to \meta{e}\to_3^* \meta{v}$ for some value $\meta{v}$.
+      % \begin{itemize}
+      %   \item Base case. $\inferrule{ }{\meta{e} \to_2^* \meta{e}}$. In this case, $\meta{e}$ is the same as $\meta{v}$. Therefore the evaluation is the same in $\to_3^*$. Thus $\meta{e} \to_3^* \meta{e}$.\\
+      %   \item Case. $\inferrule{
+      %     \meta{e} \to_2 \meta{e^\prime}
+      %     \and
+      %     \meta{e^\prime} \to_2^* \meta{v}
+      %     }{\meta{e} \to_2^* \meta{v}}$. By case analysis on $\meta{e} \to_2 \meta{e^\prime}$ with induction hypothesis that $\meta{e^\prime} \to_3^* \meta{v}$:
+      %     \begin{enumerate}
+      %       \item $\inferrule{\meta{e_1} \to_2 \meta{e_1^\prime}}{\meta{e_1} + \meta{e_2} \to_2 \meta{e_1^\prime} + \meta{e_2}}$. The semantics is the same in System~2 and System~3, thus $\inferrule{\meta{e_1} \to_3 \meta{e_1^\prime}}{\meta{e_1} + \meta{e_2} \to_3 \meta{e_1^\prime} + \meta{e_2}}$ and thus $\inferrule{\meta{e_1} + \meta{e_2} \to_3 \meta{e_1^\prime} + \meta{e_2}\and \meta{e_1^\prime} + \meta{e_2} \to_3^* \meta{v}}{\meta{e_1} + \meta{e_2} \to_3^* \meta{v}}$.
+      %       \item $\inferrule{\meta{e_2} \to_2 \meta{e_2^\prime}}{\meta{n_1} + \meta{e_1} \to_2 \meta{n_1} + \meta{e_2^\prime}}$. Similar as Case i.
+      %       \item $\inferrule{ }{\meta{n_1} \wedge \meta{n_2} \to_2 \meta{n_1 \wedge n_2}}$. Similar as Case i.
+      %       \item $\inferrule{\meta{e_1} \to_2 \meta{e_1\prime}}{\meta{e_1}\wedge\meta{e_2} \to_2 \meta{e_1^\prime}\wedge\meta{e_2}}$. Similar as Case i.
+      %       \item $\inferrule{\meta{e_2} \to_2 \meta{e_2^\prime}}{\meta{b_1 } \wedge \meta{e_2} \to_2 \meta{b_1} \wedge \meta{e_2^\prime}}$. Case analysis on $\meta{b_1}$.
+      %         \begin{enumerate}
+      %           \item Case. $\meta{b_1} = \meta{\top}$. Since \texttt{AndCont} is a sub-case of \texttt{$And_2$} in System~2; therefore, $\inferrule{
+      %             \meta{e_2} \to_3 \meta{e_2^\prime}
+      %           }{\meta{\top} \wedge \meta{e_2} \to_3 \meta{\top} \wedge \meta{e_2^\prime}}$, and $\inferrule{
+      %             \meta{\top} \wedge \meta{e_2} \to_3 \meta{\top} \wedge \meta{e_2^\prime}
+      %             \and
+      %             \meta{\top} \wedge \meta{e_2^\prime} \to_3^* \meta{v} (IH)
+      %           }{\meta{\top} \wedge \meta{e_2} \to_3^* \meta{v}}$.
+      %           \item Case. $\meta{b_1} = \meta{\bot}$. According to the rule \texttt{AndShortCircuiting}, $\inferrule{ }{\meta{\bot} \wedge \meta{e_2} \to_3 \meta{\bot}}$, and $\inferrule{ }{\meta{\bot} \to_3^* \meta{\bot}}$ (Induction hypothesis). Therefore, $\inferrule{
+      %             \meta{\bot} \wedge \meta{e_2} \to_3 \meta{\bot}
+      %             \and
+      %             \meta{\bot} \to_3^* \meta{\bot}
+      %           }{\meta{\bot} \wedge \meta{e_3} \to_3^* \meta{\bot}}$.
+      %         \end{enumerate}
+      %       Therefore, in both case $\meta{b_1} \wedge \meta{e_2} \to_3^* \meta{v}$.
+      %       % According to our assumption, the expression $\meta{b_1} \wedge \meta{e_2}$ is well-typed. According to the theorem proved in problem 7, $\meta{e_2} \leq \meta{b_1} \wedge \meta{e_2}$; therefore, $\meta{e_2}$ is also a well-typed expression. According to the theorem proved in problem 6, there exists a value $\meta{v^\prime}$, such that $\meta{e_2} \to_2^* \meta{v^\prime}$. 
+      %     \end{enumerate}
+      %     As shown above, we can conclude that forall expressions $\meta{e}$ and all values $\meta{v}$, if $\meta{e} \to_2^* \meta{v}$ then $\meta{e} \to_3^* \meta{v}$.
+      % \end{itemize}
+    \end{proof}
+  \item List all the (relevant) things you \emph{could} have tried to induct on in part~\ref{claim23pf}.
+    For each one, say briefly whether you think it would have worked to induct on that thing
+    (it's ok to be wrong; just say what you think).
+    Finally, say why you chose to induct on what you did.
+
+    \textbf{I could induction on $\meta{e}$, $\meta{e} \to_2^* \meta{v}$ or $\vdash \meta{e} : \meta{\tau}$. For $\meta{e}$, it might be the case that I can apply the new rules directly by doing induction and case analysis. For the steping rules, I think it could be easier since I only modify one rule and I only need to show that under that rule, the result is the same in two systems. Since $\meta{e} \to_2^* \meta{v}$, from the type completeness theorem, we know $\meta{e}$ is a well-typed expression, thus I can also induction on the typing rules. I chose to induct on the typing rule to derive a lemma that is applicable for this theorem (and the one below), since it can lead to a stronger conclusion.
+    } 
+
+  \item\label{claim32stmt} Now consider the converse of the statement, in other words:
+    \begin{quote}
+      If a program evaluates to a value in System~3, then it evaluates to the same value in System~2.
+    \end{quote}
+    State this claim formally.
+
+    \textbf {
+      For all expressions $\meta{e}$ and all values $\meta{v}$, if $\meta{e} \to_3^* \meta{v}$, then $\meta{e} \to_2^* \meta{v}$.
+    }
+  \item Show that this claim is false by giving an example that evaluates differently in System~2 than
+    it does in System~3. (Hint: Use short-circuiting to hide something bad from System~3!)
+
+    \textbf {
+      Consider the expression $\bot \wedge (1 + 2)$. \\
+      The evaluation in System~2 cannot be proceeded at this point, since it does not match any rule. \\
+      The evaluation in System~3 will be $$
+        \inferrule{ }{\bot \wedge (1 + 2) \to_3^* \bot}$$
+    }
+
+
+  \item Explain why your example does not contradict the claim from part~\ref{claim23stmt}.
+  
+    \textbf {
+      According to the type completeness theorem proved in privious part, $\meta{e}$ is a well-typed expression. However, the example given in part (h) is not a well-typed expression, thus cannot apply to the statement in part (d).
+    }
+
+  \item Explain how your example \emph{also} answers the question ``Does type completeness hold in System~3?''.
+    
+    \textbf {
+      Type completeness does not hold in System~3 since a ill-typed expression can evaluate to a well-typed value.      
+    }
+
+  \item\label{claim32wt} Finally, consider restricting to well-typed programs. (System~2 and 3 have the same type system.)
+    \begin{quote}
+      If a well-typed program evaluates to a value in System~3, then it evaluates to the same value in System~2.
+    \end{quote}
+    Formalize and prove this claim (by induction on a thing of your choice).
+
+    \textbf{
+      Theorem. For all expressions $\meta{e}$, if $\vdash \meta{e} : \meta{\tau}$ and $\meta{e} \to_3^* \meta{v}$, then $\meta{e} \to_2^* \meta{v}$ for some values $\meta{v}$ and types $\meta{\tau}$
+    }
+    \begin{proof}
+      Since $\vdash \meta{e} : \meta{\tau}$, according to \textit{Lemma 9-1}, we know that $\exists \meta{v}.\ \meta{e} \to_2^* \meta{v} \wedge \meta{e} \to_3^* \meta{v}$ for some value $\meta{v}$. Thus, the conclusion of \textit{Lemma 9-1} implies this theorem.
+    \end{proof}
+      \item Explain where your proof from part~\ref{claim32wt} breaks down if you try to use it
+    to prove the claim from part~\ref{claim32stmt}. (Don't just say ``it breaks down because
+    we need the program to be well typed''. Point exactly to the step of the proof that is
+    no longer true.)
+  \end{enumerate}
+\end{enumerate}
+
+
+\clearpage
+  \fbox{
+  \begin{minipage}[t]{0.35\linewidth}
+
+    \begin{center}
+      System 1
+    \end{center}
+
+  Syntax and two styles of semantics for arithmetic with natural numbers and addition.
+  \[
+    \begin{array}{rcl}
+      \meta{e} & ::= & \meta{n} \mid \meta{e} + \meta{e}\\
+      \meta{v} & ::= & \meta{n}\\
+      \meta{n} & \in & \mathbb{N}
+    \end{array}
+  \]
+  \begin{align*}
+      eval(\meta{n}) & = \meta{n} \\
+      eval(\meta{e_1} + \meta{e_2}) & = eval(\meta{e_1}) \mathop{\meta{+}} eval(\meta{e_2}) \\
+  \end{align*}
+
+  \boxed{\meta{e} \to \meta{e}}
+  \begin{mathpar}
+    \inferrule{ }{\meta{n_1} + \meta{n_2} \to \meta{n_1 + n_2}}\\
+    \and
+    \inferrule{ \meta{e_1} \to \meta{e_1'} }{\meta{e_1} + \meta{e_2} \to \meta{e_1'} + \meta{e_2}}\\
+    \and
+    \inferrule{ \meta{e_2} \to \meta{e_2'} }{\meta{n_1} + \meta{e_2} \to \meta{n_1} + \meta{e_2'}}
+  \end{mathpar}
+  \end{minipage}
+  }
+\hfill
+   \fbox{
+  \begin{minipage}[t]{0.5\linewidth}
+
+    \begin{center}
+      System 2
+    \end{center}
+
+
+  Adding booleans to arithmetic, with small-step semantics and type system.
+  \[
+    \begin{array}{rcl}
+      \meta{e} & ::= & \ldots \mid \meta{b} \mid \meta{e}\wedge \meta{e}\\
+      \meta{v} & ::= & \ldots \mid \meta{b}\\
+      \meta{b} & \in & \mathbb{B}
+    \end{array}
+  \]
+  \boxed{\meta{e} \to \meta{e}}
+  \begin{mathpar}
+    \ldots\\
+    \and
+    \inferrule*[right=AndReduce]{ }{\meta{b_1} \wedge \meta{b_2} \to \meta{b_1 \wedge b_2}}\\
+    \and
+    \inferrule*[right=And$_1$]{ \meta{e_1} \to \meta{e_1'} }{\meta{e_1} \wedge \meta{e_2} \to \meta{e_1'} \wedge \meta{e_2}}\\
+    \and
+    \inferrule*[right=And$_2$]{ \meta{e_2} \to \meta{e_2'} }{\meta{b_1} \wedge \meta{e_2} \to \meta{b_1} \wedge \meta{e_2'}}
+  \end{mathpar}
+
+  \[
+  \begin{array}{rcl}
+    \meta{\tau} & ::= & int \mid bool
+  \end{array}
+  \]
+
+  \boxed{\vdash \meta{e} : \meta{\tau}}
+  \begin{mathpar}
+    \inferrule{ }{\vdash \meta{n} : int}
+    \and
+    \inferrule{ }{\vdash \meta{b} : bool}\\
+    \and
+    \inferrule{ \vdash \meta{e_1} : int \\ \vdash \meta{e_2} : int }{\vdash \meta{e_1} + \meta{e_2} : int}
+    \and
+    \inferrule{ \vdash \meta{e_1} : bool \\ \vdash \meta{e_2} : bool }{\vdash \meta{e_1} \wedge \meta{e_2} : bool}
+  \end{mathpar}
+  \end{minipage}
+  }
+\end{document}
