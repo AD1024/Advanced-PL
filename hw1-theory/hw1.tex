@@ -217,7 +217,12 @@ Problem~\ref{evalorder} asks you design System~3.
       }
       \end{proof}
     }
-
+    
+    \textbf{
+      Theorem. For every expression $\meta{e}$, value $\meta{v}$, and type $\meta{\tau}$,
+      if $\meta{e} \to^* \meta{v}$ and $\vdash \meta{v} : \meta{\tau}$,
+      then $\vdash \meta{e} : \meta{\tau}$.
+    }
     \begin{proof}
       By induction on $\meta{e} \to^* \meta{v}$.
       \begin{itemize}
@@ -292,13 +297,30 @@ Problem~\ref{evalorder} asks you design System~3.
       By induction on the steping rule $\meta{e_1} \to_3^* \meta{e_1^\prime}$
       \begin{enumerate}
         \item $\meta{e_1} \to_3^* \meta{e_1}$. $\meta{e_1^\prime}$ is $\meta{e_1}$. Thus $\meta{e_1} \wedge \meta{e_2} \to_3^* \meta{e_1^\prime} \wedge \meta{e_2}$ holds by the reflexivity rule.
-        \item $\inferrule{\meta{e_1} \to_3 \meta{e^\prime}\and \meta{e^\prime} \to_3^* \meta{e_1^\prime}}{\meta{e_1} \wedge \meta{e_2} \to_3^* \meta{e_1^\prime} \wedge \meta{e_2}}$. By using the steping rule and the induction hypothesis, we can conclude $$\inferrule{
+        \item $\inferrule{\meta{e_1} \to_3 \meta{e^\prime}\and \meta{e^\prime} \to_3^* \meta{e_1^\prime}}{\meta{e_1} \to_3^* \meta{e_1^\prime}}$. By using the steping rule ($And_1$) and the induction hypothesis, we can conclude $$\inferrule{
           \inferrule{
             \meta{e_1} \to_3 \meta{e^\prime}
           }{\meta{e_1} \wedge \meta{e_2} \to_3 \meta{e^\prime} \wedge \meta{e_2}}
           \and
           \inferrule{\meta{e^\prime} \to_3^* \meta{e_1^\prime}}{\meta{e^\prime} \wedge \meta{e_2} \to_3^* \meta{e_1^\prime} \wedge \meta{e_2}}
         }{\meta{e_1} \wedge \meta{e_2} \to_3^* \meta{e_1^\prime} \wedge \meta{e_2}}$$
+      \end{enumerate}
+    \end{proof}
+
+    \textbf{Lemma 9-0.2: $\forall \meta{e}.\ \inferrule{\meta{e} \to_3^* \meta{e^\prime}}{\meta{\top} \wedge \meta{e} \to_3^* \meta{\top} \wedge \meta{e^\prime}}$}
+    \begin{proof}
+      By induction on the steping rule $\meta{e} \to_3^* \meta{e^\prime}$
+      \begin{enumerate}
+        \item $\meta{e} \to_3^* \meta{e}$. Since $\meta{e^\prime}$ is $\meta{e}$, $\inferrule{ }{\meta{\top} \wedge \meta{e} \to_3^* \meta{\top} \wedge \meta{e^\prime}}$ holds by the reflexivity rule.
+        \item $\inferrule{\meta{e} \to_3 \meta{e_1} \and \meta{e_1} \to_3^* \meta{e^\prime}}{\meta{e} \to_3^* \meta{e^\prime}}$. By the steping rule $AndCont$ and the induction hypothesis, we can conclude that $$\inferrule{
+          \inferrule{
+            \meta{e} \to_3 \meta{e_1}
+          }{\meta{\top} \wedge \meta{e} \to_3 \meta{\top} \wedge \meta{e_1}}
+          \and
+          \inferrule{
+            \meta{e_1} \to_3^* \meta{e^\prime}
+          }{\meta{\top} \wedge \meta{e_1} \to_3^* \meta{\top} \wedge \meta{e^\prime}}
+        }{\meta{\top} \wedge \meta{e} \to_3^* \meta{\top} \wedge \meta{e^\prime}}$$
       \end{enumerate}
     \end{proof}
     
@@ -312,10 +334,10 @@ Problem~\ref{evalorder} asks you design System~3.
             \item $\inferrule{ }{\meta{e} : bool}$. In this case, $\meta{v}$ is $\meta{e}$; therefore $\meta{e} \to_2^* \meta{e}$ and $\meta{e} \to_3^* \meta{e}$.
             \item $\inferrule{\vdash \meta{e_1} : bool \and \vdash \meta{e_2} : bool}{\vdash \meta{e_1} \wedge \meta{e_2} : bool}$.
               By the induction hypothesis, $$\exists \meta{v_1}.\ \meta{e_1}\to_2^* \meta{v_1} \wedge \meta{e_1} \to_3^* \meta{v_1}$$ $$\exists \meta{v_2}.\ \meta{e_2} \to_2^* \meta{v_2} \wedge \meta{e_2} \to_3^* \meta{v_2}$$
-              Therefore, we can rewrite the expression to $\inferrule{ \vdash \meta{v_1} : bool \and \vdash \meta{e_2} : bool }{\vdash \meta{v_1} \wedge \meta{e_2} : bool}$ by \textit{Lemma 9-0.1}. By case analysis on $\meta{v_1}$:
+              Therefore, the expression can step to $\inferrule{ \vdash \meta{v_1} : bool \and \vdash \meta{e_2} : bool }{\vdash \meta{v_1} \wedge \meta{e_2} : bool}$ by \textit{Lemma 9-0.1} (and the equivalent one in System~2). By case analysis on $\meta{v_1}$:
                 \begin{enumerate}
-                  \item $\meta{v_1}$ is $\meta{\top}$. The expression becomes $\meta{\top} \wedge \meta{e_2}$. According to the induction hypothesis, the expression can be rewritten to $\meta{\top} \wedge \meta{v_2}$. Since the evaluation of base case is the same in System~2 and System~3, therefore the expression evaluates to the same value under System~2 and System~3.
-                  \item $\meta{v_1}$ is $\meta{\bot}$. In this case, under System~3, the expression immediately evaluates to $\meta{\bot}$. Under System~2, the expression can be rewritten to $\meta{\bot}\wedge \meta{v_2}$. In System~2, this evaluates to $\meta{\bot \wedge v_2}$. According to the definition of $\wedge$ in meta-language, the expression evaluates to $\meta{\bot}$. Thus exists the value $\bot$ such that the expression evaluates to this value in System~2 and System~3.
+                  \item $\meta{v_1}$ is $\meta{\top}$. The expression becomes $\meta{\top} \wedge \meta{e_2}$. According to the induction hypothesis, the expression can step to $\meta{\top} \wedge \meta{v_2}$ by \textit{Lemma 9-0.2} (and the equivalent one in System~2). Since the evaluation of base case is the same in System~2 and System~3, therefore the expression evaluates to the same value under System~2 and System~3.
+                  \item $\meta{v_1}$ is $\meta{\bot}$. In this case, under System~3, the expression immediately evaluates to $\meta{\bot}$($AndShortCircuiting$). Under System~2, the expression can step to $\meta{\bot}\wedge \meta{v_2}$ ($And_2$). This evaluates to $(\meta{\bot \wedge v_2})$. According to the definition of $\wedge$ in meta-language, the expression evaluates to $\meta{\bot}$. Thus exists the value $\bot$ such that the expression evaluates to this value in System~2 and System~3.
                 \end{enumerate}
           \end{itemize}
           Therefore, if $\meta{e}$ is well-typed, there exists a value $\meta{v}$ such that $\meta{e} \to_2^* \meta{v}$ and $\meta{e} \to_3^* \meta{v}$.
