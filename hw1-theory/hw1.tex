@@ -307,7 +307,7 @@ Problem~\ref{evalorder} asks you design System~3.
       \end{enumerate}
     \end{proof}
 
-    \textbf{Lemma 9-0.2: $\forall \meta{e}.\ \inferrule{\meta{e} \to_3^* \meta{e^\prime}}{\meta{\top} \wedge \meta{e} \to_3^* \meta{\top} \wedge \meta{e^\prime}}$}
+    \textbf{Lemma 9-0.2: $\forall \meta{e}.\ \inferrule{\meta{e} \to_3^* \meta{e^\prime}}{\meta{\top} \wedge \meta{e} \to_3^* \meta{\top} \wedge \meta{e^\prime}}$} for some expressions $\meta{e^\prime}$
     \begin{proof}
       By induction on the steping rule $\meta{e} \to_3^* \meta{e^\prime}$
       \begin{enumerate}
@@ -328,7 +328,7 @@ Problem~\ref{evalorder} asks you design System~3.
     \begin{proof}
       By case analysis on $\tau$.
       \begin{enumerate}
-        \item $\tau$ is \texttt{int}. For all rules that related to \texttt{int}, System~2 and System~3 are identical. Thus the claim holds by the type safety theorem.
+        \item $\tau$ is \texttt{int}. For all rules that related to \texttt{int}, System~2 and System~3 are identical. Thus the claim holds trivially.
         \item $\tau$ is \texttt{bool}. By induction on the typing rule $\vdash \meta{e} : bool$.
           \begin{itemize}
             \item $\inferrule{ }{\meta{e} : bool}$. In this case, $\meta{v}$ is $\meta{e}$; therefore $\meta{e} \to_2^* \meta{e}$ and $\meta{e} \to_3^* \meta{e}$.
@@ -337,7 +337,7 @@ Problem~\ref{evalorder} asks you design System~3.
               Therefore, the expression can step to $\inferrule{ \vdash \meta{v_1} : bool \and \vdash \meta{e_2} : bool }{\vdash \meta{v_1} \wedge \meta{e_2} : bool}$ by \textit{Lemma 9-0.1} (and the equivalent one in System~2). By case analysis on $\meta{v_1}$:
                 \begin{enumerate}
                   \item $\meta{v_1}$ is $\meta{\top}$. The expression becomes $\meta{\top} \wedge \meta{e_2}$. According to the induction hypothesis, the expression can step to $\meta{\top} \wedge \meta{v_2}$ by \textit{Lemma 9-0.2} (and the equivalent one in System~2). Since the evaluation of base case is the same in System~2 and System~3, therefore the expression evaluates to the same value under System~2 and System~3.
-                  \item $\meta{v_1}$ is $\meta{\bot}$. In this case, under System~3, the expression immediately evaluates to $\meta{\bot}$($AndShortCircuiting$). Under System~2, the expression can step to $\meta{\bot}\wedge \meta{v_2}$ ($And_2$). This evaluates to $(\meta{\bot \wedge v_2})$. According to the definition of $\wedge$ in meta-language, the expression evaluates to $\meta{\bot}$. Thus exists the value $\bot$ such that the expression evaluates to this value in System~2 and System~3.
+                  \item $\meta{v_1}$ is $\meta{\bot}$. In this case, under System~3, the expression immediately evaluates to \\$\meta{\bot}$($AndShortCircuiting$). Under System~2, the expression can step to $$\meta{\bot}\wedge \meta{v_2} (\text{Assume }\inferrule{\meta{e} \to_2^* \meta{e^\prime}}{\meta{b_1} \wedge \meta{e} \to_2^* \meta{b_1} \wedge \meta{e^\prime}})$$ This evaluates to $(\meta{\bot \wedge v_2})$. According to the definition of $\wedge$ in meta-language, the expression evaluates to $\meta{\bot}$. Thus exists the value $\bot$ such that the expression evaluates to this value in System~2 and System~3.
                 \end{enumerate}
           \end{itemize}
           Therefore, if $\meta{e}$ is well-typed, there exists a value $\meta{v}$ such that $\meta{e} \to_2^* \meta{v}$ and $\meta{e} \to_3^* \meta{v}$.
@@ -404,7 +404,7 @@ Problem~\ref{evalorder} asks you design System~3.
 
     \textbf {
       Consider the expression $\bot \wedge (1 + 2)$. \\
-      The evaluation in System~2 cannot be proceeded at this point, since it does not match any rule. \\
+      The evaluation in System~2 stucks at this point, since it does not match any rule. \\
       The evaluation in System~3 will be $$
         \inferrule{ }{\bot \wedge (1 + 2) \to_3^* \bot}$$
     }
@@ -438,6 +438,12 @@ Problem~\ref{evalorder} asks you design System~3.
     to prove the claim from part~\ref{claim32stmt}. (Don't just say ``it breaks down because
     we need the program to be well typed''. Point exactly to the step of the proof that is
     no longer true.)
+
+      \textbf{
+        If it is not well-typed, then \textit{Lemma 9-1} does not work, because it assumes $\meta{e}$ is a well-typed expression. But the proof of (e) and (k) uses \textit{Lemma 9-1}.\\
+        The reason is that \textit{Lemma 9-1} invokes implicitly invokes type safety theorem of System~2 while proving base case. If the expression is ill-typed, then the base case proof would not work because the expression may stuck and can never get to a value.
+      }
+
   \end{enumerate}
 \end{enumerate}
 
