@@ -356,7 +356,7 @@ the written questions.
   Rerun the fuzzer. Does it find it? Does it take shorter or longer to find than
   the first bug above? Why do you think this might be?
 
-      I change the semantic of `ADD e1 e2` to calculate `e1 / e2`. The minimal input to the interpreter that will throw an exception is `1 + 1145141919810`, and the exception is `division_by_zero`. The fuzzer catches the bug very quickly (only took around 5 seconds to find the first input that will cause the exception). I think this is reasonable, since `division_by_zero` is a very common bug a program might have and the fuzzer may try this common inputs first.
+      I change the evaluation of `ADD e1 e2` to calculate `e1 / e2`. The minimal input to the interpreter that will throw an exception is `1 + 0`, and the exception is `division_by_zero`. The fuzzer catches the bug very quickly (only took around 5 seconds to find the first input that will cause the exception). I think this is reasonable, since `division_by_zero` is a very common bug a program might have and the fuzzer may try this common inputs first.
 
 - (Extra credit) Try to optimize (pessimize?) the bug you introduce into your type
   checker so that it takes as long as possible for the fuzzer to find it, while

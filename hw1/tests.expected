@@ -9,4 +9,13 @@ Add expression is ill-typed
 And expression is ill-typed
 Add expression is ill-typed
 And expression is ill-typed
+x = (Syntax.VInt 6) : Syntax.TInteger
+y = (Syntax.VInt 114514) : Syntax.TInteger
+z = (Syntax.VInt 114520) : Syntax.TInteger
+my_flag = (Syntax.VBool true) : Syntax.TBoolean
+(Syntax.VBool false)
+(Syntax.VInt 13)
+x = (Syntax.VInt 229040) : Syntax.TInteger
+my_flag = (Syntax.VBool false) : Syntax.TBoolean
+(Syntax.VBool false)
 bye!

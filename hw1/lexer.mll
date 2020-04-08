@@ -18,7 +18,7 @@ rule token = parse
 | '('                         { LPAREN }
 | ')'                         { RPAREN }
 | ";;"                        { DOUBLESEMI }
-| ['a'-'z''A'-'Z']+ as ident  { IDENT ident }
+| ['a'-'z''A'-'Z''_']+ as ident  { IDENT ident }
 | eof                         { EOF }
 | _                           {
     let msg = Printf.sprintf "unexpected character %C" (Lexing.lexeme_char lexbuf 0)
