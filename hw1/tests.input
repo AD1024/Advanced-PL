@@ -24,11 +24,31 @@ true && 1 + 2;;
 true && false && 1;;
 
 x = 1 + 2 + 3;;
+
 y = 114514;;
+
 z = x + y;;
+
 my_flag = true;;
+
 false && my_flag;;
+
 x + x + 1;;
+
 x = x + y + z;;
+
 my_flag = my_flag && true && false;;
+
 my_flag;;
+
+my_flag + 1;;
+
+x = my_flag + z + y;;
+
+my_flag = my_flag && false;;
+
+my_flag = my_flag + 1;;
+
+my_flag = my_flag && 1 + 2;;
+
+oof = my_flag + true;;

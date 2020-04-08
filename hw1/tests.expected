@@ -18,4 +18,10 @@ my_flag = (Syntax.VBool true) : Syntax.TBoolean
 x = (Syntax.VInt 229040) : Syntax.TInteger
 my_flag = (Syntax.VBool false) : Syntax.TBoolean
 (Syntax.VBool false)
+Add expression is ill-typed
+Add expression is ill-typed
+my_flag = (Syntax.VBool false) : Syntax.TBoolean
+Add expression is ill-typed
+And expression is ill-typed
+Add expression is ill-typed
 bye!
