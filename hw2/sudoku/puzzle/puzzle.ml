@@ -1,4 +1,5 @@
 exception ParseError of string
+exception ZipError of string
 
 module GridKey =
     struct
@@ -30,9 +31,9 @@ let assert_eqconst coordinate value =
   let id = get_variable_name coordinate in
   Printf.sprintf "(assert (= %s %d))" id value
 
-let assert_neqconst coordinate value =
+(* let assert_neqconst coordinate value =
   let id = get_variable_name coordinate in
-  Printf.sprintf "(assert (not (= %s %d)))" id value
+  Printf.sprintf "(assert (not (= %s %d)))" id value *)
 
 let assert_bound coordinate lower_bound upper_bound = 
   let id = get_variable_name coordinate in
@@ -41,11 +42,25 @@ let assert_bound coordinate lower_bound upper_bound =
 let assert_distinct variables =
   let cartisian = product variables variables in
   Printf.sprintf "(assert (and %s))" 
-                      (List.fold_left (^) "" (List.map 
-                                                (fun (car, cdr) -> 
-                                                    if car != cdr 
-                                                    then Printf.sprintf "(not (= %s %s))" car cdr
-                                                    else "") cartisian))
+                      (List.fold_left (^) "true "
+                            (List.map 
+                                  (fun (car, cdr) -> 
+                                      if car != cdr 
+                                      then Printf.sprintf "(not (= %s %s))" car cdr
+                                      else "") cartisian))
+
+let rec zip_list xs ys = 
+  match (xs, ys) with
+    | ([], []) -> []
+    | (x :: xs', y :: ys') -> (x, y) :: (zip_list xs' ys')
+    | (_, _) -> raise (ZipError "length does not match")
+
+let assert_disj variables values =
+  let pairs = zip_list variables values in
+  Printf.sprintf "(assert (or %s))" 
+                    (List.fold_left (^) "" 
+                        (List.map 
+                              (fun (id, value) -> Printf.sprintf "(not (= %s %d))" id value) pairs))
 
 let declare_val i k =
   let id = (get_variable_name (get_coordniate i k)) in
@@ -135,17 +150,20 @@ let rec solve dep z3_send z3_readline (sudoku : t) (banned : int GridMap.t) =
            done in
   (* Assert Bounds EQ / NEQ Constants *)
   (* let () = print_endline "Assert Consts" in *)
-  let () = for i = 0 to k * k * k * k - 1 do
-              let coordinate = get_coordniate i k in
-              let () = z3_send (assert_bound coordinate 1 (k * k)) in
-              (* let (x, y) = coordinate in *)
-              (* let () = Printf.printf "(%d %d)\n" x y; flush stdout in *)
-              match grid_lookup coordinate banned with
-                | Some value -> z3_send (assert_neqconst coordinate value)
-                | None -> let num = GridMap.find (get_coordniate i k) grid in
-                          if num != 0
-                          then z3_send (assert_eqconst coordinate num)
-           done in
+  let rec process_consts dep = 
+    if dep == k * k * k * k then
+      ([], [])
+    else
+      let (solved_vars, values) = process_consts (dep + 1) in
+      let coordinate = get_coordniate dep k in
+      let () = z3_send (assert_bound coordinate 1 (k * k)) in
+        match grid_lookup coordinate banned with
+                | Some value -> ((get_variable_name coordinate) :: solved_vars, value :: values)
+                | None -> let num = GridMap.find (get_coordniate dep k) grid in
+                          let () = if num != 0 then z3_send (assert_eqconst coordinate num) in
+                          (solved_vars, values) in
+  let (solved_vars, values) = process_consts 0 in
+  let () = if solved_vars != [] && values != [] then z3_send (assert_disj solved_vars values) in
   (* Rows / Cols *)
   (* let () = print_endline "Distinct Rows / Cols" in *)
   let () = for x1 = 0 to k * k - 1 do
@@ -158,12 +176,9 @@ let rec solve dep z3_send z3_readline (sudoku : t) (banned : int GridMap.t) =
               done
            done in
   (* Cells *)
-  (* let () = print_endline "Distinct Cells" in *)
   let () = distinct_cells 0 0 k in
-  (* let () = print_endline "Check sat" in *)
   let () = z3_send "(check-sat)" in
   let result = z3_readline () in
-  (* let () = print_endline result in *)
   if compare result "unsat" == 0 then
     let () = if dep == 0 then print_endline "unsat" 
              else print_endline "puzzle solution is unique"
