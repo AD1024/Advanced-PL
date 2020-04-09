@@ -8,7 +8,7 @@ module GridKey =
 
 module GridMap = Map.Make (GridKey)
 
-type t = int * (int GridMap.t) * int list
+type t = int * (int GridMap.t)
 
 let product xa xb = 
   List.concat 
@@ -69,24 +69,21 @@ let from_channel (s : Scanf.Scanning.in_channel) : t =
   if k <= 0 then raise (ParseError (Printf.sprintf "k must be > 0, but got %d" k));
   if k > 100 then raise (ParseError (Printf.sprintf "k must be <= 100, got %d" k));
   (* now call get_int k**4 times and store the numbers in the puzzle *)
-  let rec init_map (dep : int) (grid_map : int GridMap.t) (holes : int list) : int GridMap.t * int list =
+  let rec init_map (dep : int) (grid_map : int GridMap.t) : int GridMap.t =
     if dep == k * k * k * k then
-      (grid_map, holes)
+      grid_map
     else
       let num = get_int () in
       let new_map = GridMap.add 
                     (get_coordniate dep k)
                     num  grid_map in
-      let new_holes = if num == 0 then k :: holes else holes in
-      init_map (dep + 1) new_map new_holes
-  in
-    let (grid_map, holes) = init_map 0 GridMap.empty [] in
-    (k, grid_map, holes)
+      init_map (dep + 1) new_map
+  in (k, init_map 0 GridMap.empty)
   
 
 let show (sudoku : t) =
   match sudoku with
-    | (k, grid, _) -> let () = Printf.printf "%d\n" k in
+    | (k, grid) -> let () = Printf.printf "%d\n" k in
                       let rec process i =
                             if i == k * k * k * k then ""
                             else let num = GridMap.find (i / (k * k), i mod (k * k)) grid in
@@ -117,7 +114,7 @@ let rec parse_model z3_send z3_readline grid k dep =
 
 
 let rec solve dep z3_send z3_readline (sudoku : t) (banned : int GridMap.t) = 
-  let (k, grid, _) = sudoku in
+  let (k, grid) = sudoku in
   let () = z3_send "(push)" in
   (* Process a k * k cell *)
   let rec process_cell start_x start_y cx cy k =
@@ -174,9 +171,9 @@ let rec solve dep z3_send z3_readline (sudoku : t) (banned : int GridMap.t) =
   else
     let (new_grid, banned_value) = parse_model z3_send z3_readline grid k 0 in
     let () = if dep > 0 then print_endline "found more than one solution!" in
-    let () = print_endline (show (k, new_grid, [])) in
+    let () = print_endline (show (k, new_grid)) in
     let () = z3_send "(pop)" in
-    if dep == 0 then solve (dep + 1) z3_send z3_readline (k, grid, []) banned_value
+    if dep == 0 then solve (dep + 1) z3_send z3_readline (k, grid) banned_value
     
 
 let emit_smt f1 f2 sudoku = solve 0 f1 f2 sudoku GridMap.empty
