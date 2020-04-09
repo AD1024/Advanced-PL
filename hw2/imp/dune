@@ -1,0 +1,19 @@
+(ocamllex
+  (modules lexer))
+
+(menhir
+ (modules parser)
+ (flags --strict))
+
+(executable
+ (preprocess (pps ppx_deriving.show))
+ (name imp))
+
+(rule
+  (with-stdout-to test.output
+  (with-stdin-from test.input
+    (run ./imp.exe))))
+
+(rule
+ (alias runtest)
+ (action (diff test.expected test.output)))

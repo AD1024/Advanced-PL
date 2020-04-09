@@ -1,0 +1,45 @@
+(executable
+ (preprocess (pps ppx_deriving.show))
+ (libraries puzzle z3 unix)
+ (modules sudoku)
+ (name sudoku))
+
+(rule
+  (with-stdout-to test-small.output
+  (with-stdin-from test-small.input
+    (run ./sudoku.exe))))
+
+(rule
+  (with-stdout-to test-nosol.output
+  (with-stdin-from test-nosol.input
+    (run ./sudoku.exe))))
+
+(rule
+  (with-stdout-to test-nonuniq.output
+  (with-stdin-from test-nonuniq.input
+    (run ./sudoku.exe))))
+
+(rule
+  (with-stdout-to test.output
+  (with-stdin-from test.input
+    (run ./sudoku.exe))))
+
+
+
+; Uncomment these tests when you have something ready to try.
+
+; (rule
+;  (alias runtest)
+;  (action (diff test-small.expected test-small.output)))
+; 
+; (rule
+;  (alias runtest)
+;  (action (diff test-nosol.expected test-nosol.output)))
+; 
+; (rule
+;  (alias runtest)
+;  (action (diff test-nonuniq.expected test-nonuniq.output)))
+; 
+; (rule
+;  (alias runtest)
+;  (action (diff test.expected test.output)))
