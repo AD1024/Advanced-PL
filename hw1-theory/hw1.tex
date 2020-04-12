@@ -51,7 +51,7 @@ Problem~\ref{evalorder} asks you design System~3.
 
   \item \label{sys2pf} Prove (by induction on a thing of your choice) this modified statement for System~2.
     
-    \textbf{Since $\meta{e}$ is a well-typed expression, $\vdash \meta{e} : \tau$. Thus we are going to prove if $\vdash \meta{e} : \tau$, then there exists a value $\meta{v}$ such that $\meta{e} \to^* \meta{v}$. Induction on this typing relation.}
+    \textbf{Since $\meta{e}$ is a well-typed expression, $\vdash \meta{e} : \meta{\tau}$. Thus we are going to prove if $\vdash \meta{e} : \tau$, then there exists a value $\meta{v}$ such that $\vdash \meta{v} : \meta{\tau}$ and $\meta{e} \to^* \meta{v}$. Induction on this typing relation.}
     \begin{proof}
       \begin{itemize}
         \item Base case.
@@ -67,15 +67,18 @@ Problem~\ref{evalorder} asks you design System~3.
               \end{mathpar}
               With induction hypothesis that if $\vdash \meta{e_1} : int$, then exists $\meta{v_1}$ such that $\meta{e_1} \to^* \meta{v_1}$; if $\vdash \meta{e_2} : int$, then exists $\meta{v_2}$ such that $\meta{e_2} \to^* \meta{v_2}$. \\
 
-              According to our assumption, $\vdash \meta{e_1} : int$ and $\vdash \meta{e_2} : int$. Then according to the induction hypothesis, exists $\meta{v_1}$ such that $\meta{e_1} \to^* \meta{v_1}$; exists $\meta{v_2}$ such that $\meta{e_2} \to^* \meta{v_2}$. Subsequently, $\meta{e_1} + \meta{e_2} \to^* \meta{v_1} + \meta{e_2}$; $\meta{v_1} + \meta{e_2} \to^* \meta{v_2}$. Since $\meta{v_1}$ and $\meta{v_2}$ are $int$ values, according to the definition of $\to$, $\meta{v_1} + \meta{v_2} \to \meta{v_1 + v_2}$. Therefore, if $\meta{e_1} + \meta{e_2}$ is well-typed, then exists $\meta{v_1 + v_2}$ such that $\meta{e_1} + \meta{e_2} \to^* \meta{v_1 + v_2}$.
+              According to our assumption, $\vdash \meta{e_1} : int$ and $\vdash \meta{e_2} : int$. Then according to the induction hypothesis, exists $\meta{v_1}$ such that $\meta{e_1} \to^* \meta{v_1}$; exists $\meta{v_2}$ such that $\meta{e_2} \to^* \meta{v_2}$. Subsequently (assume transitivity of $\to^*$), 
+               $$\inferrule{
+                 \inferrule{\meta{e_1} \to^* \meta{v_1}}{\meta{e_1} + \meta{e_2}\to^* \meta{v_1} + \meta{e_2}}
+                 \and
+                 \inferrule{\meta{e_2} \to^* \meta{v_2}}{\meta{v_1} + \meta{e_2} \to^* \meta{v_1} + \meta{v_2}}
+               }{\meta{e_1} + \meta{e_2} \to^* \meta{v_1} + \meta{v_2}}$$Since $\meta{v_1}$ and $\meta{v_2}$ are $int$ values (induction hypothesis), according to the definition of $\to$, $\meta{v_1} + \meta{v_2} \to \meta{v_1 + v_2}$. Therefore, if $\meta{e_1} + \meta{e_2}$ is well-typed, then exists $\meta{v_1 + v_2}$ such that $\meta{e_1} + \meta{e_2} \to^* \meta{v_1 + v_2}$.
 
         \item Case
               \begin{mathpar}
                 \inferrule{\vdash \meta{e_1} : bool \\ \vdash \meta{e_2} : bool} {\vdash \meta{e_1} \wedge \meta{e_2} : bool}
               \end{mathpar}
-              With induction hypothesis that if $\vdash \meta{e_1} : bool$, then exists $\meta{b_1}$ such that $\meta{e_1} \to^* \meta{b_1}$; if $\vdash \meta{e_2} : bool$, then exists $\meta{b_2}$ such that $\meta{e_2} \to^* \meta{b_2}$. \\
-
-              According to our assumption, $\vdash \meta{e_1} : bool$, $\vdash \meta{e_2} : bool$, and the induction hypothesis, exists a value $\meta{b_1}$ such that $\meta{e_1} \to^* \meta{b_1}$; exists a value $\meta{b_2}$ such that $\meta{e_2} \to^* \meta{b_2}$. Subsequently, $\meta{e_1} \wedge \meta{e_2} \to^* \meta{b_1} \wedge \meta{e_2}$, and then $\meta{b_1} \wedge \meta{e_2} \to^* \meta{b_1} \wedge \meta{b_2}$. Since $\meta{b_1}$ and $\meta{b_2}$ are $bool$ values, according to the definition of $\to$, $\meta{b_1} \wedge \meta{b_2} \to \meta{b_2 \wedge b_2}$. Thus if $\meta{e_1} \wedge \meta{e_2}$ is well-typed, exists a value $\meta{b_1 \wedge b_2}$ such that $\meta{e_1} \wedge \meta{e_2} \to^* \meta{b_1 \wedge b_2}$.
+              Similar to the previous case.
 
       \end{itemize}
     \end{proof}
@@ -86,7 +89,7 @@ Problem~\ref{evalorder} asks you design System~3.
     Could there be a small-step semantics for some programming language
     that satisfies type safety but not your statement? What about vice versa?)
     
-    \textbf{It is not equivalent to the type safety theorem because the modified statement from part (c) guarantees termination whereas type safty theorem, applied to some programming languages (e.g. STLC with fixpoint combinator), does not guarantee termination.}
+    \textbf{It is not equivalent to the type safety theorem because the modified statement from part (c) guarantees termination whereas type safety theorem, applied to some programming languages (e.g. STLC with fixpoint combinator), does not guarantee termination.}
 
   \item Consider your proof from part~\ref{sys2pf}.
     List all the (relevant) things you \emph{could} have tried to induct on.
@@ -207,7 +210,7 @@ Problem~\ref{evalorder} asks you design System~3.
           \item $\inferrule{ }{\vdash \meta{e^\prime} : int}$. Since $\meta{e^\prime}$ in this case is already a value, so the only rule for $\meta{e}\to \meta{e^\prime}$ is $\inferrule{ }{\meta{n_1} + \meta{n_2} \to \meta{n_1 + n_2}}$, hence $\meta{e} = \meta{n_1} + \meta{n_2}$. In this case $\vdash \meta{n_1} : int$ and $\vdash \meta{n_2} : int$, so by applying $\inferrule{\vdash \meta{n_1} : int\\ \vdash \meta{n_2} : int}{\vdash \meta{n_1} + \meta{n_2} : int}$, we get $\vdash \meta{e} : int$ \\
           \item $\inferrule{\vdash \meta{e_1} : int\\ \vdash \meta{e_2} : int}{\vdash \meta{e_1} + \meta{e_2} : int}$. By case analysis on $\meta{e} \to \meta{e_1} + \meta{e_2}$:
             \begin{enumerate}
-              \item $\meta{n_1} + \meta{n_2} = \meta{n_1 + n_2}$. Since the right hand side, $\meta{e_1} + \meta{e_2}$ is not a value, which contradicts to our assumption.
+              \item $\meta{n_1} + \meta{n_2} = \meta{n_1 + n_2}$. Since the right hand side of $\to$, $\meta{e_1} + \meta{e_2}$ is not a value, which raises a contradiction in this case. Thus this case is not admissible.
               \item $\inferrule{\meta{e_\alpha} \to \meta{e_1}}{\meta{e_\alpha} + \meta{e_2} \to \meta{e_1} + \meta{e_2}}$. According to assumptions, $\meta{e_\alpha} \to \meta{e_1}$ and $\vdash \meta{e_1} : int$, and the induction hypothesis, we get $\vdash \meta{e_\alpha} : int$. Since $\vdash \meta{e_2} : int$ according to assumption, applying the rule $\inferrule{\vdash \meta{e_\alpha} : int \\ \vdash \meta{e_2} : int}{\vdash \meta{e_\alpha} + \meta{e_2} : int}$. Thus $\vdash \meta{e} : int$. 
               \item $\inferrule{\meta{e_\beta}\to \meta{e_2}}{\meta{n_1} + \meta{e_\beta} \to \meta{n_1} + \meta{e_2}}$. Similarly by induction hypothesis and assumption that $\meta{e_\beta}\to \meta{e_2}$ and $\vdash \meta{e_2} : int$, we can get $\vdash \meta{e_\beta} : int$. Thus by applying $\inferrule{\inferrule{ }{\vdash \meta{n_1} : int} \\ \inferrule{ }{\vdash \meta{e_\beta} : int}}{\vdash \meta{n_1} + \meta{e_\beta} : int}$, subsequently $\vdash \meta{e} : int$. 
             \end{enumerate}
@@ -328,7 +331,7 @@ Problem~\ref{evalorder} asks you design System~3.
     \begin{proof}
       By case analysis on $\tau$.
       \begin{enumerate}
-        \item $\tau$ is \texttt{int}. For all rules that related to \texttt{int}, System~2 and System~3 are identical. Thus the claim holds trivially.
+        \item $\tau$ is \texttt{int}. For all rules that related to \texttt{int}, System~2 and System~3 are identical. Thus the claim holds by the Type Safety Theorem.
         \item $\tau$ is \texttt{bool}. By induction on the typing rule $\vdash \meta{e} : bool$.
           \begin{itemize}
             \item $\inferrule{ }{\meta{e} : bool}$. In this case, $\meta{v}$ is $\meta{e}$; therefore $\meta{e} \to_2^* \meta{e}$ and $\meta{e} \to_3^* \meta{e}$.
@@ -336,7 +339,7 @@ Problem~\ref{evalorder} asks you design System~3.
               By the induction hypothesis, $$\exists \meta{v_1}.\ \meta{e_1}\to_2^* \meta{v_1} \wedge \meta{e_1} \to_3^* \meta{v_1}$$ $$\exists \meta{v_2}.\ \meta{e_2} \to_2^* \meta{v_2} \wedge \meta{e_2} \to_3^* \meta{v_2}$$
               Therefore, the expression can step to $\inferrule{ \vdash \meta{v_1} : bool \and \vdash \meta{e_2} : bool }{\vdash \meta{v_1} \wedge \meta{e_2} : bool}$ by \textit{Lemma 9-0.1} (and the equivalent one in System~2). By case analysis on $\meta{v_1}$:
                 \begin{enumerate}
-                  \item $\meta{v_1}$ is $\meta{\top}$. The expression becomes $\meta{\top} \wedge \meta{e_2}$. According to the induction hypothesis, the expression can step to $\meta{\top} \wedge \meta{v_2}$ by \textit{Lemma 9-0.2} (and the equivalent one in System~2). Since the evaluation of base case is the same in System~2 and System~3, therefore the expression evaluates to the same value under System~2 and System~3.
+                  \item $\meta{v_1}$ is $\meta{\top}$. The expression becomes $\meta{\top} \wedge \meta{e_2}$. With the induction hypothesis, the expression can step to $\meta{\top} \wedge \meta{v_2}$ by \textit{Lemma 9-0.2} (and the equivalent one in System~2). Since the evaluation of base case is the same in System~2 and System~3, therefore the expression evaluates to the same value under System~2 and System~3.
                   \item $\meta{v_1}$ is $\meta{\bot}$. In this case, under System~3, the expression immediately evaluates to \\$\meta{\bot}$($AndShortCircuiting$). Under System~2, the expression can step to $$\meta{\bot}\wedge \meta{v_2} (\text{Assume }\inferrule{\meta{e} \to_2^* \meta{e^\prime}}{\meta{b_1} \wedge \meta{e} \to_2^* \meta{b_1} \wedge \meta{e^\prime}})$$ This evaluates to $(\meta{\bot \wedge v_2})$. According to the definition of $\wedge$ in meta-language, the expression evaluates to $\meta{\bot}$. Thus exists the value $\bot$ such that the expression evaluates to this value in System~2 and System~3.
                 \end{enumerate}
           \end{itemize}

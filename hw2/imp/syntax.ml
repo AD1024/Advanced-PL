@@ -5,12 +5,15 @@ type value =
 
 type unop =
   | Neg
+  | Not
   [@@deriving show]
 
 type binop =
   | Add
   | Sub
   | And
+  | Le
+  | Eq
   [@@deriving show]
 
 let line_col_of_lex_pos =
@@ -51,5 +54,7 @@ type ty =
 
 type raw_stmt =
   | Skip
+  | Assign of string * expr
+  | Seq of stmt * stmt
   [@@deriving show]
 and stmt = raw_stmt located [@printer fun fmt s -> pp_raw_stmt fmt s.value]

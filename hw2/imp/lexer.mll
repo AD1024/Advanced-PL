@@ -14,11 +14,16 @@ rule token = parse
 | "true"                 { TRUE }
 | "false"                { FALSE }
 | "skip"                 { SKIP }
+| '!'                    { NOT  }
 | '+'                    { PLUS }
 | '-'                    { MINUS }
 | "&&"                   { DOUBLEAMP }
 | '('                    { LPAREN }
 | ')'                    { RPAREN }
+| '='                    { EQ }
+| '<'                    { LE }
+| ":="                   { ASSIGN }
+| ';'                    { SEMISEP }
 | eof                    { EOF }
 | ['a'-'z''A'-'Z']+ as x { ID x }
 | _                      {
