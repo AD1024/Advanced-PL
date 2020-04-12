@@ -14,6 +14,11 @@ module Env = Map.Make (EnvKey)
 
 type heap = string Env.t * string Env.t
 
+let check_type_1 pos senv t expected msg =
+  if t != expected
+  then raise (TypeError (msg, pos))
+  else senv
+
 let type_check_binop pos op t1 t2 expected ret =
   if (t1 == expected && t2 == expected) then ret
   else raise (TypeError (Printf.sprintf "TypeError: Cannot apply %s on type %s and %s" 
@@ -37,7 +42,7 @@ let rec type_infer_binop pos senv e1 op e2 =
     | Syntax.Eq  ->
         (match ((type_infer_expr senv e1), (type_infer_expr senv e2)) with
                 | (t1, t2) -> if t1 == t2 
-                              then t1
+                              then Syntax.TBool
                               else raise (TypeError 
                                           (Printf.sprintf "Cannot Compare %s with %s" 
                                                 (Syntax.show_ty t1) (Syntax.show_ty t2),
@@ -59,33 +64,30 @@ and type_infer_expr (senv : Syntax.ty Env.t) (expr : Syntax.expr) : Syntax.ty =
           | Syntax.Literal v -> 
                 (match v with
                   | Syntax.VBool _ -> Syntax.TBool
-                  | Syntax.VInt _  -> Syntax.TInt)
+                  | Syntax.VInt _  -> Syntax.TInt
+                  | Syntax.VUnit   -> Syntax.TUnit)
           | Syntax.Var x     -> 
                 (match (Env.find_opt x senv) with
                   | None -> raise (TypeError ("Use of undefined variable " ^ x, pos))
                   | Some ty -> ty)
           | Syntax.Binop (e1, op, e2) -> type_infer_binop pos senv e1 op e2
           | Syntax.Unop (op, e)       -> type_infer_unop pos senv op e
+          | Syntax.Ite (cond, lb, rb) ->
+                let _ = check_type_1 pos senv (type_infer_expr senv cond) Syntax.TBool 
+                        "If condition is not a bool" in
+                let t1 = type_infer_expr senv lb in
+                (match rb with
+                  | None     -> t1
+                  | Some rb' -> if (type_infer_expr senv rb') != t1
+                                then raise (TypeError ("If-then branch type mismatched", pos))
+                                else t1)
 
-(* Evaluate Add operation *)
-(* Raises RuntimeError when operands are not integers *)
-(* 
-   v1 : lhs operand
-   v2 : rhs operand
-*)
-(* Returns : the sum of v1 and v2 in target language *)
+
 let eval_aexp pos op v1 v2 = 
   match (v1, v2) with
     | (Syntax.VInt x, Syntax.VInt y) -> Syntax.VInt(op x y)
     | _ -> raise (RuntimeError ("Integer arith on non-integer values", pos))
 
-(* Evaluate And operation *)
-(* Raises RuntimeError when operands are not booleans *)
-(* 
-   v1 : lhs operand
-   v2 : rhs operand
-*)
-(* Returns : v1 && v2 in target language *)
 let eval_bexp pos op v1 v2 = 
   match (v1, v2) with
     | (Syntax.VBool x, Syntax.VBool y) -> Syntax.VBool (op x y)
@@ -131,11 +133,20 @@ and eval_expr (denv : Syntax.value Env.t)(e : Syntax.expr) : Syntax.value =
       let (_, pos) = loc in
           match stmt with
             | Syntax.Literal x -> x
-            | Syntax.Var x  -> (match (Env.find_opt x denv) with
-                                  | None -> raise (RuntimeError (("Use of undefined variable " ^ x), pos))
-                                  | Some v -> v)
-            | Syntax.Binop (e1, op, e2) -> eval_binop pos denv e1 op e2
-            | Syntax.Unop  (op, e)       -> eval_unop pos denv op e
+            | Syntax.Var x  -> 
+                    (match (Env.find_opt x denv) with
+                      | None -> raise (RuntimeError (("Use of undefined variable " ^ x), pos))
+                      | Some v -> v)
+            | Syntax.Binop (e1, op, e2)   -> eval_binop pos denv e1 op e2
+            | Syntax.Unop  (op, e)        -> eval_unop pos denv op e
+            | Syntax.Ite   (cond, lb, rb) ->
+                    (match (eval_expr denv cond) with
+                      | (Syntax.VBool true) -> eval_expr denv lb
+                      | (Syntax.VBool false) ->
+                                (match rb with
+                                  | None     -> Syntax.VUnit
+                                  | Some rb' -> eval_expr denv rb')
+                      | _ -> raise (RuntimeError (("If condition is not a bool", pos))))
 
 let rec eval_stmt (denv : Syntax.value Env.t) (stmt : Syntax.stmt) : Syntax.value Env.t =
     match stmt with
@@ -153,8 +164,15 @@ let rec eval_stmt (denv : Syntax.value Env.t) (stmt : Syntax.stmt) : Syntax.valu
                             then denv
                             else raise (AssertionError ("Assertion failed at ", line))
                       | _ -> raise (RuntimeError ("Assertion can only make on Boolean", pos)))
+            | Syntax.While (cond, body) ->
+                    (match (eval_expr denv cond) with
+                      | (Syntax.VBool true) -> 
+                              let denv' = eval_stmt denv body in
+                              eval_stmt denv' stmt
+                      | (Syntax.VBool false) -> denv
+                      | _ -> raise (RuntimeError ("while condition is not a bool", pos)))
         with 
-          | RuntimeError (err, pos) -> 
+          | RuntimeError (err, pos)   -> 
                     let () = Printf.printf "RuntimeError: %s, at %s\n" 
                                             err (Syntax.string_of_lex_pos pos) in
                     Env.empty
@@ -174,14 +192,20 @@ let rec type_infer_stmt (senv : Syntax.ty Env.t) (stmt : Syntax.stmt) : Syntax.t
                         | None -> Env.add x (type_infer_expr senv expr) senv
                         | Some ty -> 
                               let e_type = type_infer_expr senv expr in
-                              if e_type != ty 
-                              then raise (TypeError ("Type cannot be changed once declared", pos))
-                              else senv)
+                              check_type_1 pos senv ty e_type 
+                                      (Printf.sprintf "Cannot unify %s with %s"
+                                                      (Syntax.show_ty e_type)
+                                                      (Syntax.show_ty ty)))
             | Syntax.Seq (e1, e2) -> type_infer_stmt (type_infer_stmt senv e1) e2
             | Syntax.Assert e     -> let t = type_infer_expr senv e in
                                      if t != Syntax.TBool
                                      then raise (TypeError ("Not asserting on bool", pos))
                                      else senv
+            | Syntax.While (cond, body) -> 
+                      let msg = Printf.sprintf "While condition is not bool" in
+                      let senv' = check_type_1 pos senv (type_infer_expr senv cond) Syntax.TBool msg in
+                      type_infer_stmt senv' body
+                      
 
 let get_lexbuf () =
   let lexbuf = Lexing.from_channel stdin in

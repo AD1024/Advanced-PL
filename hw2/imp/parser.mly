@@ -11,6 +11,10 @@
 %token LE
 %token ASSIGN
 %token ASSERT
+%token WHILE
+%token LCURLY RCURLY
+%token IF THEN ELSE
+%token END
 %token SEMISEP
 %token EOF
 
@@ -37,16 +41,22 @@
 
 %%
 
+
+%public optionElse(X):
+|  { None }
+|  ELSE x = X { Some x }
+
 main:
-| s = stmt EOF                     { s }
+| s = stmt EOF                               { s }
 
 raw_stmt:
-| SKIP                             { Syntax.Skip }
-| id = ID ASSIGN e = expr          { Syntax.Assign (id, e) }
-| ASSERT e = expr                  { Syntax.Assert e }
-| l = stmt SEMISEP r = stmt        { Syntax.Seq (l, r) }
+| SKIP                                       { Syntax.Skip }
+| id = ID ASSIGN e = expr                    { Syntax.Assign (id, e) }
+| ASSERT e = expr                            { Syntax.Assert e }
+| WHILE cond = expr LCURLY s = stmt RCURLY   { Syntax.While (cond, s) }
+| l = stmt SEMISEP r = stmt                  { Syntax.Seq (l, r) }
 
-stmt: l = located(raw_stmt)        { l }
+stmt: l = located(raw_stmt)                  { l }
 
 raw_expr:
 | i = INT                          { Syntax.Literal (Syntax.VInt i) }
@@ -58,6 +68,9 @@ raw_expr:
 | e1 = expr PLUS e2 = expr         { Syntax.Binop (e1, Syntax.Add, e2) }
 | e1 = expr MINUS e2 = expr        { Syntax.Binop (e1, Syntax.Sub, e2) }
 | e1 = expr DOUBLEAMP e2 = expr    { Syntax.Binop (e1, Syntax.And, e2) }
+| IF cond = expr THEN 
+   ifbranch = expr 
+   elsebranch = optionElse(expr) END         {Syntax.Ite (cond, ifbranch, elsebranch)}
 | MINUS e = expr  %prec UMINUS     { Syntax.Unop (Syntax.Neg, e) }
 | NOT e = expr    %prec UNOT       { Syntax.Unop (Syntax.Not, e) }
 | LPAREN e = raw_expr RPAREN       { e }

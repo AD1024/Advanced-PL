@@ -15,10 +15,17 @@ rule token = parse
 | "false"                { FALSE }
 | "skip"                 { SKIP }
 | "assert"               { ASSERT }
+| "while"                { WHILE }
+| "if"                   { IF }
+| "then"                 { THEN }
+| "else"                 { ELSE }
+| "end"                  { END }
 | '!'                    { NOT  }
 | '+'                    { PLUS }
 | '-'                    { MINUS }
 | "&&"                   { DOUBLEAMP }
+| '{'                    { LCURLY }
+| '}'                    { RCURLY }
 | '('                    { LPAREN }
 | ')'                    { RPAREN }
 | '='                    { EQ }
