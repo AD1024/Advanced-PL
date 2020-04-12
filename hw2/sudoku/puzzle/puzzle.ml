@@ -94,7 +94,7 @@ let show (sudoku : t) =
                             else let num = GridMap.find (i / (k * k), i mod (k * k)) grid in
                                  let tail = process (i + 1) in
                                  if i mod (k * k) == k * k - 1
-                                 then string_of_int num ^ (if (i / (k * k) != k * k - 1) then "\n" else "") ^ tail
+                                 then string_of_int num ^ " \n" ^ tail
                                  else string_of_int num ^ " "  ^ tail
                       in
                         process 0
@@ -176,7 +176,7 @@ let rec solve dep z3_send z3_readline (sudoku : t) (banned : int GridMap.t) =
   else
     let (new_grid, banned_value) = parse_model z3_send z3_readline grid k 0 in
     let () = if dep > 0 then print_endline "found more than one solution!" in
-    let () = print_endline (show (k, new_grid)) in
+    let () = print_string (show (k, new_grid)) in
     let () = z3_send "(pop)" in
     if dep == 0 then solve (dep + 1) z3_send z3_readline (k, grid) banned_value
     
@@ -200,4 +200,3 @@ let%test_module _ =
          4 3 2 1
        |}]
    end)
-

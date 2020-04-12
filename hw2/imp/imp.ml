@@ -54,7 +54,7 @@ let rec type_infer_binop pos senv e1 op e2 =
 and type_infer_unop pos senv op e =
   match op with
     | Syntax.Neg -> type_check_unop pos "Neg" (type_infer_expr senv e) Syntax.TInt Syntax.TInt
-    | Syntax.Not -> type_check_unop pos "Neg" (type_infer_expr senv e) Syntax.TBool Syntax.TBool
+    | Syntax.Not -> type_check_unop pos "Not" (type_infer_expr senv e) Syntax.TBool Syntax.TBool
 
 and type_infer_expr (senv : Syntax.ty Env.t) (expr : Syntax.expr) : Syntax.ty =
   match expr with
@@ -81,7 +81,6 @@ and type_infer_expr (senv : Syntax.ty Env.t) (expr : Syntax.expr) : Syntax.ty =
                   | Some rb' -> if (type_infer_expr senv rb') != t1
                                 then raise (TypeError ("If-then branch type mismatched", pos))
                                 else t1)
-
 
 let eval_aexp pos op v1 v2 = 
   match (v1, v2) with
@@ -302,8 +301,8 @@ let () =
   try
     let _ = type_infer_stmt Env.empty stmt in
     let folded_ast = stmt_fold_constant Env.empty stmt in
-    let () = print_endline (Syntax.show_stmt folded_ast) in
-    let result_heap = eval_stmt denv stmt in
+    (* let () = print_endline (Syntax.show_stmt folded_ast) in *)
+    let result_heap = eval_stmt denv folded_ast in
     print_endline (print_heap (Env.bindings result_heap))
   with TypeError (err, pos) ->
           Printf.printf "TypeError: %s, at %s\n" err (Syntax.string_of_lex_pos pos)
