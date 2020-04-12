@@ -28,18 +28,18 @@
 
 ; Uncomment these tests when you have something ready to try.
 
-; (rule
-;  (alias runtest)
-;  (action (diff test-small.expected test-small.output)))
-; 
-; (rule
-;  (alias runtest)
-;  (action (diff test-nosol.expected test-nosol.output)))
-; 
-; (rule
-;  (alias runtest)
-;  (action (diff test-nonuniq.expected test-nonuniq.output)))
-; 
-; (rule
-;  (alias runtest)
-;  (action (diff test.expected test.output)))
+(rule
+  (alias runtest)
+  (action (diff test-small.expected test-small.output)))
+ 
+ (rule
+  (alias runtest)
+  (action (diff test-nosol.expected test-nosol.output)))
+ 
+ (rule
+  (alias runtest)
+  (action (diff test-nonuniq.expected test-nonuniq.output)))
+ 
+ (rule
+  (alias runtest)
+  (action (diff test.expected test.output)))

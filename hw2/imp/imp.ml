@@ -185,27 +185,98 @@ let rec type_infer_stmt (senv : Syntax.ty Env.t) (stmt : Syntax.stmt) : Syntax.t
   match stmt with
     | {loc = loc; value = e} ->
         let (_, pos) = loc in
-          match e with
-            | Syntax.Skip -> senv
-            | Syntax.Assign (x, expr) -> 
-                      (match (Env.find_opt x senv) with
-                        | None -> Env.add x (type_infer_expr senv expr) senv
-                        | Some ty -> 
-                              let e_type = type_infer_expr senv expr in
-                              check_type_1 pos senv ty e_type 
-                                      (Printf.sprintf "Cannot unify %s with %s"
-                                                      (Syntax.show_ty e_type)
-                                                      (Syntax.show_ty ty)))
-            | Syntax.Seq (e1, e2) -> type_infer_stmt (type_infer_stmt senv e1) e2
-            | Syntax.Assert e     -> let t = type_infer_expr senv e in
-                                     if t != Syntax.TBool
-                                     then raise (TypeError ("Not asserting on bool", pos))
-                                     else senv
-            | Syntax.While (cond, body) -> 
-                      let msg = Printf.sprintf "While condition is not bool" in
-                      let senv' = check_type_1 pos senv (type_infer_expr senv cond) Syntax.TBool msg in
-                      type_infer_stmt senv' body
-                      
+      match e with
+        | Syntax.Skip -> senv
+        | Syntax.Assign (x, expr) -> 
+                  (match (Env.find_opt x senv) with
+                    | None -> Env.add x (type_infer_expr senv expr) senv
+                    | Some ty -> 
+                          let e_type = type_infer_expr senv expr in
+                          check_type_1 pos senv ty e_type 
+                                  (Printf.sprintf "Cannot unify %s with %s"
+                                                  (Syntax.show_ty e_type)
+                                                  (Syntax.show_ty ty)))
+        | Syntax.Seq (e1, e2) -> type_infer_stmt (type_infer_stmt senv e1) e2
+        | Syntax.Assert e     -> let t = type_infer_expr senv e in
+                                  if t != Syntax.TBool
+                                  then raise (TypeError ("Not asserting on bool", pos))
+                                  else senv
+        | Syntax.While (cond, body) -> 
+                  let msg = Printf.sprintf "While condition is not bool" in
+                  let senv' = check_type_1 pos senv (type_infer_expr senv cond) Syntax.TBool msg in
+                  type_infer_stmt senv' body
+
+let rec expr_is_constant env (expr : Syntax.expr) =
+  match expr with
+    | {loc = _; value = e} ->
+      match e with
+        | Syntax.Literal _ -> true
+        | Syntax.Var x   -> 
+          (match Env.find_opt x env with
+            | None -> false
+            | Some _ -> true)
+        | Syntax.Unop (_, e) -> expr_is_constant env e
+        | Syntax.Binop (e1, _, e2) -> (expr_is_constant env e1) && (expr_is_constant env e2)
+        | Syntax.Ite (cond, lb, rb) -> (expr_is_constant env cond) && (expr_is_constant env lb) &&
+                                       (match rb with
+                                          | None -> true
+                                          | Some rb' -> expr_is_constant env rb')
+
+let read_back loc (v : Syntax.value) : Syntax.expr =
+  {loc = loc; value = Syntax.Literal v}
+
+let rec expr_fold_constant env (expr : Syntax.expr) : Syntax.expr =
+  match expr with
+    | {loc = loc; value = e} ->
+      let (_, pos) = loc in
+      match e with
+        | Syntax.Literal _ -> expr
+        | Syntax.Var x     -> 
+          (match Env.find_opt x env with
+            | None -> expr
+            | Some v -> read_back loc v)
+        | Syntax.Binop (e1, op, e2) -> 
+          let fe1 = expr_fold_constant env e1 in
+          let fe2 = expr_fold_constant env e2 in
+          (match (fe1, fe2) with
+            | ({loc = _; value = e1'}, {loc = _; value = e2'}) ->
+                match (e1', e2') with
+                  | (Syntax.Literal _, Syntax.Literal _) -> read_back loc (eval_binop pos Env.empty fe1 op fe2)
+                  | _              -> {loc = loc; value = Syntax.Binop (fe1, op, fe2)})
+        | Syntax.Unop (op, e1) ->
+          let e1' = expr_fold_constant env e1 in
+          (match e1' with
+            | { loc = (_, pos); value = Syntax.Literal _ } -> 
+                    { loc = loc; value = Syntax.Literal (eval_unop pos Env.empty op e1') }
+            | _ -> e1')
+        | Syntax.Ite (cond, lb, rb) ->
+          let folded_cond = expr_fold_constant env cond in
+          (match folded_cond with
+            | {loc = _; value = Syntax.Literal (Syntax.VBool true)} -> expr_fold_constant env lb
+            | {loc = loc'; value = Syntax.Literal (Syntax.VBool false)} ->
+                (match rb with
+                  | None -> {loc = loc'; value = Syntax.Literal Syntax.VUnit}
+                  | Some rb' -> expr_fold_constant env rb')
+            | _ -> {loc = loc; value = Syntax.Ite (folded_cond, expr_fold_constant env lb, 
+                (match rb with
+                  | None -> None
+                  | Some rb' -> Some (expr_fold_constant env rb')))})
+
+let read_back_stmt loc expr : Syntax.stmt = {loc = loc; value = expr}
+
+let rec stmt_fold_constant env (stmt : Syntax.stmt): Syntax.stmt =
+  match stmt with
+    | {loc = loc; value = s} ->
+      match s with
+        | Syntax.Skip -> stmt
+        | Syntax.Assign (x, e) -> read_back_stmt loc (Syntax.Assign (x, expr_fold_constant env e))
+        | Syntax.Seq (e1, e2) ->  read_back_stmt loc (Syntax.Seq (stmt_fold_constant env e1, stmt_fold_constant env e2))
+        | Syntax.Assert e     -> {loc = loc; value = Syntax.Assert (expr_fold_constant env e)}
+        | Syntax.While (cond, body) ->
+            let folded_cond = expr_fold_constant env cond in
+            (match folded_cond with
+              | {loc = _; value = Syntax.Literal Syntax.VBool false} -> stmt_fold_constant env body
+              | _ -> {loc = loc; value = Syntax.While (expr_fold_constant env cond, stmt_fold_constant env body)})
 
 let get_lexbuf () =
   let lexbuf = Lexing.from_channel stdin in
@@ -230,6 +301,8 @@ let () =
   let denv = Env.empty in
   try
     let _ = type_infer_stmt Env.empty stmt in
+    let folded_ast = stmt_fold_constant Env.empty stmt in
+    let () = print_endline (Syntax.show_stmt folded_ast) in
     let result_heap = eval_stmt denv stmt in
     print_endline (print_heap (Env.bindings result_heap))
   with TypeError (err, pos) ->

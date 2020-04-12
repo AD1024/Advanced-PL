@@ -18,10 +18,10 @@
 %token SEMISEP
 %token EOF
 
-%left DOUBLEAMP
-%left PLUS MINUS
-%left EQ LE
 %left SEMISEP
+%left DOUBLEAMP
+%left EQ LE
+%left PLUS MINUS
 
 (* Declare a special precedence for a fake token UMINUS, which 
    is not used by the lexer at all, and exists only to adjust
@@ -62,6 +62,7 @@ raw_expr:
 | i = INT                          { Syntax.Literal (Syntax.VInt i) }
 | TRUE                             { Syntax.Literal (Syntax.VBool true) }
 | FALSE                            { Syntax.Literal (Syntax.VBool false) }
+| LPAREN RPAREN                    { Syntax.Literal (Syntax.VUnit) }
 | x = ID                           { Syntax.Var x }
 | e1 = expr EQ e2 = expr           { Syntax.Binop (e1, Syntax.Eq, e2)  }
 | e1 = expr LE e2 = expr           { Syntax.Binop (e1, Syntax.Le, e2)  }

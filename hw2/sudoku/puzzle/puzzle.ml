@@ -11,12 +11,6 @@ module GridMap = Map.Make (GridKey)
 
 type t = int * (int GridMap.t)
 
-let product xa xb = 
-  List.concat 
-      (List.map 
-          (fun e -> List.map (fun e' -> (e,e')) xb) 
-      xa)
-
 let get_coordniate i k = (i / (k * k), i mod (k * k))
 
 let get_variable_name coordinate : string =
@@ -40,14 +34,10 @@ let assert_bound coordinate lower_bound upper_bound =
   Printf.sprintf "(assert (and (>= %s %d) (<= %s %d)))" id lower_bound id upper_bound
 
 let assert_distinct variables =
-  let cartisian = product variables variables in
-  Printf.sprintf "(assert (and %s))" 
-                      (List.fold_left (^) "true "
+  Printf.sprintf "(assert (distinct %s))" 
+                      (List.fold_left (^) ""
                             (List.map 
-                                  (fun (car, cdr) -> 
-                                      if car != cdr 
-                                      then Printf.sprintf "(not (= %s %s))" car cdr
-                                      else "") cartisian))
+                                  (fun x -> x ^ " ") variables))
 
 let rec zip_list xs ys = 
   match (xs, ys) with
