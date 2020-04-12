@@ -10,6 +10,7 @@
 %token EQ
 %token LE
 %token ASSIGN
+%token ASSERT
 %token SEMISEP
 %token EOF
 
@@ -42,6 +43,7 @@ main:
 raw_stmt:
 | SKIP                             { Syntax.Skip }
 | id = ID ASSIGN e = expr          { Syntax.Assign (id, e) }
+| ASSERT e = expr                  { Syntax.Assert e }
 | l = stmt SEMISEP r = stmt        { Syntax.Seq (l, r) }
 
 stmt: l = located(raw_stmt)        { l }

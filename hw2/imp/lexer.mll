@@ -14,6 +14,7 @@ rule token = parse
 | "true"                 { TRUE }
 | "false"                { FALSE }
 | "skip"                 { SKIP }
+| "assert"               { ASSERT }
 | '!'                    { NOT  }
 | '+'                    { PLUS }
 | '-'                    { MINUS }

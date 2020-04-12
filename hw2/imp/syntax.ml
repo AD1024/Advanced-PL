@@ -56,5 +56,6 @@ type raw_stmt =
   | Skip
   | Assign of string * expr
   | Seq of stmt * stmt
+  | Assert of expr
   [@@deriving show]
 and stmt = raw_stmt located [@printer fun fmt s -> pp_raw_stmt fmt s.value]

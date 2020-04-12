@@ -1,5 +1,6 @@
 exception RuntimeError of string * Lexing.position
-exception TypeError of string
+exception TypeError of string * Lexing.position
+exception AssertionError of string * Lexing.position
 
 module EnvKey = 
   struct
@@ -13,10 +14,58 @@ module Env = Map.Make (EnvKey)
 
 type heap = string Env.t * string Env.t
 
-(* let rec type_infer_expr (senv : Syntax.ty Env.t) (expr : Syntax.expr)
-                                      : (Syntax.ty * Syntax.ty Env.t) =
+let type_check_binop pos op t1 t2 expected ret =
+  if (t1 == expected && t2 == expected) then ret
+  else raise (TypeError (Printf.sprintf "TypeError: Cannot apply %s on type %s and %s" 
+                                      op (Syntax.show_ty t1) (Syntax.show_ty t2), pos))
+
+let type_check_unop pos op t expected ret =
+  if t == expected then ret
+  else raise (TypeError (Printf.sprintf "Cannot apply %s with %s" op (Syntax.show_ty t), pos))
+
+let rec type_infer_binop pos senv e1 op e2 =
+  match op with
+    | Syntax.Add -> 
+            (match ((type_infer_expr senv e1), (type_infer_expr senv e2)) with
+              | (t1, t2) -> type_check_binop pos "Add" t1 t2 Syntax.TInt Syntax.TInt)
+    | Syntax.Sub ->
+            (match ((type_infer_expr senv e1), (type_infer_expr senv e2)) with
+              | (t1, t2) -> type_check_binop pos "Sub" t1 t2 Syntax.TInt Syntax.TInt)
+    | Syntax.And ->
+            (match ((type_infer_expr senv e1), (type_infer_expr senv e2)) with
+              | (t1, t2) -> type_check_binop pos "And" t1 t2 Syntax.TBool Syntax.TBool)
+    | Syntax.Eq  ->
+        (match ((type_infer_expr senv e1), (type_infer_expr senv e2)) with
+                | (t1, t2) -> if t1 == t2 
+                              then t1
+                              else raise (TypeError 
+                                          (Printf.sprintf "Cannot Compare %s with %s" 
+                                                (Syntax.show_ty t1) (Syntax.show_ty t2),
+                                          pos)))
+    | Syntax.Le  ->
+        (match ((type_infer_expr senv e1), (type_infer_expr senv e2)) with
+              | (t1, t2) -> type_check_binop pos "Le" t1 t2 Syntax.TInt Syntax.TBool)
+
+and type_infer_unop pos senv op e =
+  match op with
+    | Syntax.Neg -> type_check_unop pos "Neg" (type_infer_expr senv e) Syntax.TInt Syntax.TInt
+    | Syntax.Not -> type_check_unop pos "Neg" (type_infer_expr senv e) Syntax.TBool Syntax.TBool
+
+and type_infer_expr (senv : Syntax.ty Env.t) (expr : Syntax.expr) : Syntax.ty =
   match expr with
-    | {loc} *)
+    | {loc = loc; value = e} ->
+        let (_, pos) = loc in
+        match e with
+          | Syntax.Literal v -> 
+                (match v with
+                  | Syntax.VBool _ -> Syntax.TBool
+                  | Syntax.VInt _  -> Syntax.TInt)
+          | Syntax.Var x     -> 
+                (match (Env.find_opt x senv) with
+                  | None -> raise (TypeError ("Use of undefined variable " ^ x, pos))
+                  | Some ty -> ty)
+          | Syntax.Binop (e1, op, e2) -> type_infer_binop pos senv e1 op e2
+          | Syntax.Unop (op, e)       -> type_infer_unop pos senv op e
 
 (* Evaluate Add operation *)
 (* Raises RuntimeError when operands are not integers *)
@@ -90,15 +139,49 @@ and eval_expr (denv : Syntax.value Env.t)(e : Syntax.expr) : Syntax.value =
 
 let rec eval_stmt (denv : Syntax.value Env.t) (stmt : Syntax.stmt) : Syntax.value Env.t =
     match stmt with
-      | {loc = _; value = e} -> 
+      | {loc = loc; value = e} -> 
+        let (line, pos) = loc in
         try
           match e with
             | Syntax.Skip -> denv
             | Syntax.Assign (id, expr) -> Env.add id (eval_expr denv expr) denv
             | Syntax.Seq (expr_l, expr_r) -> eval_stmt (eval_stmt denv expr_l) expr_r
-        with RuntimeError (err, pos) -> 
-          let () = Printf.printf "RuntimeError: %s, at %s\n" err (Syntax.string_of_lex_pos pos) in
-          denv
+            | Syntax.Assert e          -> 
+                    (match (eval_expr denv e) with
+                      | (Syntax.VBool x) -> 
+                            if x
+                            then denv
+                            else raise (AssertionError ("Assertion failed at ", line))
+                      | _ -> raise (RuntimeError ("Assertion can only make on Boolean", pos)))
+        with 
+          | RuntimeError (err, pos) -> 
+                    let () = Printf.printf "RuntimeError: %s, at %s\n" 
+                                            err (Syntax.string_of_lex_pos pos) in
+                    Env.empty
+          | AssertionError (err, pos) ->
+                    let () = Printf.printf "AssertionError: %s, at %s\n" 
+                                            err (Syntax.string_of_lex_pos pos) in
+                    Env.empty
+
+let rec type_infer_stmt (senv : Syntax.ty Env.t) (stmt : Syntax.stmt) : Syntax.ty Env.t =
+  match stmt with
+    | {loc = loc; value = e} ->
+        let (_, pos) = loc in
+          match e with
+            | Syntax.Skip -> senv
+            | Syntax.Assign (x, expr) -> 
+                      (match (Env.find_opt x senv) with
+                        | None -> Env.add x (type_infer_expr senv expr) senv
+                        | Some ty -> 
+                              let e_type = type_infer_expr senv expr in
+                              if e_type != ty 
+                              then raise (TypeError ("Type cannot be changed once declared", pos))
+                              else senv)
+            | Syntax.Seq (e1, e2) -> type_infer_stmt (type_infer_stmt senv e1) e2
+            | Syntax.Assert e     -> let t = type_infer_expr senv e in
+                                     if t != Syntax.TBool
+                                     then raise (TypeError ("Not asserting on bool", pos))
+                                     else senv
 
 let get_lexbuf () =
   let lexbuf = Lexing.from_channel stdin in
@@ -121,5 +204,9 @@ let () =
   in
   (* print_endline (Syntax.show_stmt stmt); *)
   let denv = Env.empty in
-  let result_heap = eval_stmt denv stmt in
-  print_endline (print_heap (Env.bindings result_heap))
+  try
+    let _ = type_infer_stmt Env.empty stmt in
+    let result_heap = eval_stmt denv stmt in
+    print_endline (print_heap (Env.bindings result_heap))
+  with TypeError (err, pos) ->
+          Printf.printf "TypeError: %s, at %s\n" err (Syntax.string_of_lex_pos pos)
