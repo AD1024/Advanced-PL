@@ -17,13 +17,14 @@ rule token = parse
 | "assert"               { ASSERT }
 | "while"                { WHILE }
 | "if"                   { IF }
-| "then"                 { THEN }
 | "else"                 { ELSE }
-| "end"                  { END }
 | '!'                    { NOT  }
 | '+'                    { PLUS }
 | '-'                    { MINUS }
 | "&&"                   { DOUBLEAMP }
+| '['                    { LBRACKET }
+| ']'                    { RBRACKET }
+| ','                    { COMMA  }
 | '{'                    { LCURLY }
 | '}'                    { RCURLY }
 | '('                    { LPAREN }

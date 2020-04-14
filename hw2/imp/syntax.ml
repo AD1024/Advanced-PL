@@ -1,6 +1,7 @@
 type value =
   | VInt of int
   | VBool of bool
+  | VArray of value list
   | VUnit
   [@@deriving show]
 
@@ -13,7 +14,7 @@ type binop =
   | Add
   | Sub
   | And
-  | Le
+  | Lt
   | Eq
   [@@deriving show]
 
@@ -41,10 +42,11 @@ type 'a located =
 
 type raw_expr =
   | Literal of value
+  | Array of expr list
+  | Subscript of expr * expr
   | Var of string
   | Unop of unop * expr
   | Binop of expr * binop * expr
-  | Ite of expr * expr * expr option
   [@@deriving show]
 and expr = raw_expr located [@printer fun fmt e -> pp_raw_expr fmt e.value]
 
@@ -53,13 +55,17 @@ type ty =
   | TInt
   | TBool
   | TUnit
+  | TArray of ty
+  | TVar
   [@@deriving show]
 
 type raw_stmt =
   | Skip
   | Assign of string * expr
+  | AssignArr of string * expr * expr
   | Seq of stmt * stmt
   | Assert of expr
   | While of expr * stmt
+  | If of expr * stmt * stmt option
   [@@deriving show]
 and stmt = raw_stmt located [@printer fun fmt s -> pp_raw_stmt fmt s.value]

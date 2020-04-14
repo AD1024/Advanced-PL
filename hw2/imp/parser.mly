@@ -7,14 +7,15 @@
 %token MINUS
 %token DOUBLEAMP
 %token LPAREN RPAREN
+%token LBRACKET RBRACKET
+%token COMMA
 %token EQ
 %token LE
 %token ASSIGN
 %token ASSERT
 %token WHILE
 %token LCURLY RCURLY
-%token IF THEN ELSE
-%token END
+%token IF ELSE
 %token SEMISEP
 %token EOF
 
@@ -22,6 +23,7 @@
 %left DOUBLEAMP
 %left EQ LE
 %left PLUS MINUS
+%left LBRACKET
 
 (* Declare a special precedence for a fake token UMINUS, which 
    is not used by the lexer at all, and exists only to adjust
@@ -44,7 +46,7 @@
 
 %public optionElse(X):
 |  { None }
-|  ELSE x = X { Some x }
+|  ELSE LCURLY x = X RCURLY { Some x }
 
 main:
 | s = stmt EOF                               { s }
@@ -53,7 +55,10 @@ raw_stmt:
 | SKIP                                       { Syntax.Skip }
 | id = ID ASSIGN e = expr                    { Syntax.Assign (id, e) }
 | ASSERT e = expr                            { Syntax.Assert e }
+| id = ID LBRACKET i = expr RBRACKET ASSIGN v = expr { Syntax.AssignArr (id, i, v) }
 | WHILE cond = expr LCURLY s = stmt RCURLY   { Syntax.While (cond, s) }
+| IF    cond = expr LCURLY lb = stmt
+  RCURLY rb = optionElse(stmt)               { Syntax.If (cond, lb, rb) }
 | l = stmt SEMISEP r = stmt                  { Syntax.Seq (l, r) }
 
 stmt: l = located(raw_stmt)                  { l }
@@ -65,15 +70,14 @@ raw_expr:
 | LPAREN RPAREN                    { Syntax.Literal (Syntax.VUnit) }
 | x = ID                           { Syntax.Var x }
 | e1 = expr EQ e2 = expr           { Syntax.Binop (e1, Syntax.Eq, e2)  }
-| e1 = expr LE e2 = expr           { Syntax.Binop (e1, Syntax.Le, e2)  }
+| e1 = expr LE e2 = expr           { Syntax.Binop (e1, Syntax.Lt, e2)  }
 | e1 = expr PLUS e2 = expr         { Syntax.Binop (e1, Syntax.Add, e2) }
 | e1 = expr MINUS e2 = expr        { Syntax.Binop (e1, Syntax.Sub, e2) }
 | e1 = expr DOUBLEAMP e2 = expr    { Syntax.Binop (e1, Syntax.And, e2) }
-| IF cond = expr THEN 
-   ifbranch = expr 
-   elsebranch = optionElse(expr) END         {Syntax.Ite (cond, ifbranch, elsebranch)}
 | MINUS e = expr  %prec UMINUS     { Syntax.Unop (Syntax.Neg, e) }
 | NOT e = expr    %prec UNOT       { Syntax.Unop (Syntax.Not, e) }
+| LBRACKET es = separated_list(COMMA, expr) RBRACKET { Syntax.Array es }
+| e = expr LBRACKET i = expr RBRACKET { Syntax.Subscript (e, i) }
 | LPAREN e = raw_expr RPAREN       { e }
 
 expr: l = located(raw_expr)        { l }
