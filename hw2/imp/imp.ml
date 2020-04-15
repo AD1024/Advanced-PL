@@ -472,7 +472,7 @@ let () =
     (* let () = print_endline (Syntax.show_stmt folded_ast) in *)
     try
       let result_heap = eval_stmt denv folded_ast false in
-      print_endline (print_heap (Env.bindings (List.hd result_heap)))
+      print_endline ("[" ^ (print_heap (Env.bindings (List.hd result_heap))) ^ "]")
     with
       | RuntimeError (err, pos)   -> 
         Printf.printf "RuntimeError: %s, at %s\n" err (Syntax.string_of_lex_pos pos)
