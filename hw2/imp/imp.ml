@@ -92,6 +92,15 @@ let rec type_infer_binop pos env e1 op e2 =
         | Syntax.Lt  ->
             (match ((type_infer_expr senv e1), (type_infer_expr senv e2)) with
                   | (t1, t2) -> type_check_binop pos "Lt" t1 t2 Syntax.TInt Syntax.TBool)
+        | Syntax.Le  ->
+            (match ((type_infer_expr senv e1), (type_infer_expr senv e2)) with
+                  | (t1, t2) -> type_check_binop pos "Le" t1 t2 Syntax.TInt Syntax.TBool)
+        | Syntax.Ge  ->
+            (match ((type_infer_expr senv e1), (type_infer_expr senv e2)) with
+                  | (t1, t2) -> type_check_binop pos "Ge" t1 t2 Syntax.TInt Syntax.TBool)
+        | Syntax.Gt  ->
+            (match ((type_infer_expr senv e1), (type_infer_expr senv e2)) with
+                  | (t1, t2) -> type_check_binop pos "Gt" t1 t2 Syntax.TInt Syntax.TBool)
 
 and type_infer_unop pos env op e =
   match env with
@@ -157,6 +166,9 @@ let eval_relInt pos op x y =
   match op with
     | Syntax.Eq -> Syntax.VBool (x == y)
     | Syntax.Lt -> Syntax.VBool (x < y)
+    | Syntax.Le -> Syntax.VBool (x <= y)
+    | Syntax.Gt -> Syntax.VBool (x > y)
+    | Syntax.Ge -> Syntax.VBool (x >= y)
     | _         -> raise (RuntimeError ("Unsupported Operator", pos))
 
 let eval_relBool pos op x y =
@@ -180,6 +192,9 @@ let rec eval_binop pos env e1 op e2 =
         | Syntax.And -> eval_bexp pos (&&) (eval_expr denv e1) (eval_expr denv e2)
         | Syntax.Eq  -> eval_relexp pos Syntax.Eq (eval_expr denv e1) (eval_expr denv e2)
         | Syntax.Lt  -> eval_relexp pos Syntax.Lt (eval_expr denv e1) (eval_expr denv e2)
+        | Syntax.Le  -> eval_relexp pos Syntax.Le (eval_expr denv e1) (eval_expr denv e2)
+        | Syntax.Gt  -> eval_relexp pos Syntax.Gt (eval_expr denv e1) (eval_expr denv e2)
+        | Syntax.Ge  -> eval_relexp pos Syntax.Ge (eval_expr denv e1) (eval_expr denv e2)
 
 and eval_unop pos env op e =
   match env with

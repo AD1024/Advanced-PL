@@ -15,6 +15,9 @@ type binop =
   | Sub
   | And
   | Lt
+  | Gt
+  | Le
+  | Ge
   | Eq
   [@@deriving show]
 

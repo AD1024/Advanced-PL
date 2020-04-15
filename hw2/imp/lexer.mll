@@ -30,7 +30,10 @@ rule token = parse
 | '('                    { LPAREN }
 | ')'                    { RPAREN }
 | '='                    { EQ }
-| '<'                    { LE }
+| '<'                    { LT }
+| '>'                    { GT }
+| "<="                   { LE }
+| ">="                   { GE }
 | ":="                   { ASSIGN }
 | ';'                    { SEMISEP }
 | eof                    { EOF }

@@ -10,7 +10,7 @@
 %token LBRACKET RBRACKET
 %token COMMA
 %token EQ
-%token LE
+%token LE LT GE GT
 %token ASSIGN
 %token ASSERT
 %token WHILE
@@ -21,7 +21,7 @@
 
 %left SEMISEP
 %left DOUBLEAMP
-%left EQ LE
+%left EQ LT GT LE GE
 %left PLUS MINUS
 %left LBRACKET
 
@@ -76,7 +76,10 @@ raw_expr:
 | LPAREN RPAREN                    { Syntax.Literal (Syntax.VUnit) }
 | x = ID                           { Syntax.Var x }
 | e1 = expr EQ e2 = expr           { Syntax.Binop (e1, Syntax.Eq, e2)  }
-| e1 = expr LE e2 = expr           { Syntax.Binop (e1, Syntax.Lt, e2)  }
+| e1 = expr LT e2 = expr           { Syntax.Binop (e1, Syntax.Lt, e2)  }
+| e1 = expr GT e2 = expr           { Syntax.Binop (e1, Syntax.Gt, e2)  }
+| e1 = expr LE e2 = expr           { Syntax.Binop (e1, Syntax.Le, e2)  }
+| e1 = expr GE e2 = expr           { Syntax.Binop (e1, Syntax.Ge, e2)  }
 | e1 = expr PLUS e2 = expr         { Syntax.Binop (e1, Syntax.Add, e2) }
 | e1 = expr MINUS e2 = expr        { Syntax.Binop (e1, Syntax.Sub, e2) }
 | e1 = expr DOUBLEAMP e2 = expr    { Syntax.Binop (e1, Syntax.And, e2) }
