@@ -18,6 +18,14 @@ rule token = parse
 | "while"                { WHILE }
 | "if"                   { IF }
 | "else"                 { ELSE }
+| "print"                { PRINT }
+| "read_int"             { READINT }
+| "read_bool"            { READBOOL }
+| "array_alloc"          { ARRAYALLOC }
+| "array_length"         { ARRAYLENGTH }
+| "for"                  { FOR }
+| "foreach"              { FOREACH }
+| "in"                   { IN  }
 | '!'                    { NOT  }
 | '+'                    { PLUS }
 | '-'                    { MINUS }

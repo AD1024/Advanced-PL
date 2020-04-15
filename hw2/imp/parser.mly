@@ -2,6 +2,7 @@
 %token <string> ID
 %token TRUE FALSE
 %token SKIP
+%token PRINT READINT READBOOL ARRAYALLOC ARRAYLENGTH
 %token NOT
 %token PLUS
 %token MINUS
@@ -15,6 +16,7 @@
 %token ASSERT
 %token WHILE
 %token LCURLY RCURLY
+%token FOR FOREACH IN
 %token IF ELSE
 %token SEMISEP
 %token EOF
@@ -48,6 +50,10 @@
 |  { None }
 |  ELSE LCURLY x = X RCURLY { Some x }
 
+%public optionParamCar(X):
+| { None }
+| x = X COMMA { Some x }
+
 main:
 | s = stmt EOF                               { s }
 
@@ -65,6 +71,15 @@ raw_stmt:
 | WHILE cond = expr LCURLY s = stmt RCURLY   { Syntax.While (cond, s) }
 | IF    cond = expr LCURLY lb = stmt
   RCURLY rb = optionElse(stmt)               { Syntax.If (cond, lb, rb) }
+| PRINT LPAREN e = expr RPAREN               { Syntax.Print e }
+| FOR LPAREN 
+    assign = stmt SEMISEP
+    cond = expr SEMISEP
+    upd = stmt RPAREN
+    LCURLY body = stmt RCURLY                { Syntax.For (assign, cond, upd, body) }
+| FOREACH LPAREN
+    id = ID IN e = expr RPAREN
+    LCURLY body = stmt RCURLY                { Syntax.Foreach (id, e, body) }
 | l = stmt SEMISEP r = stmt                  { Syntax.Seq (l, r) }
 
 stmt: l = located(raw_stmt)                  { l }
@@ -83,6 +98,13 @@ raw_expr:
 | e1 = expr PLUS e2 = expr         { Syntax.Binop (e1, Syntax.Add, e2) }
 | e1 = expr MINUS e2 = expr        { Syntax.Binop (e1, Syntax.Sub, e2) }
 | e1 = expr DOUBLEAMP e2 = expr    { Syntax.Binop (e1, Syntax.And, e2) }
+| READBOOL LPAREN RPAREN           { Syntax.ReadBool }
+| READINT  LPAREN RPAREN           { Syntax.ReadInt  }
+| ARRAYLENGTH LPAREN 
+  e = expr RPAREN                  { Syntax.ArrayLength e }
+| ARRAYALLOC LPAREN
+  init = expr
+  COMMA length = expr RPAREN       { Syntax.ArrayAlloc (init, length) }
 | MINUS e = expr  %prec UMINUS     { Syntax.Unop (Syntax.Neg, e) }
 | NOT e = expr    %prec UNOT       { Syntax.Unop (Syntax.Not, e) }
 | LBRACKET es = separated_list(COMMA, expr) RBRACKET { Syntax.Array es }

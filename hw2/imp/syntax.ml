@@ -49,6 +49,10 @@ type raw_expr =
   | Subscript of expr * expr
   | Var of string
   | Unop of unop * expr
+  | ReadInt
+  | ReadBool
+  | ArrayAlloc of expr * expr
+  | ArrayLength of expr
   | Binop of expr * binop * expr
   [@@deriving show]
 and expr = raw_expr located [@printer fun fmt e -> pp_raw_expr fmt e.value]
@@ -65,6 +69,9 @@ type ty =
 type raw_stmt =
   | Skip
   | Assign of string * expr
+  | For of stmt * expr * stmt * stmt
+  | Foreach of string * expr * stmt
+  | Print of expr
   | AssignArr of expr * expr
   | Seq of stmt * stmt
   | Assert of expr

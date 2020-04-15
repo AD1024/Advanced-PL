@@ -27,6 +27,13 @@ let check_type_1 pos senv t expected msg =
   then raise (TypeError (msg, pos))
   else senv
 
+let rec array_alloc_impl (e : Syntax.value) (l : int) : Syntax.value =
+  match l with
+    | 0 -> VArray []
+    | _ -> match  array_alloc_impl e (l - 1) with
+            | Syntax.VArray tl -> Syntax.VArray (e :: tl)
+            | _ -> Syntax.VArray []
+
 let type_check_binop pos op t1 t2 expected ret =
   if (t1 == expected && t2 == expected) then ret
   else raise (TypeError (Printf.sprintf "Cannot apply %s on type %s and %s" 
@@ -52,20 +59,20 @@ let env_update (x : string) (v : 'a) (env : 'a scope) : 'a scope=
         match (Env.find_opt x binding) with
           | None -> find (dep + 1) xs'
           | _    -> dep in
-  let rec update dep index xs =
+  let rec update index xs =
     match xs with
       | [] -> []
       | hd :: tl ->
-        if dep == index
+        if index == 0
         then (Env.add x v hd) :: tl
-        else hd :: (update (dep + 1) index tl) in
+        else hd :: (update (index - 1) tl) in
   let idx = find 0 env in
   if idx == -1
   then 
     match env with
       | [] -> []
       | hd :: tl -> (Env.add x v hd) :: tl
-  else update 0 idx env
+  else update idx env
 
 let rec type_infer_binop pos env e1 op e2 =
   match env with
@@ -131,6 +138,12 @@ and type_infer_expr (senv : Syntax.ty scope) (expr : Syntax.expr) : Syntax.ty =
     | {loc = loc; value = e} ->
         let (_, pos) = loc in
         match e with
+          | Syntax.ReadBool -> Syntax.TBool
+          | Syntax.ReadInt  -> Syntax.TInt
+          | Syntax.ArrayAlloc (elem, length) ->
+              let _ = check_type_1 pos senv (type_infer_expr senv length) Syntax.TInt 
+                              "length (2nd argument) of array_alloc is not an int"in
+              Syntax.TArray (type_infer_expr senv elem)
           | Syntax.Literal v -> 
                 (match v with
                   | Syntax.VBool _ -> Syntax.TBool
@@ -147,6 +160,11 @@ and type_infer_expr (senv : Syntax.ty scope) (expr : Syntax.expr) : Syntax.ty =
           | Syntax.Binop (e1, op, e2) -> type_infer_binop pos senv e1 op e2
           | Syntax.Unop (op, e)       -> type_infer_unop pos senv op e
           | Syntax.Array es -> type_infer_array pos senv es
+          | Syntax.ArrayLength e ->
+              let e_type = type_infer_expr senv e in
+              (match e_type with
+                | Syntax.TArray _ -> Syntax.TInt
+                | _ -> raise (TypeError (Printf.sprintf "%s is not an array type" (Syntax.show_ty e_type), pos)))
           | Syntax.Subscript (e, i) ->
               (match ((type_infer_expr senv e), (type_infer_expr senv i)) with
                 | (Syntax.TArray ty, Syntax.TInt) -> ty
@@ -213,6 +231,20 @@ and eval_expr (denv : Syntax.value scope)(e : Syntax.expr) : Syntax.value =
     | {loc = loc; value = stmt} -> 
       let (_, pos) = loc in
           match stmt with
+            | Syntax.ReadInt -> Syntax.VInt (read_int ())
+            | Syntax.ReadBool ->
+                let str = read_line () in
+                (match str with
+                  | "true" -> Syntax.VBool true
+                  | "false" -> Syntax.VBool false
+                  | _ -> raise (RuntimeError (str ^ " is not a valid boolean value", pos)))
+            | Syntax.ArrayAlloc (elem, length) ->
+                let length = eval_expr denv length in
+                (match length with
+                  | (Syntax.VInt l) ->
+                    let e = eval_expr denv elem in
+                    array_alloc_impl e l
+                  | _ -> raise (RuntimeError ("length (2nd argument) to array_alloc must be int", pos)))
             | Syntax.Literal x -> x
             | Syntax.Var x  -> 
               (match denv with
@@ -224,6 +256,10 @@ and eval_expr (denv : Syntax.value scope)(e : Syntax.expr) : Syntax.value =
             | Syntax.Binop (e1, op, e2)   -> eval_binop pos denv e1 op e2
             | Syntax.Unop  (op, e)        -> eval_unop pos denv op e
             | Syntax.Array es -> Syntax.VArray (List.map (eval_expr denv) es)
+            | Syntax.ArrayLength e ->
+                (match eval_expr denv e with
+                  | Syntax.VArray arr -> Syntax.VInt (List.length arr)
+                  | _ -> raise (RuntimeError ("calling array_length on non-array object", pos)))
             | Syntax.Subscript (arr, i) -> 
                 let varr = eval_expr denv arr in
                 let index = eval_expr denv i in
@@ -234,21 +270,21 @@ and eval_expr (denv : Syntax.value scope)(e : Syntax.expr) : Syntax.value =
                         | Some v -> v)
                     | (_, _) -> raise (RuntimeError ("Not a subscriptable data", pos)))
 
-let rec update_list_elem (dep : int) (x : Syntax.value) (index : int) xs : Syntax.value list =
-  if dep == index
+let rec update_list_elem (x : Syntax.value) (index : int) xs : Syntax.value list =
+  if index == 0
   then (match xs with
         | [] -> []
         | _  -> x :: List.tl xs)
   else (match xs with
         | [] -> []
-        | x' :: xs' -> x' :: (update_list_elem (dep + 1) x index xs'))
+        | x' :: xs' -> x' :: (update_list_elem x (index - 1) xs'))
 
 let rec update_list_multi pos (x : Syntax.value) (indices : int list) (xs : Syntax.value) : Syntax.value =
   match indices with
     | [] -> Syntax.VUnit
     | (p :: []) ->
       (match xs with
-        | (Syntax.VArray arr) -> Syntax.VArray (update_list_elem 0 x p arr)
+        | (Syntax.VArray arr) -> Syntax.VArray (update_list_elem x p arr)
         | _ -> raise (RuntimeError ("Not an array", pos)))
     | i :: is' ->
       (match xs with
@@ -256,10 +292,18 @@ let rec update_list_multi pos (x : Syntax.value) (indices : int list) (xs : Synt
             let idx = match List.nth_opt arr i with
                         | None -> raise (RuntimeError (Printf.sprintf "array out of bound %d" i, pos))
                         | Some e -> e in
-            Syntax.VArray (update_list_elem 0 (update_list_multi pos x is' idx) i arr)
+            Syntax.VArray (update_list_elem (update_list_multi pos x is' idx) i arr)
         | _ -> raise (RuntimeError ("Not an array", pos)))
 
-let rec eval_stmt (env : Syntax.value scope) (stmt : Syntax.stmt) (block : bool) : Syntax.value scope =
+let rec eval_foreach (dep : int) (env : Syntax.value scope) 
+                     (id : string) (arr : Syntax.value list) (body : Syntax.stmt) =
+  if dep == List.length arr then env
+  else
+    let nth = List.nth arr dep in
+    eval_foreach (dep + 1) (eval_stmt (env_update id nth env) body false) id arr body
+        
+
+and eval_stmt (env : Syntax.value scope) (stmt : Syntax.stmt) (block : bool) : Syntax.value scope =
   match stmt with
     | {loc = loc; value = e} -> 
       let (line, pos) = loc in
@@ -267,6 +311,9 @@ let rec eval_stmt (env : Syntax.value scope) (stmt : Syntax.stmt) (block : bool)
         | [] -> raise (EnvError ("empty static environment", pos))
         | _ :: _ ->
             match e with
+              | Syntax.Print e ->
+                let e = eval_expr env e in
+                let () = print_endline (Syntax.show_value e) in env
               | Syntax.Skip -> env
               | Syntax.Assign (id, expr) -> env_update id (eval_expr env expr) env
               | Syntax.Seq (expr_l, expr_r) -> eval_stmt (eval_stmt env expr_l false) expr_r false
@@ -299,6 +346,22 @@ let rec eval_stmt (env : Syntax.value scope) (stmt : Syntax.stmt) (block : bool)
                                 let env' = eval_stmt (Env.empty :: env) rb' false
                                 in List.tl env')
                         | _ -> raise (RuntimeError ("if condition is not a bool", pos)))
+              | Syntax.For (assign, cond, update, body) ->
+                      let denv' = if not block
+                                  then (eval_stmt (Env.empty :: env) assign false)
+                                  else env in
+                      (match (eval_expr denv' cond) with
+                        | (Syntax.VBool true) ->
+                                let updated = eval_stmt (eval_stmt denv' body false) update false in
+                                let res = eval_stmt updated stmt true in
+                                if not block then List.tl res else res
+                        | (Syntax.VBool false) -> env
+                        | _ -> raise (RuntimeError ("if condition is not a bool", pos)))
+              | Syntax.Foreach (id, e, body) ->
+                        let env' = Env.empty :: env in
+                        (match (eval_expr env e) with
+                          | Syntax.VArray arr -> List.tl (eval_foreach 0 env' id arr body)
+                          | x -> raise (RuntimeError ((Syntax.show_value x) ^ "is not a iterable object", pos)))
               | Syntax.AssignArr (id, e) ->
                         let rec get_subscript (s : Syntax.expr) : string * int list =
                           match s with
@@ -342,16 +405,17 @@ let rec type_infer_stmt (senv : Syntax.ty scope) (stmt : Syntax.stmt) : Syntax.t
         | [] -> raise (EnvError ("empty static environment", pos))
         | _ :: _ ->
           match e with
+            | Syntax.Print _ -> senv
             | Syntax.Skip -> senv
             | Syntax.Assign (x, expr) -> 
                       (match (env_lookup x senv) with
                         | None -> env_update x (type_infer_expr senv expr) senv
                         | Some ty -> 
                               let e_type = type_infer_expr senv expr in
-                              check_type_1 pos senv ty e_type 
-                                      (Printf.sprintf "Cannot unify %s with %s"
+                              if check_rec_type_eq ty e_type then senv else
+                                      raise (TypeError(Printf.sprintf "Cannot unify %s with %s"
                                                       (Syntax.show_ty e_type)
-                                                      (Syntax.show_ty ty)))
+                                                      (Syntax.show_ty ty), pos)))
             | Syntax.Seq (e1, e2) -> type_infer_stmt (type_infer_stmt senv e1) e2
             | Syntax.Assert e     -> let t = type_infer_expr senv e in
                                       if t != Syntax.TBool
@@ -377,6 +441,21 @@ let rec type_infer_stmt (senv : Syntax.ty scope) (stmt : Syntax.stmt) : Syntax.t
                             raise (TypeError (Printf.sprintf "Cannot unify %s with %s"
                                             (Syntax.show_ty e_type)
                                             (Syntax.show_ty ty), pos))
+            | Syntax.For (assign, cond, update, body) ->
+                      let senv' = type_infer_stmt (Env.empty :: senv) assign in
+                      let cond_type = type_infer_expr senv' cond in
+                      (match cond_type with
+                        | Syntax.TBool -> let _ = type_infer_stmt senv' body in
+                                            let _ = type_infer_stmt senv' update in
+                                            senv
+                        | _ -> raise (TypeError ("for conditional is not a bool", pos)))
+            | Syntax.Foreach (id, e, body) ->
+                      let e_type = type_infer_expr senv e in
+                      (match e_type with
+                        | (Syntax.TArray ty) -> 
+                              let _ = type_infer_stmt (env_update id ty (Env.empty :: senv)) body in
+                              senv
+                        | ty -> raise (TypeError ((Syntax.show_ty ty) ^ " is not iterable type", pos)))
 
 let read_back loc (v : Syntax.value) : Syntax.expr =
   {loc = loc; value = Syntax.Literal v}
@@ -394,12 +473,18 @@ let rec expr_is_constant env (expr : Syntax.expr) =
         | Syntax.Binop (e1, _, e2) -> (expr_is_constant env e1) && (expr_is_constant env e2)
         | Syntax.Array es -> List.fold_left (&&) true (List.map (expr_is_constant env) es)
         | Syntax.Subscript (es, i) -> (expr_is_constant env i) && (expr_is_constant env es)
+        | Syntax.ReadBool -> false
+        | Syntax.ReadInt  -> false
+        | Syntax.ArrayAlloc (elem, length) -> (expr_is_constant env elem) && (expr_is_constant env length)
+        | Syntax.ArrayLength _ -> false
 
 let rec expr_fold_constant env (expr : Syntax.expr) : Syntax.expr =
   match expr with
     | {loc = loc; value = e} ->
       let (_, pos) = loc in
       match e with
+        | Syntax.ReadBool -> expr
+        | Syntax.ReadInt -> expr
         | Syntax.Literal _ -> expr
         | Syntax.Var x     -> 
           (match Env.find_opt x env with
@@ -421,6 +506,11 @@ let rec expr_fold_constant env (expr : Syntax.expr) : Syntax.expr =
             | _ -> e1')
         | Syntax.Array es -> {loc = loc; value = (Syntax.Array (List.map (expr_fold_constant env) es))}
         | Syntax.Subscript (arr, i) -> {loc = loc; value = Syntax.Subscript (arr, expr_fold_constant env i)}
+        | Syntax.ArrayAlloc (elem, length) ->
+          let elem = expr_fold_constant env elem in
+          let length = expr_fold_constant env length in
+          {loc = loc; value = Syntax.ArrayAlloc(elem, length)}
+        | Syntax.ArrayLength _ -> expr
 
 let read_back_stmt loc expr : Syntax.stmt = {loc = loc; value = expr}
 
@@ -428,6 +518,7 @@ let rec stmt_fold_constant env (stmt : Syntax.stmt): Syntax.stmt =
   match stmt with
     | {loc = loc; value = s} ->
       match s with
+        | Syntax.Print _ -> stmt
         | Syntax.Skip -> stmt
         | Syntax.Assign (x, e) -> read_back_stmt loc (Syntax.Assign (x, expr_fold_constant env e))
         | Syntax.Seq (e1, e2) ->  read_back_stmt loc (Syntax.Seq (stmt_fold_constant env e1, stmt_fold_constant env e2))
@@ -450,33 +541,46 @@ let rec stmt_fold_constant env (stmt : Syntax.stmt): Syntax.stmt =
                   | None -> None
                   | Some rb' -> Some (stmt_fold_constant env rb')))})
         | Syntax.AssignArr (_, _) -> stmt
+        | Syntax.For _ -> stmt
+        | Syntax.Foreach _ -> stmt
 
 let get_lexbuf () =
-  let lexbuf = Lexing.from_channel stdin in
-  let () = lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with Lexing.pos_fname = "<stdin>" } in
-  lexbuf
+  let argc = Array.length Sys.argv in
+  if argc < 2 
+  then
+    let msg = Printf.sprintf "Usage: %s <src>\n" (Sys.argv.(0)) in 
+    let () = print_endline msg in
+    let _ = exit 0 in None
+  else
+    let file_in = open_in Sys.argv.(1) in
+    let lexbuf = Lexing.from_channel file_in in
+    let () = lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with Lexing.pos_fname = "<stdin>" } in
+    Some lexbuf
 
 let () =
   let lexbuf = get_lexbuf () in
-  let stmt = try
-      Parser.main Lexer.token lexbuf
-    with
-    | Lexer.Error (pos, msg) -> Printf.printf "%s: lexical error: %s\n%!" (Syntax.string_of_lex_pos pos) msg; exit 1
-    | Parser.Error -> Printf.printf "%s: parse error while looking at %s\n%!" (Syntax.string_of_lex_pos (Lexing.lexeme_start_p lexbuf)) (Lexing.lexeme lexbuf); exit 1
-  in
-  (* print_endline (Syntax.show_stmt stmt); *)
-  let denv = [Env.empty] in
-  try
-    let _ = type_infer_stmt [Env.empty] stmt in
-    let folded_ast = stmt_fold_constant Env.empty stmt in
-    (* let () = print_endline (Syntax.show_stmt folded_ast) in *)
-    try
-      let result_heap = eval_stmt denv folded_ast false in
-      print_endline ("[" ^ (print_heap (Env.bindings (List.hd result_heap))) ^ "]")
-    with
-      | RuntimeError (err, pos)   -> 
-        Printf.printf "RuntimeError: %s, at %s\n" err (Syntax.string_of_lex_pos pos)
-      | AssertionError (err, pos) ->
-        Printf.printf "AssertionError: %s, at %s\n" err (Syntax.string_of_lex_pos pos)
-  with TypeError (err, pos) ->
-          Printf.printf "TypeError: %s, at %s\n" err (Syntax.string_of_lex_pos pos)
+  match lexbuf with
+    | None -> exit 0
+    | Some lexbuf ->
+        let stmt = try
+            Parser.main Lexer.token lexbuf
+          with
+          | Lexer.Error (pos, msg) -> Printf.printf "%s: lexical error: %s\n%!" (Syntax.string_of_lex_pos pos) msg; exit 1
+          | Parser.Error -> Printf.printf "%s: parse error while looking at %s\n%!" (Syntax.string_of_lex_pos (Lexing.lexeme_start_p lexbuf)) (Lexing.lexeme lexbuf); exit 1
+        in
+        (* print_endline (Syntax.show_stmt stmt); *)
+        let denv = [Env.empty] in
+        try
+          let _ = type_infer_stmt [Env.empty] stmt in
+          let folded_ast = stmt_fold_constant Env.empty stmt in
+          (* let () = print_endline (Syntax.show_stmt folded_ast) in *)
+          try
+            let result_heap = eval_stmt denv folded_ast false in
+            print_endline ("[" ^ (print_heap (Env.bindings (List.hd result_heap))) ^ "]")
+          with
+            | RuntimeError (err, pos)   -> 
+              Printf.printf "RuntimeError: %s, at %s\n" err (Syntax.string_of_lex_pos pos)
+            | AssertionError (err, pos) ->
+              Printf.printf "AssertionError: %s, at %s\n" err (Syntax.string_of_lex_pos pos)
+        with TypeError (err, pos) ->
+                Printf.printf "TypeError: %s, at %s\n" err (Syntax.string_of_lex_pos pos)
