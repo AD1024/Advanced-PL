@@ -229,7 +229,6 @@ let rec eval_stmt (env : Syntax.value scope) (stmt : Syntax.stmt) (block : bool)
       match env with
         | [] -> raise (EnvError ("empty static environment", pos))
         | _ :: _ ->
-          try
             match e with
               | Syntax.Skip -> env
               | Syntax.Assign (id, expr) -> env_update id (eval_expr env expr) env
@@ -239,7 +238,7 @@ let rec eval_stmt (env : Syntax.value scope) (stmt : Syntax.stmt) (block : bool)
                         | (Syntax.VBool x) -> 
                               if x
                               then env
-                              else raise (AssertionError ("Assertion failed at ", line))
+                              else raise (AssertionError ("Assertion failed", line))
                         | _ -> raise (RuntimeError ("Assertion can only make on Boolean", pos)))
               | Syntax.While (cond, body) ->
                       (match (eval_expr env cond) with
@@ -275,15 +274,7 @@ let rec eval_stmt (env : Syntax.value scope) (stmt : Syntax.stmt) (block : bool)
                                   raise (RuntimeError (("Use of undefined variable " ^ id), pos))
                           | (_, x)   ->
                                   raise (RuntimeError (Printf.sprintf "%s is not a proper subscript" (Syntax.show_value x), pos)))
-          with 
-            | RuntimeError (err, pos)   -> 
-                      let () = Printf.printf "RuntimeError: %s, at %s\n" 
-                                              err (Syntax.string_of_lex_pos pos) in
-                      [Env.empty]
-            | AssertionError (err, pos) ->
-                      let () = Printf.printf "AssertionError: %s, at %s\n" 
-                                              err (Syntax.string_of_lex_pos pos) in
-                      [Env.empty]
+            
 
 let rec type_infer_stmt (senv : Syntax.ty scope) (stmt : Syntax.stmt) : Syntax.ty scope =
   match stmt with
@@ -430,7 +421,13 @@ let () =
     let _ = type_infer_stmt [Env.empty] stmt in
     let folded_ast = stmt_fold_constant Env.empty stmt in
     (* let () = print_endline (Syntax.show_stmt folded_ast) in *)
-    let result_heap = eval_stmt denv folded_ast false in
-    print_endline (print_heap (Env.bindings (List.hd result_heap)))
+    try
+      let result_heap = eval_stmt denv folded_ast false in
+      print_endline (print_heap (Env.bindings (List.hd result_heap)))
+    with
+      | RuntimeError (err, pos)   -> 
+        Printf.printf "RuntimeError: %s, at %s\n" err (Syntax.string_of_lex_pos pos)
+      | AssertionError (err, pos) ->
+        Printf.printf "AssertionError: %s, at %s\n" err (Syntax.string_of_lex_pos pos)
   with TypeError (err, pos) ->
           Printf.printf "TypeError: %s, at %s\n" err (Syntax.string_of_lex_pos pos)
