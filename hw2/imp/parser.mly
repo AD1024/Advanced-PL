@@ -51,11 +51,17 @@
 main:
 | s = stmt EOF                               { s }
 
+
+raw_subscript:
+| id = expr LBRACKET i = expr RBRACKET        { Syntax.Subscript (id, i) }
+
+subscript: l = located(raw_subscript)        { l }
+
 raw_stmt:
 | SKIP                                       { Syntax.Skip }
 | id = ID ASSIGN e = expr                    { Syntax.Assign (id, e) }
 | ASSERT e = expr                            { Syntax.Assert e }
-| id = ID LBRACKET i = expr RBRACKET ASSIGN v = expr { Syntax.AssignArr (id, i, v) }
+| arr = subscript ASSIGN v = expr            { Syntax.AssignArr (arr, v) }
 | WHILE cond = expr LCURLY s = stmt RCURLY   { Syntax.While (cond, s) }
 | IF    cond = expr LCURLY lb = stmt
   RCURLY rb = optionElse(stmt)               { Syntax.If (cond, lb, rb) }
@@ -77,7 +83,7 @@ raw_expr:
 | MINUS e = expr  %prec UMINUS     { Syntax.Unop (Syntax.Neg, e) }
 | NOT e = expr    %prec UNOT       { Syntax.Unop (Syntax.Not, e) }
 | LBRACKET es = separated_list(COMMA, expr) RBRACKET { Syntax.Array es }
-| e = expr LBRACKET i = expr RBRACKET { Syntax.Subscript (e, i) }
+| s = raw_subscript                { s }
 | LPAREN e = raw_expr RPAREN       { e }
 
 expr: l = located(raw_expr)        { l }

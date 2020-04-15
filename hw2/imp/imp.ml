@@ -101,11 +101,16 @@ and type_infer_unop pos env op e =
         | Syntax.Neg -> type_check_unop pos "Neg" (type_infer_expr senv e) Syntax.TInt Syntax.TInt
         | Syntax.Not -> type_check_unop pos "Not" (type_infer_expr senv e) Syntax.TBool Syntax.TBool
 
+and check_rec_type_eq t1 t2 =
+  match (t1, t2) with
+    | (Syntax.TArray t1', Syntax.TArray t2') -> check_rec_type_eq t1' t2'
+    | _, _ -> t1 == t2
+
 and type_infer_array pos env es =
   (match es with
     | [] -> Syntax.TArray Syntax.TVar
     | e :: es' -> Syntax.TArray (List.fold_left
-                (fun e1 e2 -> if e1 == e2 
+                (fun e1 e2 -> if check_rec_type_eq e1 e2
                               then e1
                               else raise (TypeError ("type mismatched in array", pos)))
                 (type_infer_expr env e)
@@ -213,7 +218,7 @@ and eval_expr (denv : Syntax.value scope)(e : Syntax.expr) : Syntax.value =
                         | Some v -> v)
                     | (_, _) -> raise (RuntimeError ("Not a subscriptable data", pos)))
 
-let rec update_list_elem dep x index xs =
+let rec update_list_elem (dep : int) (x : Syntax.value) (index : int) xs : Syntax.value list =
   if dep == index
   then (match xs with
         | [] -> []
@@ -221,6 +226,22 @@ let rec update_list_elem dep x index xs =
   else (match xs with
         | [] -> []
         | x' :: xs' -> x' :: (update_list_elem (dep + 1) x index xs'))
+
+let rec update_list_multi pos (x : Syntax.value) (indices : int list) (xs : Syntax.value) : Syntax.value =
+  match indices with
+    | [] -> Syntax.VUnit
+    | (p :: []) ->
+      (match xs with
+        | (Syntax.VArray arr) -> Syntax.VArray (update_list_elem 0 x p arr)
+        | _ -> raise (RuntimeError ("Not an array", pos)))
+    | i :: is' ->
+      (match xs with
+        | Syntax.VArray arr -> 
+            let idx = match List.nth_opt arr i with
+                        | None -> raise (RuntimeError (Printf.sprintf "array out of bound %d" i, pos))
+                        | Some e -> e in
+            Syntax.VArray (update_list_elem 0 (update_list_multi pos x is' idx) i arr)
+        | _ -> raise (RuntimeError ("Not an array", pos)))
 
 let rec eval_stmt (env : Syntax.value scope) (stmt : Syntax.stmt) (block : bool) : Syntax.value scope =
   match stmt with
@@ -262,19 +283,40 @@ let rec eval_stmt (env : Syntax.value scope) (stmt : Syntax.stmt) (block : bool)
                                 let env' = eval_stmt (Env.empty :: env) rb' false
                                 in List.tl env')
                         | _ -> raise (RuntimeError ("if condition is not a bool", pos)))
-              | Syntax.AssignArr (id, i, e) ->
-                        let arr = env_lookup id env in
-                        let index = eval_expr env i in
-                        (match (arr, index) with
-                          | (Some (Syntax.VArray arr'), Syntax.VInt i') -> 
-                                  env_update id (Syntax.VArray (update_list_elem 0 (eval_expr env e) i' arr')) env
-                          | (Some x, Syntax.VInt _) -> 
+              | Syntax.AssignArr (id, e) ->
+                        let rec get_subscript (s : Syntax.expr) : string * int list =
+                          match s with
+                            | {loc = (_, pos); value = s'} ->
+                            match s' with
+                              | Syntax.Subscript (id, i) ->
+                                  let idx = eval_expr env i in
+                                  (match idx with
+                                    | Syntax.VInt idx' ->
+                                      (match id with
+                                        | {loc = (_, pos'); value = id'} ->
+                                          (match id' with
+                                            | Syntax.Subscript (subexp, index) -> 
+                                                let idx' = eval_expr env index in
+                                                (match idx' with
+                                                  | Syntax.VInt idx'' -> 
+                                                    let (name, subscripts) = get_subscript subexp in
+                                                    (name, List.append subscripts [idx''])
+                                                  | _ -> raise (RuntimeError ("Not a proper subscript", pos')))
+                                            | Syntax.Var x -> (x, [ idx' ])
+                                            | _ -> raise (RuntimeError ("Not a proper subscript", pos'))))
+                                    | _ -> raise (RuntimeError (Printf.sprintf "%s is not a proper subscript" 
+                                                              (Syntax.show_value idx), pos)))
+                              | _ -> raise (RuntimeError ("Not a subscript expr", pos)) in
+                        let (aname, subscripts) = get_subscript id in
+                        let old_arr = env_lookup aname env in
+                        (match old_arr with
+                          | (Some (Syntax.VArray arr)) -> 
+                                  env_update aname (update_list_multi pos (eval_expr env e) subscripts (Syntax.VArray arr)) env
+                          | (Some x) -> 
                                   raise (RuntimeError (Printf.sprintf "%s is not subscriptable" (Syntax.show_value x), pos))
-                          | (None, _) -> 
-                                  raise (RuntimeError (("Use of undefined variable " ^ id), pos))
-                          | (_, x)   ->
-                                  raise (RuntimeError (Printf.sprintf "%s is not a proper subscript" (Syntax.show_value x), pos)))
-            
+                          | (None) -> 
+                                  raise (RuntimeError (("Use of undefined variable " ^ aname), pos)))
+
 
 let rec type_infer_stmt (senv : Syntax.ty scope) (stmt : Syntax.stmt) : Syntax.ty scope =
   match stmt with
@@ -311,22 +353,14 @@ let rec type_infer_stmt (senv : Syntax.ty scope) (stmt : Syntax.stmt) : Syntax.t
                       (match rb with
                         | None -> senv
                         | Some rb' -> let _ = type_infer_stmt senv rb' in senv)
-            | Syntax.AssignArr (id, i, e) ->
-                      (match env_lookup id senv with
-                        | None -> raise (TypeError ("Use of undefined variable " ^ id, pos))
-                        | Some ty ->
-                          let index_ty = type_infer_expr senv i in
-                          let e_type = type_infer_expr senv e in
-                          match (ty, index_ty) with
-                            | (Syntax.TArray ty, Syntax.TInt) -> 
-                                check_type_1 pos senv ty e_type 
-                                      (Printf.sprintf "Cannot unify %s with %s"
-                                                      (Syntax.show_ty e_type)
-                                                      (Syntax.show_ty ty))
-                            | (t1, t2) -> 
-                                raise (TypeError (Printf.sprintf "%s is not subscriptable by %s" 
-                                                  (Syntax.show_ty t1)
-                                                  (Syntax.show_ty t2), pos)))
+            | Syntax.AssignArr (id, e) ->
+                      let ty = type_infer_expr senv id in
+                      let e_type = type_infer_expr senv e in
+                      if check_rec_type_eq ty e_type 
+                      then senv else
+                            raise (TypeError (Printf.sprintf "Cannot unify %s with %s"
+                                            (Syntax.show_ty e_type)
+                                            (Syntax.show_ty ty), pos))
 
 let read_back loc (v : Syntax.value) : Syntax.expr =
   {loc = loc; value = Syntax.Literal v}
@@ -399,8 +433,7 @@ let rec stmt_fold_constant env (stmt : Syntax.stmt): Syntax.stmt =
                 (match rb with
                   | None -> None
                   | Some rb' -> Some (stmt_fold_constant env rb')))})
-        | Syntax.AssignArr (id, idx, e) -> 
-              {loc = loc; value = Syntax.AssignArr (id, expr_fold_constant env idx, expr_fold_constant env e)}
+        | Syntax.AssignArr (_, _) -> stmt
 
 let get_lexbuf () =
   let lexbuf = Lexing.from_channel stdin in

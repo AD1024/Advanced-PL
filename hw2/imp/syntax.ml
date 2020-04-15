@@ -62,7 +62,7 @@ type ty =
 type raw_stmt =
   | Skip
   | Assign of string * expr
-  | AssignArr of string * expr * expr
+  | AssignArr of expr * expr
   | Seq of stmt * stmt
   | Assert of expr
   | While of expr * stmt
