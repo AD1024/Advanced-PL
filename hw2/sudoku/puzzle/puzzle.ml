@@ -160,8 +160,8 @@ let rec solve dep z3_send z3_readline (sudoku : t) (banned : int GridMap.t) =
               for x2 = 0 to k * k - 1 do
                 for y = 0 to k * k - 1 do
                   if x1 != x2 then
-                    let () = z3_send (assert_neq (x1, y) (x2, y)) in
-                    let () = z3_send (assert_neq (y, x1) (y, x2)) in ()
+                    z3_send (assert_neq (x1, y) (x2, y));
+                    z3_send (assert_neq (y, x1) (y, x2))
                 done
               done
            done in
