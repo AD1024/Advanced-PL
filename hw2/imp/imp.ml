@@ -112,7 +112,8 @@ and type_infer_array pos env es =
     | e :: es' -> Syntax.TArray (List.fold_left
                 (fun e1 e2 -> if check_rec_type_eq e1 e2
                               then e1
-                              else raise (TypeError ("type mismatched in array", pos)))
+                              else raise (TypeError (Printf.sprintf "type mismatched between %s and %s in array"
+                                                    (Syntax.show_ty e1) (Syntax.show_ty e2), pos)))
                 (type_infer_expr env e)
                 (List.map (type_infer_expr env) es')))
 
