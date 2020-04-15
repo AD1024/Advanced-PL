@@ -72,13 +72,13 @@ raw_stmt:
 | IF    cond = expr LCURLY lb = stmt
   RCURLY rb = optionElse(stmt)               { Syntax.If (cond, lb, rb) }
 | PRINT LPAREN e = expr RPAREN               { Syntax.Print e }
-| FOR LPAREN 
+| FOR 
     assign = stmt SEMISEP
     cond = expr SEMISEP
-    upd = stmt RPAREN
+    upd = stmt
     LCURLY body = stmt RCURLY                { Syntax.For (assign, cond, upd, body) }
-| FOREACH LPAREN
-    id = ID IN e = expr RPAREN
+| FOREACH
+    id = ID IN e = expr
     LCURLY body = stmt RCURLY                { Syntax.Foreach (id, e, body) }
 | l = stmt SEMISEP r = stmt                  { Syntax.Seq (l, r) }
 
