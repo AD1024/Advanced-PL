@@ -1,0 +1,17 @@
+n := read_int();
+arr := array_alloc(0, n);
+i := 0;
+while i < n {
+    arr[i] := read_int();
+    i := i + 1
+};
+max := 0;
+n := n - 1;
+while n >= 0 {
+    if max < arr[n] {
+        max := arr[n]
+    } else {
+        max := max
+    };
+    n := n - 1
+}
