@@ -1,0 +1,221 @@
+\documentclass{article}
+
+\usepackage{lmodern}
+\usepackage{concrete}
+\usepackage{eulervm}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{mathpartir}
+\usepackage{stmaryrd}
+\usepackage{xcolor}
+\usepackage[shortlabels]{enumitem}
+\usepackage{listings}
+
+% copied from package braket
+% edited to remove whitespace inside braces
+% and to simplify the definition of \Set because we don't use double-vert
+{\catcode`\|=\active
+  \xdef\set{\protect\expandafter\noexpand\csname set \endcsname}
+  \expandafter\gdef\csname set \endcsname#1{\mathinner
+    {\lbrace{\mathcode`\|32768\let|\midvert #1}\rbrace}}
+  \xdef\Set{\protect\expandafter\noexpand\csname Set \endcsname}
+  \expandafter\gdef\csname Set \endcsname#1{\left\{%
+     {\mathcode`\|32768\let|\SetVert #1}\right\}}
+}
+\def\midvert{\egroup\mid\bgroup}
+\makeatletter
+\def\mid@vertical{\mskip1mu\vrule\mskip1mu}
+\def\SetVert{{\egroup\;\mid@vertical\;\bgroup}}
+\makeatother
+
+
+\lstdefinelanguage{imp}
+{morekeywords={while,assert,skip,failed},
+sensitive=true,
+morecomment=[l]{//},
+morestring=[b]",
+}
+\lstset{
+language=imp,
+basicstyle=\ttfamily,
+keywordstyle=\bfseries,
+identifierstyle=,
+showstringspaces=false}
+
+
+\newtheorem{theorem}{Theorem}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{changepage}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead[C]{Homework 3: Theory part}
+\fancyhead[R]{CSE 490P}
+\setlength{\headheight}{14pt}
+\newcommand{\meta}[1]{{\color{blue}#1}}
+\newcommand{\todo}[1]{{\huge\color{red}#1}}
+\newcommand{\imp}{\textsc{Imp}}
+\newcommand{\stlc}{\textsc{STLC}}
+\newcommand{\dom}[1]{\ensuremath{\text{dom}\ #1}}
+
+%\skip is already a LaTeX command, so we pick another name
+\newcommand{\progtext}[1]{\ensuremath{\text{\ttfamily\bfseries #1}}}
+\newcommand{\impskip}{\progtext{skip}}
+\newcommand{\assert}{\progtext{assert}}
+\newcommand{\failed}{\progtext{failed}}
+\newcommand{\while}{\progtext{while}}
+\newcommand{\assign}{\ensuremath{\mathrel{\text{\texttt{:=}}}}}
+\newcommand{\progif}{\progtext{if}}
+\newcommand{\progthen}{\progtext{then}}
+\newcommand{\progelse}{\progtext{else}}
+\newcommand{\progtrue}{\progtext{true}}
+\newcommand{\progfalse}{\progtext{false}}
+
+\begin{document}
+
+\noindent The last page of this document contains a reference for \stlc{} with booleans.
+
+\section*{Problems from after Lecture on Wednesday 4/15}
+
+\begin{enumerate}[leftmargin=*,itemindent=*,start=1,label={{\bf Problem \arabic*}.},ref=\arabic*]
+\item Consider the following statement.
+  \begin{quote}
+    If $\cdot\vdash\meta{e}:\meta{\tau}$ then $\meta{e}$ is closed.
+  \end{quote}
+  \begin{enumerate}[(a)]
+  \item Enumerate all the things you could try to induct on. Say which ones are reasonable choices. 
+    \textbf{$\cdot\vdash\meta{e}:\meta{\tau}$, $\meta{\tau}$ or $\meta{e}$. $\cdot\vdash\meta{e}:\meta{\tau}$ and $\meta{e}$ are reasonable choices}
+  \item For the most reasonable choice (your choice!) of thing to induct on, say
+    why the direct proof by induction will not work. Be specific.
+  \item State a stronger lemma and prove it by induction on a thing of your
+    choice. Be sure to state your strengthened lemma clearly. Also, explain
+    briefly and informally why your strengthening is, in fact, stronger than the
+    statement above.
+  \end{enumerate}
+\item This problem is about the substitution operator $\meta{e_1}[\meta{e}/\meta{x}]$.
+  \begin{enumerate}[(a)]
+  \item In the definition of substitution, for the $\lambda$ case, there are two
+    side conditions, $\meta{y}\ne\meta{x}$ (which we forgot to write in lecture)
+    and $\meta{y}\not\in FV(\meta{e})$. For the first side condition, $\meta{y}\ne\meta{x}$,
+    explain what can go wrong if we leave it out by giving a concrete example where
+    substitution behaves unexpectedly.
+  \item Explain what \emph{should} happen if $\meta{y} = \meta{x}$. Why is it ok to \emph{not} handle this case explicitly in the definition of substitution?
+  \item Now consider the second side condition from the $\lambda$ case, namely $\meta{y}\not\in FV(\meta{e})$.
+    Describe a simple condition on $\meta{e}$ that (1) ensures this side condition is always met;
+    and (2) is sufficient to cover the cases we encountered in proving type safety.
+    In your answer, state your condition clearly, and explain briefly and informally why it satisfies (1) and (2).
+  \item Suppose we remove this second side condition. Explain informally why any
+    expression that is well typed in the empty context still evaluates the same
+    way without this side condition.
+  \item Find a well-typed expression (in a non-empty context!) that steps
+    differently with and without this second side condition.  In your answer,
+    state your expression and its typing context clearly, and show informally
+    the two different executions it has with and without this side condition.
+  \end{enumerate}
+\item This problem considers adding pairs to the language. Your job is to add syntax and rules, and to update the proofs.
+  \begin{enumerate}[(a)]
+  \item Add new syntax.
+    \begin{itemize}
+    \item For expressions, add $(\meta{e}, \meta{e})$, to construct a pair, and
+      $\meta{e}.1$ and $\meta{e}.2$, to project out the components.
+    \item For values, add a new branch to the grammar so that a pair of
+      values is considered a value.
+    \item For types, make it so the product of two types, written
+      $\meta{\tau_1}\times\meta{\tau_2}$ is a type.
+    \end{itemize}
+  \item Add semantics. (4 boring rules and 2 rules ``where stuff happens''.)
+    \begin{itemize}
+    \item Add rules to $\meta{e}\to\meta{e}$ such that pairs $(\meta{e_1},\meta{e_2})$ get evaluated in left to right order.
+    \item For $\meta{e}.1$ and $\meta{e}.2$, make sure that $\meta{e}$ gets evaluated to a value before the projection occurs.
+    \end{itemize}
+  \item Add typing rules. Add one rule per new expression AST node.
+  \item Extend the proof of type safety, as follows:
+    \begin{itemize}
+    \item Add cases to the proof of the progress lemma from lecture for each new
+      typing rule you added. No need to repeat the cases we covered in lecture,
+      just handle your new rules. If you need any lemmas, clearly state them,
+      and describe in one sentence how you \emph{would} prove them (by induction
+      or some other way? induction on what?), but no need to prove your lemmas.
+    \item Add cases to the proof of the preservation lemma from lecture. Same
+      directions as above about repeated cases and lemmas.
+    \end{itemize}
+  \end{enumerate}
+\end{enumerate}
+
+\section*{Problems from after Lecture on Friday 4/17}
+
+TBD
+
+\clearpage
+  \noindent\stlc{} with booleans
+  \[
+    \begin{array}{rcl}
+      \meta{e} & ::= & \meta{x} \mid \lambda \meta{x}.\,\meta{e} \mid \meta{e}\ \meta{e}\mid \meta{b} \mid \progif\ \meta{e}\ \progthen\ \meta{e}\ \progelse\ \meta{e}\\
+      \meta{v} & ::= & \meta{b} \mid \lambda \meta{x}.\,\meta{e}\\
+      \meta{\tau} & ::= & bool \mid \meta{\tau} \to \meta{\tau}\\
+      \meta{\Gamma} & \in & Var \rightharpoonup Type
+    \end{array}
+  \]
+  \boxed{\meta{e} \to \meta{e}}
+  \begin{mathpar}
+    \inferrule{ }{(\lambda\meta{x}.\,\meta{e})\ \meta{v}\to \meta{e}[\meta{v}/\meta{x}]}
+    \and
+    \inferrule{\meta{e_1}\to\meta{e_1'}}{\meta{e_1}\ \meta{e_2} \to\meta{e_1'}\ \meta{e_2}}
+    \and
+    \inferrule{\meta{e_2}\to\meta{e_2'}}{\meta{v}\ \meta{e_2} \to\meta{v}\ \meta{e_2'}}\\
+    \and
+    \inferrule{\meta{e_1}\to\meta{e_1'}}{\progif\ \meta{e_1}\ \progthen\ \meta{e_2}\ \progelse\ \meta{e_3} \to \progif\ \meta{e_1'}\ \progthen\ \meta{e_2}\ \progelse\ \meta{e_3}}\\
+    \and
+    \inferrule{ }{\progif\ \progtrue\ \progthen\ \meta{e_2}\ \progelse\ \meta{e_3} \to \meta{e_2}}
+    \and
+    \inferrule{ }{\progif\ \progfalse\ \progthen\ \meta{e_2}\ \progelse\ \meta{e_3} \to \meta{e_3}}
+  \end{mathpar}
+  Note that we use $\to$ for both the small-step semantics and for function types.
+  You can always tell which one we mean by seeing if the arguments are types or expressions.
+
+  \vspace{3mm}
+
+  \noindent\boxed{\meta{e_1}[\meta{e}/\meta{x}]}
+  \[
+    \begin{array}{rcll}
+      \meta{x}[\meta{e}/\meta{x}] & = & \meta{e} &\\
+      \meta{y}[\meta{e}/\meta{x}] & = & \meta{y} & (\meta{y} \ne \meta{x})\\
+      (\lambda\meta{y}.\, \meta{e_1})[\meta{e}/\meta{x}] & = & \lambda\meta{y}.\, \meta{e_1}[\meta{e}/\meta{x}] & (\meta{y} \ne \meta{x}\ \text{and}\ \meta{y} \not\in FV(\meta{e}))\\
+      (\meta{e_1}\ \meta{e_2})[\meta{e}/\meta{x}] & = & \meta{e_1}[\meta{e}/\meta{x}]\ \meta{e_2}[\meta{e}/\meta{x}]&\\
+      \meta{b}[\meta{e}/\meta{x}] & = & \meta{b} &\\
+      (\progif\ \meta{e_1}\ \progthen\ \meta{e_2}\ \progelse\ \meta{e_3})[\meta{e}/\meta{x}] & = & \progif\ \meta{e_1}[\meta{e}/\meta{x}] &\\
+      & & \progthen\ \meta{e_2}[\meta{e}/\meta{x}] & \\
+      & & \progelse\ \meta{e_3}[\meta{e}/\meta{x}] &
+    \end{array}
+  \]
+  \boxed{FV(\meta{e})}
+  \[
+    \begin{array}{rcl}
+      FV(\meta{x}) & = & \set{\meta{x}} \\
+      FV(\lambda\meta{x}.\, \meta{e}) & = & FV(\meta{e}) - \set{x}\\
+      FV(\meta{e_1}\ \meta{e_2}) & = & FV(\meta{e_1})\cup FV(\meta{e_2})\\
+      FV(\meta{b}) & = & \emptyset\\
+      FV(\progif\ \meta{e_1}\ \progthen\ \meta{e_2}\ \progelse\ \meta{e_3}) & = & FV(\meta{e_1}) \cup FV(\meta{e_2}) \cup FV(\meta{e_3})\\
+    \end{array}
+  \]
+  We say that $\meta{e}$ is \emph{closed} if $FV(\meta{e}) = \emptyset$.
+
+  \vspace{3mm}
+
+  \noindent\boxed{\meta{\Gamma} \vdash \meta{e} : \meta{\tau}}
+  \begin{mathpar}
+    \inferrule{ }{\meta{\Gamma} \vdash \meta{b} : bool}
+    \and
+    \inferrule{\meta{\Gamma} \vdash \meta{e_1} : bool \and \meta{\Gamma} \vdash \meta{e_2} : \meta{\tau}\and \meta{\Gamma} \vdash\meta{e_3} : \meta{\tau} }
+              {\meta{\Gamma} \vdash \progif\ \meta{e_1}\ \progthen\ \meta{e_2}\ \progelse\ \meta{e_3} : \meta{\tau}}
+    \and
+    \inferrule{\meta{x} \in \dom{\meta{\Gamma}} \and \meta{\Gamma}(\meta{x}) = \meta{\tau}}{\meta{\Gamma} \vdash \meta{x} : \meta{\tau}}\\
+    \and
+    \inferrule{\meta{\Gamma}\vdash\meta{e_1}:\meta{\tau_1}\to\meta{\tau_2} \and \meta{\Gamma}\vdash\meta{e_2}:\meta{\tau_1}}
+              {\meta{\Gamma}\vdash\meta{e_1}\ \meta{e_2}:\meta{\tau_2}}
+    \and
+    \inferrule{\meta{\Gamma}[\meta{x}\mapsto\meta{\tau_1}]\vdash\meta{e}:\meta{\tau_2}}
+              {\meta{\Gamma}\vdash\lambda\meta{x}.\,\meta{e}:\meta{\tau_1}\to\meta{\tau_2}}
+  \end{mathpar}
+\end{document}

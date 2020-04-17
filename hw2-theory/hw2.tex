@@ -1,0 +1,344 @@
+\documentclass{article}
+
+\usepackage{lmodern}
+\usepackage{concrete}
+\usepackage{eulervm}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{mathpartir}
+\usepackage{stmaryrd}
+\usepackage{xcolor}
+\usepackage[shortlabels]{enumitem}
+\usepackage{listings}
+
+% copied from package braket
+% edited to remove whitespace inside braces
+% and to simplify the definition of \Set because we don't use double-vert
+{\catcode`\|=\active
+  \xdef\set{\protect\expandafter\noexpand\csname set \endcsname}
+  \expandafter\gdef\csname set \endcsname#1{\mathinner
+    {\lbrace{\mathcode`\|32768\let|\midvert #1}\rbrace}}
+  \xdef\Set{\protect\expandafter\noexpand\csname Set \endcsname}
+  \expandafter\gdef\csname Set \endcsname#1{\left\{%
+     {\mathcode`\|32768\let|\SetVert #1}\right\}}
+}
+\def\midvert{\egroup\mid\bgroup}
+\makeatletter
+\def\mid@vertical{\mskip1mu\vrule\mskip1mu}
+\def\SetVert{{\egroup\;\mid@vertical\;\bgroup}}
+\makeatother
+
+
+\lstdefinelanguage{imp}
+{morekeywords={while,assert,skip,failed},
+sensitive=true,
+morecomment=[l]{//},
+morestring=[b]",
+}
+\lstset{
+language=imp,
+basicstyle=\ttfamily,
+keywordstyle=\bfseries,
+identifierstyle=,
+showstringspaces=false}
+
+
+\newtheorem{theorem}{Theorem}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{changepage}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead[C]{Homework 2: Theory part}
+\fancyhead[R]{CSE 490P}
+\setlength{\headheight}{14pt}
+\newcommand{\meta}[1]{{\color{blue}#1}}
+\newcommand{\imp}{\textsc{Imp}}
+
+%\skip is already a LaTeX command, so we pick another name
+\newcommand{\impskip}{\ensuremath{\text{\ttfamily\bfseries skip}}}
+\newcommand{\assert}{\ensuremath{\text{\ttfamily\bfseries assert}}}
+\newcommand{\failed}{\ensuremath{\text{\ttfamily\bfseries failed}}}
+\newcommand{\while}{\ensuremath{\text{\ttfamily\bfseries while}}}
+\newcommand{\assign}{\ensuremath{\mathrel{\text{\texttt{:=}}}}}
+
+\begin{document}
+
+\begin{enumerate}[leftmargin=*,itemindent=*,start=1,label={{\bf Problem \arabic*}.},ref=\arabic*]
+\item\label{odeds-program} Consider the following \imp{} program.
+  \begin{lstlisting}
+    a := 0;
+    b := 0;
+    c := 0;
+    while true {
+      assert a >= 0;
+      a := a + b;
+      b := b + c;
+      c := c + 1;
+    }
+  \end{lstlisting}
+  \begin{enumerate}[(a)]
+  \item Manually convert this program into a transition system, where each step
+    of the transition system corresponds to one iteration of the body of the
+    loop. Use some ``poetic license'' in your conversion, so that the resulting
+    transition system is as simple as possible. (Do not model the first three
+    lines of the program as transitions, but rather as part of your definition
+    of the initial states. Also, ignore the \lstinline|assert| for now.)
+
+    Be sure to clearly define the three components of your transition system:
+    state space, initial states, and step relation.
+  \item Convert the assertion into a property $P$ of states in your transition
+    system. Explain briefly and informally why $P$ is an invariant of your
+    transition system.
+  \item Explain why a direct proof that $P$ is an invariant by induction on
+    executions fails. (Don't just say ``it fails because it's not
+    inductive''. Either walk through the start of a proof and point to exactly
+    where you get stuck because the induction hypothesis is not strong
+    enough, or give a concrete counterexample to induction (CTI) that shows $P$
+    is not inductive and explain why your CTI is, in fact, a CTI.)
+  \item Prove $P$ is an invariant indirectly: find a property $I$ that implies
+    $P$ and prove $I$ is an invariant directly by induction on executions. Be
+    sure to clearly state your definition of $I$. Try to make your $I$ as simple
+    as possible.
+  \item Does your invariant $I$ capture exactly the set of reachable states in
+    your transition system?
+    \begin{itemize}
+    \item If so, prove it by proving that for every state satisfying $I$, you
+      can construct an execution that reaches it.
+    \item If not, give an example of a state that satisfies $I$ but is not
+      reachable. Prove that your example state is not reachable. (How do we show
+      a state is not reachable...?)
+    \end{itemize}
+    In your answer, be sure to clearly state which of the two possibilities
+    above you are proving. Since there are many invariants $I$ that are
+    inductive and imply $P$, there are many different answers to this
+    question. That's ok! Just answer the question for the $I$ you picked in the
+    previous part.
+  \end{enumerate}
+  \clearpage
+\item This problem is about treating the small-step operational semantics of a
+  language as a transition system.
+  \begin{enumerate}[(a)]
+  \item The small-step operational semantics for \imp{} are themselves already a
+    giant transition system whose state space consists of all possible pairs of
+    heaps and statements and whose transitions are just steps in the small-step
+    operational semantics.
+
+    Define a set of initial states that describes the states at the beginning of
+    an execution of the program from Problem~\ref{odeds-program}. Try to make
+    your definition of the initial states as simple as possible. (Think
+    carefully about what constraints, if any, you need to place on the heap.)
+  \item\label{reach-stmts} A state in this transition system is a pair of a heap and a (possibly
+    complex) statement. Describe the set of \emph{statements} that can appear in
+    reachable states, ignoring the heap. No need to prove that your answer is correct just yet.
+    (Hint: There are more than 5 and fewer than 15.
+    It's ok not to list them out explicitly, but to describe them succinctly.)
+  \item Are there finitely many \emph{heaps} that can appear in reachable states?
+    Give a one-sentence proof of your yes/no answer.
+  \item Using the ``official'' version of the semantics for \imp{} (i.e., the
+    one with \failed{}, which is reproduced at the end of this document), we can
+    encode the English statement
+    \begin{quote}
+      The assertion in the program from Problem~\ref{odeds-program} is never
+      violated.
+    \end{quote}
+    by saying that the statement \failed{} does not appear in any reachable
+    state. State this formally using metavariables and symbols. Call this
+    property $P$.
+  \item Explain informally why $P$ is an invariant of your transition system.
+  \item Explain why a direct proof that $P$ is an invariant by induction on
+    executions fails. (Don't just say ``it fails because it's not inductive''.
+    Either walk through the start of a proof and point to exactly
+    where you get stuck because the induction hypothesis is not strong
+    enough, or, give a concrete CTI and explain why your CTI is, in fact, a CTI.)
+  \item\label{opsem-ind-proof} Prove $P$ is an invariant indirectly: find a property $I$ that implies
+    $P$ and prove $I$ is an invariant directly by induction on executions. Be
+    sure to clearly state your definition of $I$.
+  \item Explain why your $I$ in this problem is more complicated than the $I$
+    from Problem~\ref{odeds-program}. (Hint: What is the ``granularity'' of a
+    step in the transition system from Problem~\ref{odeds-program}? What about
+    in the transition system in this problem? What is the state space in
+    Problem~\ref{odeds-program}? What about in this problem?)
+  \item Does your invariant $I$ capture exactly the set of \emph{statements} that
+    can appear in reachable states, as you enumerated in part~\ref{reach-stmts}?
+    \begin{itemize}
+    \item If so, prove it by proving that for every statement that can appear in
+      a state satisfying $I$, you can construct an execution that reaches a state
+      containing that statement.
+    \item If not, give an example of a statement that can appear in a state
+      satisfying $I$ but not in any reachable state. Prove that your example
+      statement cannot appear in any reachable state. (How do we show something
+      about all reachable states...?)
+    \end{itemize}
+    In your answer, be sure to clearly state which of the two possibilities
+    above you are proving. Since there are many invariants $I$ that are
+    inductive and imply $P$, there are many different answers to this
+    question. That's ok! Just answer the question for the $I$ you picked in
+    part~\ref{opsem-ind-proof}.
+  \end{enumerate}
+\clearpage
+\item Consider the transition system from lecture that we produced by manually
+  translating our favorite program into a transition system. We reproduce the
+  definition here. The transition system is parameterized by an integer $n$.
+  \begin{align*}
+    S &= \set{(x,y) | x,y\in \mathbb{Z}}\\
+    S_0 &= \set{(0, n)}\\
+    \to &= \Set{\big((x,y),(x+1,y-1)\big) | y > 0}
+  \end{align*}
+  \begin{enumerate}[(a)]
+  \item Which states cannot step? Give your answer as a definition of a set of
+    states, and a one-sentence proof that a state cannot step if and only if it
+    is in your set.
+    $$ S = \set{(x, y) | x, y \in \mathbb{Z} \wedge y \leq 0}$$
+    \textbf{States in this set cannot step, because according to our definition of step, a state can step if and only if $y>0$. However, in this set of states, the $y$ values are less or equal to 0 thus cannot step.}
+  \item Define a set of ``final'' states, which are those we intuitively expect
+    execution to end in. There is more than one reasonable answer here, so pick
+    whatever seems most intuitive to you, subject to your ability to prove the
+    next part below.
+    $$ S = \set{(x, 0)| x \in \mathbb{Z} \wedge x \geq 0}$$
+  \item Prove that for all $n\in\mathbb{Z}$, if $n\ge 0$ then there exists a
+    final state $s$ such that $(0,n) \to^* s$. (Hint: There is more than one
+    thing you could try to prove by induction, but really only one choice of
+    \emph{what} to induct on.)\\
+    \textbf{Lemma 1: for all $x, y\in \mathbb{N}$, $(x, y) \to^* s$ for some arbitary but fixed final state s}
+    \begin{proof}
+      By induction on $y$.
+      \begin{itemize}
+        \item $y = 0$. In this case, by the reflexivity of step and $\to^*$, $(x, 0) \to^* (x, 0)$.
+        \item $y = y^\prime + 1$. According to the definition of step, $(x, y^\prime + 1) \to (x + 1, y^\prime)$. Since $x \in \mathbb{N}$ and $y^\prime \in \mathbb{N}$, $x + 1\in \mathbb{N}$, and thus according to the induction hypothesis, $(x + 1, y^\prime) \to^* s$ for some arbitary but fixed final state $s$. According to the definition of $\to^*$, 
+        $$\inferrule{(x, y^\prime + 1) \to (x + 1, y^\prime)\and (x + 1, y^\prime) \to^* s}{(x, y^\prime + 1) \to^* s}$$
+        for some arbitary but fixed final state $s$.
+      \end{itemize}
+    \end{proof}
+
+    \textbf{Theorem: for all $n\in\mathbb{Z}$, if $n\ge 0$ then there exists a
+    final state $s$ such that $(0,n) \to^* s$}
+    \begin{proof}
+      Since $0 \in\mathbb{N}$, and $n \in\mathbb{Z} \wedge n \geq 0 \to n \in\mathbb{N}$, according to \textit{Lemma 1}, $(0, n) \to^* s$ for some fixed final state s.
+    \end{proof}
+  \item Explain how your proof from the previous part, together with the fact
+    that the transition system is deterministic, also shows that there are no
+    infinite executions in this transition system.
+
+    \textbf{We can classify states to two categories: $\mathbb{S}^+$ denotes a set of states that are able to make at least one step, and $\mathbb{S}^-$ which denotes states that are not able to step. According to the definition of step in this system, it is obvious that (only consider the case where $x, y \in \mathbb{Z}$)
+    $$(x, y) \in \mathbb{S}^+ \Leftrightarrow x \geq 0 \wedge y > 0$$ Since $\mathbb{S}^-$ is disjoint with $\mathbb{S}^+$, therefore apparently $$(x, y)\in \mathbb{S}^- \Leftrightarrow x < 0 \vee y \leq 0$$} We can define $\to^*$ as a function $f : \mathbb{S}^+ \cup \mathbb{S}^- \to \mathbb{S}^+ \cup \mathbb{S}^-$, such that
+    \begin{align*}
+      &\forall (x, y)
+ \in \mathbb{S}^+, f(x, y) = f (x + 1, y - 1) & \text{Takes n steps}\\
+      & \forall (x, y) \in \mathbb{S}^-, f(x, y) = (x, y) & \text{Takes 0 step}
+    \end{align*}
+    According to the proof in previous part, since this transition system is deterministic, for all admissible inputs $(x, y) \in \mathbb{S}_0$, there exists a \textit{unique} final state $s \in \mathbb{S}^-$ such that $(x, y) \to^* s$, which means $f(x, y) = s$. Apparently, $f(f(x, y)) = f(x, y)$, which means function $f$ has a fixpoint, which the program terminates at.
+  \item Construct an infinite execution of your transition system from
+    Problem~\ref{odeds-program}.
+  \end{enumerate}
+\item Consider the ``official'' version of \imp{}, with \failed{} (full
+  semantics on next page). In Lecture~6, we stated the following progress lemma:
+  \begin{quote}
+    If $\vdash_{\meta{\Sigma}} \meta{s}\ ok$ and
+    $\vdash_{\meta{\Sigma}} \meta{H}\ ok$, then $\meta{s} = \impskip$ or
+    $\meta{s} = \failed$ or there exists $\meta{H'},\meta{s'}$ such that
+    $\meta{H},\meta{s} \to \meta{H'},\meta{s'}$
+  \end{quote}
+  \begin{enumerate}[(a)]
+  \item Enumerate all the things you \emph{could} try to induct on. For each
+    one, say whether you think the proof would work if you inducted on that thing.
+    (As usual, it's ok to be wrong.)
+  \item Prove the progress lemma by induction on a thing of your choice. As we
+    mentioned in class, you will need at least one lemma. Try to make your
+    lemma(s) as simple as possible.  You do not need to prove any additional
+    lemmas other than progress, just state what you're using clearly (and
+    convince yourself it's true!).
+  \end{enumerate}
+
+\end{enumerate}
+
+\clearpage
+  \imp
+  \[
+    \begin{array}{rcl}
+      \meta{e} & ::= & \meta{n} \mid \meta{e} + \meta{e} \mid \meta{e} - \meta{e}
+                       \mid \meta{b} \mid \meta{e} < \meta{e} \mid \meta{e} = \meta{e} \mid \meta{x}\\
+      \meta{v} & ::= & \meta{n} \mid \meta{b}\\
+      \meta{s} & ::= & \impskip \mid \assert\ \meta{e} \mid \failed \mid \meta{x} \assign \meta{e} \mid \meta{s}; \meta{s} \mid \while\ \meta{e}\ \meta{s}\\
+      \meta{\tau} & ::= & int \mid bool
+    \end{array}
+    \qquad
+    \begin{array}{rcl}
+      \meta{n} & \in & \mathbb{Z}\\
+      \meta{b} & \in & \mathbb{B}\\
+      \meta{x} & \in & \mathrm{Var}\ (= \mathrm{String})\\
+      \meta{H} & \in & \mathrm{Var} \rightharpoonup \mathrm{Value}\\
+      \meta{\Sigma} & \in & \mathrm{Var} \rightharpoonup \mathrm{Type}
+    \end{array}
+  \]
+  \boxed{\meta{H},\meta{e} \Downarrow \meta{v}}\vspace{-7mm}
+  \begin{mathpar}
+    \inferrule{ }{\meta{H},\meta{n}\Downarrow\meta{n}}
+    \and
+    \inferrule{ }{\meta{H},\meta{b}\Downarrow\meta{b}}
+    \and
+    \inferrule{x \in \mathrm{dom}\ \meta{H} \and \meta{H}(\meta{x}) = \meta{v}}{\meta{H},\meta{x}\Downarrow\meta{v}}\\
+    \and
+    \inferrule{\meta{H},\meta{e_1}\Downarrow\meta{n_1} \and \meta{H},\meta{e_2}\Downarrow\meta{n_2}}{\meta{H},\meta{e_1} + \meta{e_2}\Downarrow\meta{n_1 + n_2}}
+    \and
+    \inferrule{\meta{H},\meta{e_1}\Downarrow\meta{n_1} \and \meta{H},\meta{e_2}\Downarrow\meta{n_2}}{\meta{H},\meta{e_1} - \meta{e_2}\Downarrow\meta{n_1 - n_2}}\\
+    \and
+    \inferrule{\meta{H},\meta{e_1}\Downarrow\meta{n_1} \and \meta{H},\meta{e_2}\Downarrow\meta{n_2}}{\meta{H},\meta{e_1} < \meta{e_2}\Downarrow\meta{n_1 < n_2}}
+    \and
+    \inferrule{\meta{H},\meta{e_1}\Downarrow\meta{v_1} \and \meta{H},\meta{e_2}\Downarrow\meta{v_2}}{\meta{H},\meta{e_1} = \meta{e_2}\Downarrow\meta{n_1 = n_2}}
+  \end{mathpar}
+  \boxed{\meta{H},\meta{s} \to \meta{H},\meta{s}}\vspace{-3mm}
+  \begin{mathpar}
+    \inferrule{\meta{H},\meta{e}\Downarrow\meta{v}}{\meta{H},\meta{x}\assign\meta{e} \to \meta{H}[\meta{x}\mapsto\meta{v}],\impskip}
+    \and
+    \inferrule{\meta{H},\meta{e}\Downarrow\meta{\top}}{\meta{H},\assert\ \meta{e} \to \meta{H},\impskip}
+    \and
+    \inferrule{\meta{H},\meta{e}\Downarrow\meta{\bot}}{\meta{H},\assert\ \meta{e} \to \meta{H},\failed}
+    \and
+    \inferrule{\meta{H},\meta{s_1} \to \meta{H'},\meta{s_1'}}{\meta{H},\meta{s_1};\meta{s_2} \to \meta{H'},\meta{s_1'};\meta{s_2}}
+    \and
+    \inferrule{ }{\meta{H},\impskip;\meta{s} \to \meta{H},\meta{s}}
+    \and
+    \inferrule{ }{\meta{H},\failed;\meta{s} \to \meta{H},\failed}\\
+    \and
+    \inferrule{\meta{H},\meta{e}\Downarrow\meta{\top}}{\meta{H},\while\ \meta{e}\ \meta{s} \to \meta{H},\meta{s};\while\ \meta{e}\ \meta{s}}
+    \and
+    \inferrule{\meta{H},\meta{e}\Downarrow\meta{\bot}}{\meta{H},\while\ \meta{e}\ \meta{s} \to \meta{H},\impskip}
+  \end{mathpar}
+  \boxed{\vdash_{\meta{\Sigma}} \meta{e} : \meta{\tau}}\vspace{-7mm}
+  \begin{mathpar}
+    \inferrule{ }{\vdash_{\meta{\Sigma}} \meta{n} : int}
+    \and
+    \inferrule{ }{\vdash_{\meta{\Sigma}} \meta{b} : bool}
+    \and
+    \inferrule{x \in \mathrm{dom}\ \meta{\Sigma} \and \meta{\Sigma}(\meta{x}) = \meta{\tau}}{\vdash_{\meta{\Sigma}} \meta{x} : \meta{\tau}}\\
+    \and
+    \inferrule{ \vdash_{\meta{\Sigma}} \meta{e_1} : int \\ \vdash_{\meta{\Sigma}} \meta{e_2} : int }{\vdash_{\meta{\Sigma}} \meta{e_1} + \meta{e_2} : int}
+    \and
+    \inferrule{ \vdash_{\meta{\Sigma}} \meta{e_1} : int \\ \vdash_{\meta{\Sigma}} \meta{e_2} : int }{\vdash_{\meta{\Sigma}} \meta{e_1} - \meta{e_2} : int}\\
+    \and
+    \inferrule{ \vdash_{\meta{\Sigma}} \meta{e_1} : int \\ \vdash_{\meta{\Sigma}} \meta{e_2} : int }{\vdash_{\meta{\Sigma}} \meta{e_1} < \meta{e_2} : bool}
+    \and
+    \inferrule{ \vdash_{\meta{\Sigma}} \meta{e_1} : \meta{\tau} \\ \vdash_{\meta{\Sigma}} \meta{e_2} : \meta{\tau} }
+              {\vdash_{\meta{\Sigma}} \meta{e_1} = \meta{e_2} : bool}
+  \end{mathpar}
+  \boxed{\vdash_{\meta{\Sigma}} \meta{s}\ ok}\vspace{-5mm}
+  \begin{mathpar}
+    \inferrule{ }{\vdash_{\meta{\Sigma}} \impskip\ ok}
+    \and
+    \inferrule{x \in \mathrm{dom}\ \meta{\Sigma} \and  \vdash_{\meta{\Sigma}} \meta{e} : \meta{\Sigma}(\meta{x})}{\vdash_{\meta{\Sigma}} \meta{x}\assign\meta{e}\ ok}
+    \and
+    \inferrule{\vdash_{\meta{\Sigma}} \meta{e} : bool}{\vdash_{\meta{\Sigma}} \assert\ \meta{e}\ ok}\\
+    \and
+    \inferrule{\vdash_{\meta{\Sigma}} \meta{s_1}\ ok \and \vdash_{\meta{\Sigma}} \meta{s_2}\ ok}{\vdash_{\meta{\Sigma}} \meta{s_1};\meta{s_2}\ ok}
+    \and
+    \inferrule{\vdash_{\meta{\Sigma}} \meta{e} : bool \and \vdash_{\meta{\Sigma}} \meta{s}\ ok}{\vdash_{\meta{\Sigma}} \while\ \meta{e}\ \meta{s}\ ok}
+  \end{mathpar}
+  \boxed{\vdash_{\meta{\Sigma}} \meta{H}\ ok}\vspace{-5mm}
+  \begin{mathpar}
+    \inferrule{\forall \meta{x}\in\mathrm{dom}\ \meta{\Sigma},\ \meta{x}\in\mathrm{dom}\ \meta{H} ~\wedge{}
+                 \vdash_{\meta{\Sigma}} \meta{H}(\meta{x}) : \meta{\Sigma}(\meta{x})}
+              {\vdash_{\meta{\Sigma}} \meta{H}\ ok}
+  \end{mathpar}
+\end{document}
