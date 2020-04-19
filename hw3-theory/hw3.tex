@@ -88,10 +88,36 @@ showstringspaces=false}
     \textbf{$\cdot\vdash\meta{e}:\meta{\tau}$, $\meta{\tau}$ or $\meta{e}$. $\cdot\vdash\meta{e}:\meta{\tau}$ and $\meta{e}$ are reasonable choices}
   \item For the most reasonable choice (your choice!) of thing to induct on, say
     why the direct proof by induction will not work. Be specific.
+    
+    \textbf{I choose to induct on $\cdot\vdash\meta{e}:\meta{\tau}$. When proceeding at the case $\inferrule{\lbrack \meta{x}\mapsto \meta{\tau_1}\rbrack \vdash \meta{e}:\meta{\tau_2}}{\cdot \vdash\lambda \meta{x}.\meta{e}:\meta{\tau_1}\to\meta{\tau_2}}$, I cannot apply the induction hypothesis on $\meta{e}$ since we are assuming an empty context $\Gamma$}
+
   \item State a stronger lemma and prove it by induction on a thing of your
     choice. Be sure to state your strengthened lemma clearly. Also, explain
     briefly and informally why your strengthening is, in fact, stronger than the
     statement above.
+
+    \textbf{For all $\meta{e}$, $\meta{x}$ and context $\meta{\Gamma}$, if $\meta{x} \in FV(\meta{e})$ and $\meta{\Gamma}\vdash\meta{e} :\meta{\tau}$ for some type $\meta{\tau}$, then there exists a type $\meta{\tau^\prime}$ such that $\meta{\Gamma}\vdash \meta{x} : \meta{\tau^\prime}$ }
+    \begin{proof}
+        By induction on $FV(\meta{e})$.
+        \begin{enumerate}
+          \item Case $FV(\meta{b})=\emptyset$. This case $\meta{e}$ does not have any free variable, thus this case is vacuous.
+          \item Case $FV(\meta{x})=\set{\meta{x}}$. In this case, $\meta{e}$ is $\meta{x}$. Since $\meta{\Gamma}\vdash \meta{e} :\meta{\tau}$, exists $\meta{\tau^\prime}=\meta{\tau}$ such that $\meta{\Gamma}\vdash\meta{x}:\meta{\tau^\prime}$.
+          \item Case $FV(\meta{e_1}\ \meta{e_2})=FV(\meta{e_1}) \cup FV(\meta{e_2})$.
+            \begin{enumerate}
+              \item $\meta{x} \in FV(\meta{e_1})$. Since $\meta{\Gamma}\vdash\meta{e_1}\ \meta{e_2}:\meta{\tau}$, according to the typing rule, the only way to get this is
+              $$\inferrule{
+                \meta{\Gamma}\vdash\meta{e_1}:\meta{\tau_1}\to\meta{\tau}\and
+                \meta{\Gamma}\vdash\meta{e_2}:\meta{\tau_1}
+              }{\meta{\Gamma}\vdash\meta{e_1}\ \meta{e_2} : \meta{\tau}}$$
+              Therefore, $\meta{\Gamma}\vdash\meta{e_1}:\meta{\tau_1}\to\meta{\tau}$. Since, in this case, $\meta{x}\in FV(\meta{e_1})$, according to the induction hypothesis, there exists a type $\tau^\prime$ such that $\meta{\Gamma}\vdash\meta{x}:\meta{\tau^\prime}$.
+              \item $\meta{x} \in FV(\meta{e_2})$. Similar as Case A.
+            \end{enumerate}
+        \end{enumerate}
+        \item Case $FV(\texttt{if}\ \meta{e_1}\ \texttt{then}\ \meta{e_2}\texttt{else}\ \meta{e_3})=FV(\meta{e_1})\cup FV(\meta{e_2})\cup FV(\meta{e_3})$. Similar as Case iii.
+        \item Case $FV(\lambda\meta{y}. \meta{e})=FV(\meta{e}) - \set{\meta{y}}$. In this case, $\meta{x}$ is free in $\meta{e}$. Since $\meta{\Gamma}\lbrack \meta{y}\mapsto \meta{\tau_1} \rbrack \vdash\meta{e}:\meta{\tau}$, and note that $\meta{y} \neq \meta{x}$ since $\meta{x}$ is also free in $\lambda\meta{y}. \meta{e}$, according to the induction hypothesis, there exists a $\meta{\tau^\prime}$ such that $\meta{\Gamma}\vdash \meta{x}:\meta{\tau^\prime}$.
+    \end{proof}
+    This lemma is stronger. Having $\cdot\vdash\meta{e}:\meta{\tau}$ and assuming that $\meta{e}$ is not closed, then there exists a free variable $\meta{x}\in FV(\meta{e})$ such that $\cdot\vdash\meta{x}:\meta{\tau^\prime}$. However, $\cdot$ is an empty envrionment, so the domain of $\cdot$ is $\emptyset$, and no free variable can be assigned a type in this context. This contradicts with the conclusion of the lemma that $\exists \meta{\tau^\prime}, \cdot\vdash\meta{x}:\meta{\tau^\prime}$. So if $\cdot\vdash\meta{e}:\meta{\tau}$, $\meta{e}$ must be closed.
+
   \end{enumerate}
 \item This problem is about the substitution operator $\meta{e_1}[\meta{e}/\meta{x}]$.
   \begin{enumerate}[(a)]
@@ -100,7 +126,13 @@ showstringspaces=false}
     and $\meta{y}\not\in FV(\meta{e})$. For the first side condition, $\meta{y}\ne\meta{x}$,
     explain what can go wrong if we leave it out by giving a concrete example where
     substitution behaves unexpectedly.
+
+    \textbf{If we leave the restriction $\meta{y} \neq \meta{x}$ out, the substitution can change the semantics of the lambda abstraction by substituting a bound variable. For instance: if we have $(\lambda \meta{x}. \meta{x}\ \meta{x})\lbrack \meta{v}/\meta{x}\rbrack$, this would be rewritten to $\lambda \meta{x}. \meta{v}\ \meta{v}$, which changed the semantics of the lambda abstraction.}
+
   \item Explain what \emph{should} happen if $\meta{y} = \meta{x}$. Why is it ok to \emph{not} handle this case explicitly in the definition of substitution?
+    
+    \textbf{The body of the lambda abstraction should remain the same after substitution. It is ok to not handle this case since if $\meta{y}=\meta{x}$, the behavior is defined in application}
+
   \item Now consider the second side condition from the $\lambda$ case, namely $\meta{y}\not\in FV(\meta{e})$.
     Describe a simple condition on $\meta{e}$ that (1) ensures this side condition is always met;
     and (2) is sufficient to cover the cases we encountered in proving type safety.
@@ -108,10 +140,16 @@ showstringspaces=false}
   \item Suppose we remove this second side condition. Explain informally why any
     expression that is well typed in the empty context still evaluates the same
     way without this side condition.
+    
+    \textbf{According to the theorem proved in Question 1, if an expression $\meta{e}$ is well-typed in an empty context, then $\meta{e}$ is closed, hence $FV(\meta{e}) = \emptyset$, and $\forall \meta{y}.\ \meta{y}\not\in \emptyset$, so ignoring the second condition does not affect the way of evaluating the substitution.}
+
   \item Find a well-typed expression (in a non-empty context!) that steps
     differently with and without this second side condition.  In your answer,
     state your expression and its typing context clearly, and show informally
     the two different executions it has with and without this side condition.
+
+    \textbf{Consider the expression $(\lambda\meta{x}. \texttt{if}\ \meta{x}\ \texttt{then}\ \meta{y}\ \texttt{else}\ \meta{x})\ true$ with the context $\lbrack \meta{y}\mapsto bool \rbrack$, and we are to substitute $\meta{y}$ with $\meta{x}$, i.e. $((\lambda\meta{x}.\ \texttt{if}\ \meta{x}\ \texttt{then}\ \meta{y}\ \texttt{else}\ \meta{x})\lbrack \meta{x} / \meta{y} \rbrack)\ true$. Obviously, $\meta{x}$ is free in current context, and $\meta{x} \neq \meta{y}$ so we can proceed the substitution (ignoring the second condition). After substitution, the expression becomes $(\lambda\meta{x}.\ \texttt{if}\ \meta{x}\ \texttt{then}\ \meta{x}\ \texttt{else}\ \meta{x})\ true$. These two expressions can execute differently: consider having $\meta{y} = false$, the original application yields $false$ but after substitution, the expression evaluates to $true$ instead.}
+
   \end{enumerate}
 \item This problem considers adding pairs to the language. Your job is to add syntax and rules, and to update the proofs.
   \begin{enumerate}[(a)]
@@ -119,17 +157,51 @@ showstringspaces=false}
     \begin{itemize}
     \item For expressions, add $(\meta{e}, \meta{e})$, to construct a pair, and
       $\meta{e}.1$ and $\meta{e}.2$, to project out the components.
+
+      \textbf{extends $\meta{e}$ with}
+      $\meta{e} ::= (\meta{e}, \meta{e})\ |\ \meta{e}.1\ |\ \meta{e}.2$
+
     \item For values, add a new branch to the grammar so that a pair of
       values is considered a value.
+
+      \textbf{Extends $\meta{v}$ with}
+      $\meta{v} ::= (\meta{v}, \meta{v})$
+
     \item For types, make it so the product of two types, written
       $\meta{\tau_1}\times\meta{\tau_2}$ is a type.
+
+      \textbf{Extends $\meta{\tau}$} with $\meta{\tau} ::= \meta{\tau}\times\meta{\tau}$
     \end{itemize}
   \item Add semantics. (4 boring rules and 2 rules ``where stuff happens''.)
     \begin{itemize}
     \item Add rules to $\meta{e}\to\meta{e}$ such that pairs $(\meta{e_1},\meta{e_2})$ get evaluated in left to right order.
+      \begin{mathpar}
+        \inferrule{
+          \meta{e_1} \to \meta{e_1^\prime}
+        }{(\meta{e_1}, \meta{e_2}) \to (\meta{e_1^\prime}, \meta{e_2})}\and
+        \inferrule{
+          \meta{e_2} \to \meta{e_2^\prime}
+        }{(\meta{v}, \meta{e_2}) \to (\meta{v}, \meta{e_2^\prime})}
+      \end{mathpar}
     \item For $\meta{e}.1$ and $\meta{e}.2$, make sure that $\meta{e}$ gets evaluated to a value before the projection occurs.
+      \begin{mathpar}
+        \inferrule{ }{(\meta{v_1}, \meta{v_2}).1 \to \meta{v_1}}\and
+        \inferrule{ }{(\meta{v_1}, \meta{v_2}).2 \to \meta{v_2}}
+      \end{mathpar}
     \end{itemize}
   \item Add typing rules. Add one rule per new expression AST node.
+    \begin{mathpar}
+      \inferrule{
+        \meta{\Gamma}\vdash\meta{e_1}:\meta{\tau_1}\and
+        \meta{\Gamma}\vdash\meta{e_2}:\meta{\tau_2}
+      }{\meta{\Gamma}\vdash(\meta{e_1}, \meta{e_2}) : \meta{\tau_1}\times\meta{\tau_2}}\and
+      \inferrule{
+        \meta{\Gamma}\vdash\meta{e}:\meta{\tau_1}\times\meta{\tau_2}
+      }{\meta{\Gamma}\vdash\meta{e}.1 :\meta{\tau_1}}\and
+      \inferrule{
+        \meta{\Gamma}\vdash\meta{e}:\meta{\tau_1}\times\meta{\tau_2}
+      }{\meta{\Gamma}\vdash\meta{e}.2 :\meta{\tau_2}}
+    \end{mathpar}
   \item Extend the proof of type safety, as follows:
     \begin{itemize}
     \item Add cases to the proof of the progress lemma from lecture for each new
