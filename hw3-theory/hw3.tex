@@ -185,6 +185,24 @@ showstringspaces=false}
       \end{mathpar}
     \item For $\meta{e}.1$ and $\meta{e}.2$, make sure that $\meta{e}$ gets evaluated to a value before the projection occurs.
       \begin{mathpar}
+        \inferrule{
+          \meta{e_1} \to \meta{e_1^\prime}
+        }{(\meta{e_1}, \meta{e_2}).1 \to (\meta{e_1^\prime}, \meta{e_2}).1}\and
+        \inferrule{
+          \meta{e_1} \to \meta{e_1^\prime}
+        }{(\meta{e_1}, \meta{e_2}).2 \to (\meta{e_1^\prime}, \meta{e_2}).2}
+      \end{mathpar}
+
+      \begin{mathpar}
+        \inferrule{
+          \meta{e_2} \to \meta{e_2^\prime}
+        }{(\meta{v}, \meta{e_2}).1 \to (\meta{v}, \meta{e_2^\prime}).1}\and
+        \inferrule{
+          \meta{e_2} \to \meta{e_2^\prime}
+        }{(\meta{v}, \meta{e_2}).2 \to (\meta{v}, \meta{e_2^\prime}).2}
+      \end{mathpar}
+
+      \begin{mathpar}
         \inferrule{ }{(\meta{v_1}, \meta{v_2}).1 \to \meta{v_1}}\and
         \inferrule{ }{(\meta{v_1}, \meta{v_2}).2 \to \meta{v_2}}
       \end{mathpar}
@@ -209,8 +227,75 @@ showstringspaces=false}
       just handle your new rules. If you need any lemmas, clearly state them,
       and describe in one sentence how you \emph{would} prove them (by induction
       or some other way? induction on what?), but no need to prove your lemmas.
+      \begin{enumerate}
+        \item Case \inferrule{
+          \meta{\Gamma}\vdash\meta{e_1}:\meta{\tau_1}\and
+          \meta{\Gamma}\vdash\meta{e_2}:\meta{\tau_2}
+        }{\meta{\Gamma}\vdash(\meta{e_1}, \meta{e_2}) : \meta{\tau_1}\times\meta{\tau_2}}. According to the induction hypothesis, $\meta{e_1}$ is not a stuck, therefore:
+          \begin{itemize}
+            \item $\meta{e_1}$ is a value. Then according to the induction hypothesis, $\meta{e_2}$ is not a stuck. If $\meta{e_2}$ is a value., then $(\meta{e_1}, \meta{e_2})$ is value, and it is not a stuck; if $\meta{e_2} \to \meta{e_2^\prime}$, then the expression can take this step: $(\meta{e_1}, \meta{e_2}) \to (\meta{e_1}, \meta{e_2}^\prime)$. Thus it is not a stuck in both cases.
+            \item $\meta{e_1}$ can step to $\meta{e_1^\prime}$. Then directly, $(\meta{e_1}, \meta{e_2})$ can step to $(\meta{e_1^\prime}, \meta{e_2})$, thus it is not a stuck.
+          \end{itemize}
+        \item Case $\inferrule{
+          \meta{\Gamma}\vdash\meta{e}:\meta{\tau_1}\times\meta{\tau_2}
+        }{\meta{\Gamma}\vdash\meta{e}.1 :\meta{\tau_1}}$. Since $\meta{\Gamma}\vdash\meta{e}:\meta{\tau_1}\times\meta{\tau_2}$, $\meta{e}=(\meta{e_1}, \meta{e_2})$ for some $\meta{e_1}$ and $\meta{e_2}$, and $\meta{\Gamma}\vdash\meta{e_1}:\meta{\tau_1}$ and $\meta{\Gamma}\vdash\meta{e_2}:\meta{\tau_2}$. According to the induction hypothesis, $\meta{e}$ is not a stuck, therefore:
+          \begin{itemize}
+            \item $\meta{e}$ is a value. Then $\meta{e}=(\meta{v_1}, \meta{v_2})$, and $\meta{e}.1=\meta{v_1}$, which is a value, and thus $\meta{e}.1$ is not a stuck.
+            \item $\meta{e}$ can step. Then by case analysis on $\meta{e}\to \meta{e^\prime}$
+              \begin{enumerate}
+                \item $\inferrule{
+                  \meta{e_1} \to \meta{e_1^\prime}
+                }{(\meta{e_1}, \meta{e_2}) \to (\meta{e_1^\prime}, \meta{e_2})}$. According to the evaluation rule, $\inferrule{
+                  \meta{e_1} \to \meta{e_1^\prime}
+                }{(\meta{e_1}, \meta{e_2}).1 \to (\meta{e_1^\prime}, \meta{e_2}).1}$, therefore, $\meta{e}$ is not a stuck.
+                \item $\inferrule{
+                  \meta{e_2} \to \meta{e_2^\prime}
+                }{(\meta{v}, \meta{e_2}) \to (\meta{v}, \meta{e_2^\prime})}$. Similar as Case A.
+              \end{enumerate}
+          \end{itemize}
+        \item Case $\inferrule{
+          \meta{\Gamma}\vdash\meta{e}:\meta{\tau_1}\times\meta{\tau_2}
+        }{\meta{\Gamma}\vdash\meta{e}.2 :\meta{\tau_2}}$. Similar as Case ii.
+      \end{enumerate}
     \item Add cases to the proof of the preservation lemma from lecture. Same
       directions as above about repeated cases and lemmas.
+      \begin{enumerate}
+        \item Case \inferrule{
+          \meta{\Gamma}\vdash\meta{e_1}:\meta{\tau_1}\and
+          \meta{\Gamma}\vdash\meta{e_2}:\meta{\tau_2}
+        }{\meta{\Gamma}\vdash(\meta{e_1}, \meta{e_2}) : \meta{\tau_1}\times\meta{\tau_2}}. According to the induction hypothesis, if $\meta{e_1} \to \meta{e_1^\prime}$, then $\meta{\Gamma}\vdash\meta{e_1^\prime} : \meta{\tau_1}$, similar for $\meta{e_2^\prime}$. Therefore, by case analysis on $\meta{e} \to \meta{e^\prime}$:
+          \begin{itemize}
+            \item $\inferrule{
+              \meta{e_1}\to\meta{e_1^\prime}
+            }{(\meta{e_1}, \meta{e_2})\to(\meta{e_1^\prime}, \meta{e_2})}$. In this case, according to the induction hypothesis, $$\inferrule{
+                          \meta{\Gamma}\vdash\meta{e_1^\prime}:\meta{\tau_1}\and
+                          \meta{\Gamma}\vdash\meta{e_2}:\meta{\tau_2}}{\meta{\Gamma}\vdash(\meta{e_1^\prime}, \meta{e_2}):\meta{\tau_1}\times\meta{\tau_2}}$$
+            \item $\inferrule{
+              \meta{e_2}\to\meta{e_2^\prime}
+            }{(\meta{v}, \meta{e_2})\to(\meta{v},\meta{e_2^\prime})}$. Similar as case above.
+          \end{itemize}
+        \item Case $\inferrule{
+          \meta{\Gamma}\vdash\meta{e}:\meta{\tau_1}\times\meta{\tau_2}
+        }{\meta{\Gamma}\vdash\meta{e}.1 :\meta{\tau_1}}$. By case analysis on $\meta{e}$:
+          \begin{itemize}
+            \item $\meta{e}$ is a value. Then $\meta{e}=(\meta{v_1}, \meta{v_2})$. Since $\meta{\Gamma}\vdash\meta{e}:\meta{\tau_1}\times\meta{\tau_2}$, $\meta{\Gamma}\vdash\meta{v_1}:\meta{\tau_1}$. Therefore, in this case $\meta{e}.1=\meta{v_1}$, and thus $\meta{\Gamma}\meta{e}.1:\meta{\tau_1}$.
+            \item $\meta{e}$ can step. Then there are two ways to step,
+              \begin{enumerate}
+                \item $\inferrule{
+                  \meta{e_1} \to \meta{e_1^\prime}
+                }{(\meta{e_1}, \meta{e_2}) \to (\meta{e_1^\prime}, \meta{e_2})}$. Since $\meta{\Gamma}\vdash\meta{e_1}:\meta{\tau_1}$, according to the induction hypothesis, $\meta{\Gamma}\meta{e_1^\prime}:\meta{\tau_1}$. Therefore, $\inferrule{
+                  \meta{\Gamma}\vdash\meta{e_1^\prime}:\meta{\tau_1}\and
+                  \meta{\Gamma}\vdash\meta{e_2}:\meta{\tau_2}
+                }{\meta{\Gamma}\vdash(\meta{e_1^\prime}, \meta{e_2}):\meta{\tau_1}\times\meta{\tau_2}}$. According to the typing rule, $\meta{\Gamma}\vdash(\meta{e_1^\prime}, \meta{e_2}).1:\meta{\tau_1}$.
+                \item $\inferrule{
+                \meta{e_2} \to \meta{e_2^\prime}
+              }{(\meta{v}, \meta{e_2}) \to (\meta{v}, \meta{e_2^\prime})}$. Similar as case A.
+              \end{enumerate}
+          \end{itemize}
+          \item Case $\inferrule{
+            \meta{\Gamma}\vdash\meta{e}:\meta{\tau_1}\times\meta{\tau_2}
+          }{\meta{\Gamma}\vdash\meta{e}.2 :\meta{\tau_2}}$. Similar as Case ii.
+      \end{enumerate}
     \end{itemize}
   \end{enumerate}
 \end{enumerate}

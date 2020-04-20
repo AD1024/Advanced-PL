@@ -215,22 +215,42 @@ showstringspaces=false}
     \textbf{Theorem: for all $n\in\mathbb{Z}$, if $n\ge 0$ then there exists a
     final state $s$ such that $(0,n) \to^* s$}
     \begin{proof}
-      Since $0 \in\mathbb{N}$, and $n \in\mathbb{Z} \wedge n \geq 0 \to n \in\mathbb{N}$, according to \textit{Lemma 1}, $(0, n) \to^* s$ for some fixed final state s.
+      Since $0 \in\mathbb{N}$, and $n \in\mathbb{Z} \wedge n \geq 0 \leftrightarrow n \in\mathbb{N}$, according to \textit{Lemma 1}, $(0, n) \to^* s$ for some fixed final state s.
     \end{proof}
   \item Explain how your proof from the previous part, together with the fact
     that the transition system is deterministic, also shows that there are no
     infinite executions in this transition system.
 
-    \textbf{We can classify states to two categories: $\mathbb{S}^+$ denotes a set of states that are able to make at least one step, and $\mathbb{S}^-$ which denotes states that are not able to step. According to the definition of step in this system, it is obvious that (only consider the case where $x, y \in \mathbb{Z}$)
-    $$(x, y) \in \mathbb{S}^+ \Leftrightarrow x \geq 0 \wedge y > 0$$ Since $\mathbb{S}^-$ is disjoint with $\mathbb{S}^+$, therefore apparently $$(x, y)\in \mathbb{S}^- \Leftrightarrow x < 0 \vee y \leq 0$$} We can define $\to^*$ as a function $f : \mathbb{S}^+ \cup \mathbb{S}^- \to \mathbb{S}^+ \cup \mathbb{S}^-$, such that
-    \begin{align*}
-      &\forall (x, y)
- \in \mathbb{S}^+, f(x, y) = f (x + 1, y - 1) & \text{Takes n steps}\\
-      & \forall (x, y) \in \mathbb{S}^-, f(x, y) = (x, y) & \text{Takes 0 step}
-    \end{align*}
-    According to the proof in previous part, since this transition system is deterministic, for all admissible inputs $(x, y) \in \mathbb{S}_0$, there exists a \textit{unique} final state $s \in \mathbb{S}^-$ such that $(x, y) \to^* s$, which means $f(x, y) = s$. Apparently, $f(f(x, y)) = f(x, y)$, which means function $f$ has a fixpoint, which the program terminates at.
+    \textbf{According to the proof above, for all initial state $s \in \mathbb{S}_0$, there exists a final state $s^\prime$ such that $s\to^*s^\prime$. Since this transition system is deterministic, there exists exactly one such final state $s^\prime$ that $s\to^*s^\prime$. So for all $s\in\mathbb{S}_0$, the execution starts at $s$ terminates at a unique final state $s^\prime$.}
+
+%     \textbf{We can classify states to two categories: $\mathbb{S}^+$ denotes a set of states that are able to make at least one step, and $\mathbb{S}^-$ which denotes states that are not able to step. According to the definition of step in this system, it is obvious that (only consider the case where $x, y \in \mathbb{Z}$)
+%     $$(x, y) \in \mathbb{S}^+ \Leftrightarrow x \geq 0 \wedge y > 0$$ Since $\mathbb{S}^-$ is disjoint with $\mathbb{S}^+$, therefore apparently $$(x, y)\in \mathbb{S}^- \Leftrightarrow x < 0 \vee y \leq 0$$} We can define $\to^*$ as a function $f : \mathbb{S}^+ \cup \mathbb{S}^- \to \mathbb{S}^+ \cup \mathbb{S}^-$, such that
+%     \begin{align*}
+%       &\forall (x, y)
+%  \in \mathbb{S}^+, f(x, y) = f (x + 1, y - 1) & \text{Takes n steps}\\
+%       & \forall (x, y) \in \mathbb{S}^-, f(x, y) = (x, y) & \text{Takes 0 step}
+%     \end{align*}
+%     According to the proof in previous part, since this transition system is deterministic, for all admissible inputs $(x, y) \in \mathbb{S}_0$, there exists a \textit{unique} final state $s \in \mathbb{S}^-$ such that $(x, y) \to^* s$, which means $f(x, y) = s$. Apparently, $f(f(x, y)) = f(x, y)$, which means function $f$ has a fixpoint, which the program terminates at.
   \item Construct an infinite execution of your transition system from
     Problem~\ref{odeds-program}.
+
+    \textbf{The transition system is}
+    \begin{align*}
+      S &= \set{(a,b,c) | x,y\in \mathbb{Z}}\\
+      S_0 &= \set{(0, 0, 0)}\\
+      \to &= \Set{\big((a,b,c),(a+b,b+c,c+1)\big) | a \geq 0}
+    \end{align*}
+    Frist, prove that the transition system does have infinite execution by showing that $a \geq 0$ holds for all reachable states. We choose a strenghened invariant: $a, b, c\in \mathbb{Z} \wedge a, b, c \geq 0$.
+    \begin{proof}
+      By induction on the states.
+      \begin{enumerate}
+        \item $s=(0, 0, 0)$. The initial state satisfies the condition that $a, b, c\in \mathbb{Z} \wedge a, b, c \geq 0$.
+        \item $(a, b, c)\to (a^\prime=a+b, b^\prime=b+c, c^\prime=c+1)$. The induction hypothesis tells us that $a, b, c\in \mathbb{Z} \wedge a, b, c \geq 0$. Therefore, $a^\prime\geq a+b\wedge b^\prime\geq b+c \wedge c^\prime > c$. Therefore, $a^\prime, b^\prime, c^\prime \in \mathbb{Z}\wedge a^\prime \geq 0 \wedge b^\prime\geq 0\wedge c^\prime\geq 0$.
+      \end{enumerate}
+    \end{proof}
+    The infinite execution is:
+    $$(0, 0, 0)\to(0, 0, 1)\to(0, 1, 2)\to(1, 3, 3)\to(4, 6, 4)\to(10, 10, 5)\cdots$$
+
   \end{enumerate}
 \item Consider the ``official'' version of \imp{}, with \failed{} (full
   semantics on next page). In Lecture~6, we stated the following progress lemma:
