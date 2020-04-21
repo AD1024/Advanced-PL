@@ -35,14 +35,14 @@ three = pred four;;
 
 true = \t.\f. t;;
 false = \t.\f. f;;
-ite = \cond.\x.\y. cond x y;;
+ite = \cond. cond;;
 is_zero = \n. n (\m. false) true;;
 
 is_zero four TRUE FALSE;;
 
 Z = \f. (\x. f (\y. x x y)) (\x. f (\y. x x y));;
 
-ff = \self.\x. is_zero x one (multiply x (self (pred x)));;
+ff = \r.\n. ite (is_zero n) one (multiply n (r (pred n)));;
 
 factorial_yet_again = Z almost_fact;;
 
