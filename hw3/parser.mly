@@ -1,16 +1,18 @@
 %token <string> ID
 %token LAM
+%token EQ
 %token DOT
 %token LPAREN RPAREN
 %token DOUBLESEMI
 %token EOF
 
-%start <Syntax.expr option> main
+%start <Syntax.binding option> main
 
 %%
 
 main:
-| e = expr DOUBLESEMI                   { Some e }
+| e = expr DOUBLESEMI                   { Some (Syntax.Binding (None, e)) }
+| id = ID EQ e = expr DOUBLESEMI        { Some (Syntax.Binding (Some id, e)) }
 | EOF                                   { None }
 
 raw_expr:

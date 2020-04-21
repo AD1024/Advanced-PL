@@ -16,6 +16,7 @@ rule token = parse
 | ['a'-'z''A'-'Z']+ as id                   { ID id }
 | '('                                       { LPAREN }
 | ')'                                       { RPAREN }
+| '='                                       { EQ }
 | ";;"                                      { DOUBLESEMI }
 | '#' [^'\n']* '\n'                         { token lexbuf }  (* ignore comments (start with #) *)
 | eof                                       { EOF }

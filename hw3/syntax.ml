@@ -32,6 +32,10 @@ type raw_expr =
   [@@deriving show]
 and expr = raw_expr located [@printer fun fmt e -> pp_raw_expr fmt e.value]
 
+type binding =
+  | Binding of string option * expr
+  [@@deriving show]
+
 (* Useful if you want to build an expr, and all you've got is a
    raw_expr, and it didn't come directly from the parser... *)
 let with_no_loc re = {loc = None; value = re}
