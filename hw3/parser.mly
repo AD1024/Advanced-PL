@@ -15,7 +15,7 @@ main:
 
 raw_expr:
 | e = raw_subexpr                       { e }
-| LAM x = ID DOT e = subexpr            { Syntax.Lam (x, e) }
+| LAM x = ID DOT e = expr            { Syntax.Lam (x, e) }
 
 expr: l = located(raw_expr)             { l }
 
