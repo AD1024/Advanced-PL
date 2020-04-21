@@ -13,7 +13,7 @@ rule token = parse
 (* delete the following line *)
 | '\\'                                      { LAM }
 | '.'                                       { DOT }
-| ['a'-'z''A'-'Z']+ as id                   { ID id }
+| ['a'-'z''A'-'Z''_']+ as id                   { ID id }
 | '('                                       { LPAREN }
 | ')'                                       { RPAREN }
 | '='                                       { EQ }

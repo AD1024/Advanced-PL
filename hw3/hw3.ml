@@ -10,6 +10,12 @@ module Env = Map.Make (EnvKey)
 
 type ctx = Syntax.expr Env.t
 
+let rec unparse (e : Syntax.expr): string= 
+  match e.value with
+    | Syntax.Var x -> x
+    | Syntax.Lam (x, e) -> Printf.sprintf "(\\%s. %s)" x (unparse e)
+    | Syntax.App (e1, e2) -> Printf.sprintf "(%s %s)" (unparse e1) (unparse e2)
+
 let free_variables (e : Syntax.expr): StringSet.t=
   let rec free_variable_helper (e : Syntax.expr)(bound : StringSet.t): StringSet.t=
     match e with
@@ -33,7 +39,11 @@ let rec subst (x : string) (v : Syntax.expr) (e : Syntax.expr): Syntax.expr=
         | Lam (x', expr) -> 
           if String.equal x x'
           then e
-          else {loc = loc; value = Lam (x', subst x v expr)}
+          else
+            let free_vars = free_variables v in
+            (match StringSet.find_opt x' free_vars with
+              | None -> {loc = loc; value = Lam (x', subst x v expr)}
+              | Some _ -> e)
         | App (e1, e2) -> 
           let e1' = subst x v e1 in
           let e2' = subst x v e2 in
@@ -44,20 +54,21 @@ let rec step (e : Syntax.expr): Syntax.expr option=
     | Var _ -> None
     | Lam _ -> None
     | App (e1, e2) ->
-      match e1.value with
-        | Lam (x, expr) ->
-          (match step e2 with
-            | None -> Some (subst x e2 expr)
-            | Some e2' -> Some ({loc = e1.loc; value = Syntax.App (e1, e2')}))
-        | _ ->
-          (match step e1 with
-            | None ->
-              (match step e2 with
-                | None -> None
-                | Some e2' -> Some ({loc = e1.loc; value = Syntax.App (e1, e2')}))
-            | Some e1' -> Some ({loc = e1'.loc; value = Syntax.App (e1', e2)}))
+      match step e1 with
+        | None ->
+            (match e1.value with
+              | Lam (x, expr) ->
+                    (match step e2 with
+                      | None -> Some (subst x e2 expr)
+                      | Some e2' -> Some ({loc = e1.loc; value = Syntax.App (e1, e2')}))
+              | _ ->
+                    (match step e2 with
+                      | None -> None
+                      | Some e2' -> Some ({loc = e1.loc; value = Syntax.App (e1, e2')})))
+        | Some e1' -> Some ({loc = e1'.loc; value = Syntax.App (e1', e2)})
 
 let rec step_loop (e : Syntax.expr): Syntax.expr=
+  (* let () = print_endline (unparse e) in *)
   match step e with
     | None -> e
     | Some e' -> step_loop e'
@@ -70,11 +81,11 @@ let rec subst_env (e : Syntax.expr) (ctx_bindings: (string * Syntax.expr) list) 
 let eval_binding (e :Syntax.binding) (env : ctx): ctx=
   match e with
     | Syntax.Binding (None, e) ->
-        let () = print_endline (Syntax.show_expr (step_loop (subst_env e (Env.bindings env)))) in
+        let () = print_endline (">>> " ^ (unparse (step_loop (subst_env e (Env.bindings env))))) in
         env
     | Syntax.Binding (Some x, e) ->
         let e' = step_loop (subst_env e (Env.bindings env)) in
-        let () = print_endline (Syntax.show_expr e') in
+        let () = print_endline (Printf.sprintf ">>> %s" (unparse e')) in
         Env.add x e' env
 
 let rec list_to_string (xs : string list): string=
