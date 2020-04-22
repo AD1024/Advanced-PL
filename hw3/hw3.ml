@@ -1,3 +1,5 @@
+exception SubstError of string
+
 module StringSet = Set.Make(String)
 
 module EnvKey = 
@@ -43,7 +45,7 @@ let rec subst (x : string) (v : Syntax.expr) (e : Syntax.expr): Syntax.expr=
             let free_vars = free_variables v in
             (match StringSet.find_opt x' free_vars with
               | None -> {loc = loc; value = Lam (x', subst x v expr)}
-              | Some _ -> e)
+              | Some _ -> raise (SubstError "Free variable in subst term"))
         | App (e1, e2) -> 
           let e1' = subst x v e1 in
           let e2' = subst x v e2 in
@@ -56,19 +58,21 @@ let rec step (e : Syntax.expr): Syntax.expr option=
     | App (e1, e2) ->
       match step e1 with
         | None ->
-            (match e1.value with
-              | Lam (x, expr) ->
-                    (match step e2 with
-                      | None -> Some (subst x e2 expr)
-                      | Some e2' -> Some ({loc = e1.loc; value = Syntax.App (e1, e2')}))
-              | _ ->
-                    (match step e2 with
-                      | None -> None
-                      | Some e2' -> Some ({loc = e1.loc; value = Syntax.App (e1, e2')})))
+            (match step e2 with
+              | Some e2' -> 
+                (match e1.value with
+                  | Lam (x, expr) ->
+                      (match StringSet.find_opt x (free_variables expr) with
+                        | None -> Some expr
+                        | Some _ -> Some ({loc = e1.loc; value = Syntax.App (e1, e2')}))
+                  | _ -> Some ({loc = e1.loc; value = Syntax.App (e1, e2')}))
+              | None ->
+                match e1.value with
+                  | Lam (x, expr) -> Some (subst x e2 expr)
+                  | _ -> None)
         | Some e1' -> Some ({loc = e1'.loc; value = Syntax.App (e1', e2)})
 
 let rec step_loop (e : Syntax.expr): Syntax.expr=
-  (* let () = print_endline (unparse e) in *)
   match step e with
     | None -> e
     | Some e' -> step_loop e'
@@ -78,7 +82,14 @@ let rec subst_env (e : Syntax.expr) (ctx_bindings: (string * Syntax.expr) list) 
     | [] -> e
     | ((id, expr) :: remaining) -> subst_env (subst id expr e) remaining
 
-let eval_binding (e :Syntax.binding) (env : ctx): ctx=
+let rec step_n (dep : int) (e : Syntax.expr): Syntax.expr =
+  let () = print_endline (unparse e);print_endline "" in
+  if dep == 0 then e
+  else match step e with
+        | None -> e
+        | Some e' -> step_n (dep - 1) e'
+
+let eval_binding (e : Syntax.binding) (env : ctx): ctx=
   match e with
     | Syntax.Binding (None, e) ->
         let () = print_endline (">>> " ^ (unparse (step_loop (subst_env e (Env.bindings env))))) in
