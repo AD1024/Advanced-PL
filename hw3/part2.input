@@ -42,7 +42,7 @@ is_zero four TRUE FALSE;;
 
 Z = \f. (\x. (f (\y. x x y))) (\x. (f (\y. x x y)));;
 
-fact_f = \f. (\x. is_zero x one (multiply x (f (pred x))));;
+fact_f = \f. (\x. is_zero x one (\n. multiply x (f (pred x)) n));;
 
 factorial_yet_again = Z fact_f;;
 

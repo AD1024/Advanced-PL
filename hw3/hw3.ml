@@ -58,18 +58,15 @@ let rec step (e : Syntax.expr): Syntax.expr option=
     | App (e1, e2) ->
       match step e1 with
         | None ->
-            (match step e2 with
-              | Some e2' -> 
-                (match e1.value with
-                  | Lam (x, expr) ->
-                      (match StringSet.find_opt x (free_variables expr) with
-                        | None -> Some expr
-                        | Some _ -> Some ({loc = e1.loc; value = Syntax.App (e1, e2')}))
-                  | _ -> Some ({loc = e1.loc; value = Syntax.App (e1, e2')}))
-              | None ->
-                match e1.value with
-                  | Lam (x, expr) -> Some (subst x e2 expr)
-                  | _ -> None)
+            (match e1.value with
+              | Lam (x, expr) ->
+                    (match step e2 with
+                      | None -> Some (subst x e2 expr)
+                      | Some e2' -> Some ({loc = e1.loc; value = Syntax.App (e1, e2')}))
+              | _ ->
+                    (match step e2 with
+                      | None -> None
+                      | Some e2' -> Some ({loc = e1.loc; value = Syntax.App (e1, e2')})))
         | Some e1' -> Some ({loc = e1'.loc; value = Syntax.App (e1', e2)})
 
 let rec step_loop (e : Syntax.expr): Syntax.expr=
