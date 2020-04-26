@@ -40,11 +40,13 @@ let rec subst (x : string) (v : Syntax.expr) (e : Syntax.expr): Syntax.expr=
         | Var x' -> if String.equal x x' then v else e
         | Lam (x', expr) -> 
           if String.equal x x'
-          then raise (SubstError "Substitution conflict with bound variable")
+          then e
           else
             let free_vars = free_variables v in
             (match StringSet.find_opt x' free_vars with
-              | None -> let () = print_endline "Warning: substitution with free variable(s)" in
+              | None -> let () = if StringSet.is_empty free_vars 
+                                 then ()
+                                 else print_endline "Warning: substitution with free variable(s)" in
                         {loc = loc; value = Lam (x', subst x v expr)}
               | Some _ -> raise (SubstError "Free variable in subst term"))
         | App (e1, e2) -> 

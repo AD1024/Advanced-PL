@@ -302,7 +302,284 @@ showstringspaces=false}
 
 \section*{Problems from after Lecture on Friday 4/17}
 
-TBD
+\begin{enumerate}[resume*]
+\item Consider the type $(bool\to bool)\to (bool\to bool)$.
+  \begin{enumerate}[(a)]
+  \item Give an example of an expression with this type. (Try to make it at
+    least slightly interesting, but not so interesting that the rest of this
+    problem is tedious.)
+    $$\lambda f.\ \lambda x. f\ x$$
+
+  \item Draw a typing derivation showing that your expression actually does have this type.
+    $$\inferrule{
+      [\meta{f} \mapsto (bool \to bool)]\vdash \inferrule{
+        [\meta{f}\mapsto (bool \to bool);\meta{x} \mapsto bool]\vdash \meta{f}\ \meta{x} : bool 
+      }{[\meta{f}\mapsto (bool \to bool)]\vdash \lambda x. \meta{f}\ \meta{x} : (bool \to bool)}
+    }{\cdot \vdash \lambda f. \lambda x.\ \meta{f}\ \meta{x} : (bool \to bool) \to (bool \to bool)}$$
+  \item Translate the meaning of $T(R_{(bool\to bool)\to (bool\to bool)})$ from
+    its definition into English. For example, you might start with ``The set of
+    expressions that can step to...''.
+    
+    \textbf{The set of expressions that step to a value which is in the set of reachable value of type $(bool \to bool)\to (bool \to bool)$}
+
+  \item Show directly from the definition of $T$ and $R_{\meta{\tau}}$ that your
+    expression is in $T(R_{(bool\to bool)\to (bool\to bool)})$.
+
+    According to the definition of $R_{\meta{\tau}}$, $R_{(bool \to bool)\to (bool \to bool)}$ is
+    $$\set{\lambda \meta{x}.\ \meta{e} | \forall \meta{v} \in R_{bool \to bool},\meta{e}[\meta{v}/\meta{x}] \in T(R_{bool \to bool})}$$
+
+    and $$R_{bool \to bool}=\set{\lambda \meta{y}.\ \meta{e_y}| \forall \meta{v} \in R_{bool}, \meta{e_y}[\meta{v}/\meta{y}] \in T(R_{bool})}$$
+
+    Since $\lambda \meta{f}.\lambda \meta{x}.\ \meta{f}\ \meta{x} \to^* \lambda \meta{f}.\lambda \meta{x}.\ \meta{f}\ \meta{x}$, we can check whether $\lambda \meta{f}.\lambda \meta{x}.\ \meta{f}\ \meta{x} \in R_{(bool \to bool)\to (bool \to bool)}$. That is, whether $\forall \meta{v} \in R_{bool \to bool}, (\lambda \meta{x}.\ \meta{f}\ \meta{x})[\meta{v}/\meta{f}] \in T(R_{bool \to bool})$. Similarly, after substitution, since $\lambda \meta{x}.\ \meta{v}\ \meta{x} \to^* \lambda \meta{x}.\ \meta{f}\ \meta{x}$, we can check whether $\lambda \meta{x}.\ \meta{f}\ \meta{x}$ is in $R_{bool \to bool}$, which is whether $\forall \meta{v^\prime} \in R_{bool}, (\meta{v}\ \meta{x})[\meta{v^\prime}/\meta{x}] \in T(R_{bool})$. After substitution, we know that $\meta{v} \in R_{bool \to bool}$ and $\meta{v^\prime} \in \set{\texttt{True}, \texttt{False}}$; therefore $\meta{v}$ must be in the form of $\lambda \meta{y}.\ \meta{e^\prime}$ and $\forall \meta{b}\in bool, \meta{e^\prime}[\meta{b}/\meta{y}]\in T(R_{bool})$. According to the definition of application $(\lambda \meta{y}.\ \meta{e^\prime}) \meta{v^\prime} \to \meta{e^\prime}[\meta{v^\prime}/\meta{y}]$, since $\meta{v^\prime} \in R_{bool}$, $\meta{e^\prime}[\meta{v^\prime}/\meta{y}] \in T(R_{bool})$. Thus we can conclude that $\forall \meta{v^\prime} \in R_{bool}, (\meta{v}\ \meta{x})[\meta{v^\prime}/\meta{x}] \in T(R_{bool})$, subsequently, $\forall \meta{v}\in R_{bool \to bool}, (\lambda\meta{x}.\ \meta{f}\ \meta{x})[\meta{v}/\meta{f}] \in T(R_{bool \to bool})$. Therefore the expression $\lambda \meta{f}.\lambda \meta{x}.\ \meta{f}\ \meta{x} \in T(R_{(bool \to bool) \to (bool \to bool)})$.
+
+  \end{enumerate}
+\item Practice with multisubstitutions.
+  \begin{enumerate}[(a)]
+  \item In lecture, we said a multisubstitution was a map from variables to
+    values.  Explain why nothing goes wrong if we actually allow a variable to
+    map to any expression, not just values.
+
+    \textbf{It should not go wrong, since this is like changing call-by-value to call-by-name evaluation.}
+
+  \item When proving type safety for STLC with booleans, we used a substitution
+    lemma that said, essentially, ``substitution preserves typing''.
+    Prove (by induction on a thing of your choice) the following claim about multisubstitutions.
+    \begin{quote}
+      For all $\meta{\Gamma_1}$, $\meta{\Gamma_2}$, $\meta{e}$, $\meta{\tau}$, and $\meta{\gamma}$,\\
+      if \\
+      \phantom{$\quad$} $\meta{\Gamma_1}\vdash\meta{e}:\meta{\tau}$, and  \\
+      \phantom{$\quad$} $\dom{\meta{\Gamma_1}}\subseteq\dom{\meta{\gamma}}$, and \\
+      \phantom{$\quad$} for all $\meta{x}\in\dom\meta{\Gamma_1}$, we have $\meta{\Gamma_2}\vdash\meta{\gamma}(\meta{x}):\meta{\Gamma_1}(\meta{x})$,\\
+      then $\meta{\Gamma_2}\vdash\meta{e}[\meta{\gamma}] : \meta{\tau}$.
+    \end{quote}
+    (Hint: The proof is pretty straightforward. The hard part is wrapping your head around what this claim is saying...)
+    \begin{proof}
+      By induction on the type derivation $\meta{\Gamma_1}\vdash \meta{e}:\meta{\tau}$.
+      \begin{itemize}
+        \item $\inferrule{ }{\meta{\Gamma_1}\vdash \meta{b}:bool}$. Since $\meta{e}$ in this case is a boolean literal, $\meta{e}[\meta{\gamma}]$ does not change the value of $e$, thus $\inferrule{ }{\meta{\Gamma_2}\vdash \meta{v}:bool}$ also holds.
+        \item $\inferrule{\meta{\Gamma_1}\vdash \meta{e_1}:\meta{\tau_1}\to \meta{\tau_2}\and \meta{\Gamma_1}\vdash \meta{e_2}:\meta{\tau_1}}{\meta{\Gamma_1}\vdash \meta{e_1}\ \meta{e_2} : \meta{\tau_2}}$. According to the induction hypothesis, $\meta{\Gamma_2}\vdash \meta{e_1}[\meta{\gamma}]:\meta{\tau_1}\to \meta{\tau_2}$ and $\meta{\Gamma_2}\vdash\meta{e_2}[\meta{\gamma}]:\meta{\tau_1}$. Thus $\meta{\Gamma_2}\vdash (\meta{e_1}[\meta{\gamma}]\ \meta{e_2}[\meta{\gamma}]):\meta{\tau_2}$. 
+        
+        According to the definition of multisubstitution, $\meta{\Gamma_2}\vdash (\meta{e_1}\ \meta{e_2})[\meta{\gamma}]:\meta{\tau_2}$.
+        \item $\inferrule{
+          \meta{\Gamma_1}\vdash \meta{e_1}:bool\and
+          \meta{\Gamma_1}\vdash \meta{e_2}:\meta{\tau}\and
+          \meta{\Gamma_1}\vdash \meta{e_3}:\meta{\tau}
+        }{\meta{\Gamma_1}\vdash (\progif\ \meta{e_1}\ \progthen\ \meta{e_2}\ \progelse\ \meta{e_3}) : \meta{\tau}}$. Similar as the provious case.
+        \item $\inferrule{
+          \meta{x} \in \dom{\meta{\Gamma_1}}\and
+          \meta{\Gamma_1}(\meta{x}) = \meta{\tau}
+        }{\meta{\Gamma_1}\vdash\meta{}:\meta{\tau}}$. Since $\meta{\Gamma_1}\vdash(\meta{x}) = \meta{\tau}$. Therefore, according to our premises, $\meta{\Gamma_2}\vdash \meta{\gamma}(\meta{x}) : \meta{\tau}$.
+        \item $\inferrule{
+          \meta{\Gamma_1}[\meta{x}\mapsto \meta{\tau_1}]\vdash \meta{e}:\meta{\tau_2}
+        }{\meta{\Gamma_1}\vdash \lambda \meta{x}.\ \meta{e} : \meta{\tau_1}\to\meta{\tau_2}}$. Since $\meta{\Gamma_2}\vdash \meta{\gamma}(\meta{x}) : \meta{\Gamma_1}(\meta{x})$ for all $\meta{x}\in \dom{\meta{\Gamma_1}}$ and $\meta{\Gamma_1}[\meta{x} \mapsto \meta{\tau_1}]\vdash \meta{e}:\meta{\tau_2}$, $\meta{\Gamma_2}[\meta{x} \mapsto \meta{\tau_1}]\vdash \meta{e}[\meta{\gamma} - \meta{x}] : \meta{\tau_2}$. Therefore, $\meta{\Gamma_2}\vdash \lambda\meta{x}.\ \meta{e}[\meta{\gamma} - \meta{x}] : \meta{\tau_1}\to \meta{\tau_2}$. According to the definition of multisubstitution, $\meta{\Gamma_2}\vdash (\lambda. \meta{x}. \meta{e})[\meta{\gamma}] : \meta{\tau_1}\to\meta{\tau_2}$.
+      \end{itemize}
+    \end{proof}
+
+  \end{enumerate}
+
+\item Practice with logical relations proofs. We refer to the statement
+  ``If $\meta{\Gamma}\vdash\meta{e}:\meta{\tau}$, then $\meta{\Gamma}\vDash\meta{e}:\meta{\tau}$.''
+  as the ``fundamental theorem of the logical relation''.
+  \begin{enumerate}[(a)]
+  \item Write out the case for $\lambda$ in the proof of the fundamental theorem
+    in full detail. (Shouldn't be more than a short paragraph.)
+
+    \begin{itemize}
+      \item Case $\inferrule{
+        \meta{\Gamma}[\meta{x}\mapsto \meta{\tau_1}]\vdash \meta{e} :\meta{\tau_2}
+      }{\meta{\Gamma}\vdash \lambda \meta{x}.\ \meta{e} : \meta{\tau_1}\to \meta{\tau_2}}$. According to the induction hypothesis, $\exists \meta{v}, \meta{e}[\meta{\gamma}] \to^* \meta{v}, \meta{v} \in R_{\tau_2}$. Specifically, $\meta{\gamma}$ is in the form of $\meta{\gamma^\prime}[\meta{x} \mapsto \meta{v}]$ where $\meta{v} \in R_{(\meta{\Gamma}[\meta{x}\mapsto \meta{\tau_1}])(\meta{x})}$, which is $\meta{v} \in R_\meta{\tau_1}$. Therefore, $\forall \meta{v} \in R_{\meta{\tau_1}}, (\meta{e}[\meta{\gamma^\prime}])[\meta{v}/\meta{x}] \in T(R_\meta{\tau_2})$. Then, according to the definition of $R$, $\lambda \meta{x}.\ \meta{e}[\meta{\gamma^\prime}] \in R_{\meta{\tau_1}\to\meta{\tau_2}}$. Since $\dom{\meta{\gamma^\prime}[\meta{x} \mapsto \meta{v}]}=\dom{\meta{\Gamma}[\meta{x}\mapsto \meta{\tau_1}]}$, $\dom{\meta{\gamma^\prime}}=\dom{\meta{\Gamma}}$. Subsequently, $(\lambda \meta{x}. \meta{e})[\meta{\gamma^\prime}] \in T(R_{\meta{\tau_1}\to\meta{\tau_2}})$. 
+    \end{itemize}
+
+  \item What lemma relating multisubstitutions and (single-)substitutions do you
+    need for the $\lambda$ case of the proof? State it formally and prove it.
+
+    \textbf{For all $\meta{\gamma}$, $\meta{\gamma^\prime}$, $\meta{e}$, $\meta{\tau}$, $\meta{v}$ and $\meta{x}$, if $\meta{\gamma}=\meta{\gamma^\prime}[\meta{x}\mapsto \meta{v}]$, then $\meta{e}[\meta{\gamma}]=(\meta{e}[\meta{\gamma^\prime}])[\meta{v}/\meta{x}]$}
+    \begin{proof}
+      By induction on the expression $\meta{e}$.
+      \begin{itemize}
+        \item Case $\meta{b}$. $\meta{e}$ in this case is a literal. Then substitution does not change anything, so $\meta{e}[\meta{\gamma}]=(\meta{e}[\meta{\gamma^\prime}])[\meta{v}/\meta{x}]$ holds trivially.
+        \item Case $\lambda \meta{x}.\ \meta{e}$. According to the induction hypothesis, $\meta{e}[\meta{\gamma}]=(\meta{e}[\meta{\gamma^\prime}])[\meta{v}/\meta{x}]$. 
+          \begin{align*}
+            (\lambda \meta{x}.\ \meta{e})[\meta{\gamma^\prime}] &= \lambda \meta{x}.\ \meta{e}[\meta{\gamma^\prime}] \\
+            &= \lambda \meta{x}. (\meta{e}[\meta{\gamma^\prime}])[\meta{v}/\meta{x}] & \text{Induction Hypothesis}\\
+            &= (\lambda \meta{x}.\meta{e}[\meta{\gamma^\prime}])[\meta{v}/\meta{x}] \\
+            &= ((\lambda \meta{x}.\ \meta{e})[\meta{\gamma^\prime}])[\meta{v}/\meta{x}]
+          \end{align*}
+        \item Case $\meta{e_1}\ \meta{e_2}$.
+          \begin{align*}
+            (\meta{e_1}\ \meta{e_2})[\meta{\meta{\gamma}}] &= (\meta{e_1}[\meta{\gamma}]\ \meta{e_2}[\meta{\gamma}]) \\
+            &= (\meta{e_1}[\meta{\gamma^\prime}])[\meta{v}/\meta{x}]\ (\meta{e_2}[\meta{\gamma^\prime}])[\meta{v}/\meta{x}] & \text{Induction Hypothesis} \\
+            &= (\meta{e_1}[\meta{\gamma^\prime}]\ \meta{e_2}[\meta{\gamma^\prime}])[\meta{v}/\meta{x}] \\
+            &= ((\meta{e_1}\ \meta{e_2})[\meta{\gamma^\prime}])[\meta{v}/\meta{x}]
+          \end{align*}
+        \item Case. If-then-else. Similar as the previous case.
+      \end{itemize}
+    \end{proof}
+
+  \item Extend the definition of $R_{\meta{\tau}}$ to the pair type you introduced in your solution to Problem~\ref{prob:pairs}.
+
+    $$R_{\tau_1 \times \tau_2}=\set{(\meta{e_1}, \meta{e_2}) | \meta{e_1} \in T(R_{\meta{\tau_1}}), \meta{e_2} \in T(R_{\meta{\tau_2}})}$$
+
+  \item Extend the definition of $\meta{e}[\meta{\gamma}]$ to support the new
+    kinds of expressions you introduced in your solution to
+    Problem~\ref{prob:pairs}.
+
+    \begin{align*}
+      (\meta{e_1}, \meta{e_2})[\meta{\gamma}] &= (\meta{e_1}[\meta{\gamma}], \meta{e_2}[\meta{\gamma}])
+      % (\meta{e_1}, \meta{e_2}).1[\meta{\gamma}] &= \meta{e_1}[\meta{\gamma}]\\
+      % (\meta{e_1}, \meta{e_2}).2[\meta{\gamma}] &= \meta{e_2}[\meta{\gamma}]
+    \end{align*}
+
+  \item For each new expression you introduced in your solution to
+    Problem~\ref{prob:pairs}, add the corresponding case to the proof of the fundamental theorem for the logical relation.
+    % \textbf{Lemma 6-1. For all well-typed expressions $\meta{e_1}$, $\meta{e_2}$ and values $\meta{v_1}$, $\meta{v_2}$, if $(\meta{e_1}, \meta{e_2}) \to^* (\meta{v_1}, \meta{v_2})$, then $$}
+    \begin{itemize}
+      \item $\inferrule{
+        \meta{\Gamma}\vdash\meta{e_1}:\meta{\tau_1}\and
+        \meta{\Gamma}\vdash\meta{e_2}:\meta{\tau_2}
+      }{\meta{\Gamma}\vdash(\meta{e_1}, \meta{e_2}) : \meta{\tau_1}\times\meta{\tau_2}}$. According to the induction hypothesis, $\exists \meta{v_1} \in R_{\meta{\tau_1}}, \meta{e_1}[\meta{\gamma}] \to^* \meta{v_1}$ and $\exists \meta{v_2} \in R_{\meta{\tau_2}}, \meta{e_2}[\meta{\gamma}] \to^* \meta{v_2}$. Thus $\exists (\meta{v_1}, \meta{v_2 }), \meta{v_1} \in R_{\meta{\tau_1}}, \meta{v_2} \in R_{\meta{\tau_2}}, (\meta{e_1}[\meta{\gamma}], \meta{e_2}[\meta{\gamma}]) \to^* (\meta{v_1}, \meta{v_2})$. According to the definition of multisubstitution, subsequently we can get $(\meta{e_1}, \meta{e_2})[\meta{\gamma}] \to^* (\meta{v_1}, \meta{v_2})$, thus $(\meta{e_1}, \meta{e_2})[\meta{\gamma}] \in T(R_{\meta{\tau_1} \times \meta{\tau_2}})$.
+      \item $\inferrule{
+        \meta{\Gamma}\vdash\meta{e}:\meta{\tau_1}\times\meta{\tau_2}
+      }{\meta{\Gamma}\vdash\meta{e}.1 :\meta{\tau_1}}$. According to the inudction hypothesis, $\exists (\meta{v_1}, \meta{v_2}) \in R_{\meta{\tau_1} \times \meta{\tau_2}}, (\meta{e_1}, \meta{e_2})[\meta{\gamma}] \to^* (\meta{v_1}, \meta{v_2})$. Therefore, $(\meta{e_1}[\meta{\gamma}], \meta{e_1}[\meta{\gamma}]) \to^* (\meta{v_1}, \meta{v_2})$. Since projection occures only when $\meta{e}$ is a value, which is $(\meta{v_1}, \meta{v_2})$, $\meta{e}.1 = (\meta{v_1}, \meta{v_2}).1 = \meta{v_1}$. Since $\meta{v_1} \in R_{\meta{\tau_1}}$, thus $(\meta{e_1}, \meta{e_2})[\meta{\gamma}] \in T(R_{\meta{\tau_1}\times \meta{\tau_2}})$.
+      \item $\inferrule{
+        \meta{\Gamma}\vdash\meta{e}:\meta{\tau_1}\times\meta{\tau_2}
+      }{\meta{\Gamma}\vdash\meta{e}.2 :\meta{\tau_2}}$. Similar as the previous case.
+    \end{itemize}
+  \end{enumerate}
+\end{enumerate}
+
+
+\clearpage
+  \noindent\stlc{} with booleans
+  \[
+    \begin{array}{rcl}
+      \meta{e} & ::= & \meta{x} \mid \lambda \meta{x}.\,\meta{e} \mid \meta{e}\ \meta{e}\mid \meta{b} \mid \progif\ \meta{e}\ \progthen\ \meta{e}\ \progelse\ \meta{e}\\
+      \meta{v} & ::= & \meta{b} \mid \lambda \meta{x}.\,\meta{e}\\
+      \meta{\tau} & ::= & bool \mid \meta{\tau} \to \meta{\tau}\\
+      \meta{\Gamma} & \in & Var \rightharpoonup Type
+    \end{array}
+  \]
+  \boxed{\meta{e} \to \meta{e}}
+  \begin{mathpar}
+    \inferrule{ }{(\lambda\meta{x}.\,\meta{e})\ \meta{v}\to \meta{e}[\meta{v}/\meta{x}]}
+    \and
+    \inferrule{\meta{e_1}\to\meta{e_1'}}{\meta{e_1}\ \meta{e_2} \to\meta{e_1'}\ \meta{e_2}}
+    \and
+    \inferrule{\meta{e_2}\to\meta{e_2'}}{\meta{v}\ \meta{e_2} \to\meta{v}\ \meta{e_2'}}\\
+    \and
+    \inferrule{\meta{e_1}\to\meta{e_1'}}{\progif\ \meta{e_1}\ \progthen\ \meta{e_2}\ \progelse\ \meta{e_3} \to \progif\ \meta{e_1'}\ \progthen\ \meta{e_2}\ \progelse\ \meta{e_3}}\\
+    \and
+    \inferrule{ }{\progif\ \progtrue\ \progthen\ \meta{e_2}\ \progelse\ \meta{e_3} \to \meta{e_2}}
+    \and
+    \inferrule{ }{\progif\ \progfalse\ \progthen\ \meta{e_2}\ \progelse\ \meta{e_3} \to \meta{e_3}}
+  \end{mathpar}
+  Note that we use $\to$ for both the small-step semantics and for function types.
+  You can always tell which one we mean by seeing if the arguments are types or expressions.
+
+  \vspace{3mm}
+
+  \noindent\boxed{\meta{e_1}[\meta{e}/\meta{x}]}
+  \[
+    \begin{array}{rcll}
+      \meta{x}[\meta{e}/\meta{x}] & = & \meta{e} &\\
+      \meta{y}[\meta{e}/\meta{x}] & = & \meta{y} & (\meta{y} \ne \meta{x})\\
+      (\lambda\meta{y}.\, \meta{e_1})[\meta{e}/\meta{x}] & = & \lambda\meta{y}.\, \meta{e_1}[\meta{e}/\meta{x}] & (\meta{y} \ne \meta{x}\ \text{and}\ \meta{y} \not\in FV(\meta{e}))\\
+      (\meta{e_1}\ \meta{e_2})[\meta{e}/\meta{x}] & = & \meta{e_1}[\meta{e}/\meta{x}]\ \meta{e_2}[\meta{e}/\meta{x}]&\\
+      \meta{b}[\meta{e}/\meta{x}] & = & \meta{b} &\\
+      (\progif\ \meta{e_1}\ \progthen\ \meta{e_2}\ \progelse\ \meta{e_3})[\meta{e}/\meta{x}] & = & \progif\ \meta{e_1}[\meta{e}/\meta{x}] &\\
+      & & \progthen\ \meta{e_2}[\meta{e}/\meta{x}] & \\
+      & & \progelse\ \meta{e_3}[\meta{e}/\meta{x}] &
+    \end{array}
+  \]
+  \boxed{FV(\meta{e})}
+  \[
+    \begin{array}{rcl}
+      FV(\meta{x}) & = & \set{\meta{x}} \\
+      FV(\lambda\meta{x}.\, \meta{e}) & = & FV(\meta{e}) - \set{x}\\
+      FV(\meta{e_1}\ \meta{e_2}) & = & FV(\meta{e_1})\cup FV(\meta{e_2})\\
+      FV(\meta{b}) & = & \emptyset\\
+      FV(\progif\ \meta{e_1}\ \progthen\ \meta{e_2}\ \progelse\ \meta{e_3}) & = & FV(\meta{e_1}) \cup FV(\meta{e_2}) \cup FV(\meta{e_3})\\
+    \end{array}
+  \]
+  We say that $\meta{e}$ is \emph{closed} if $FV(\meta{e}) = \emptyset$.
+
+  \vspace{3mm}
+
+  \noindent\boxed{\meta{\Gamma} \vdash \meta{e} : \meta{\tau}}
+  \begin{mathpar}
+    \inferrule{ }{\meta{\Gamma} \vdash \meta{b} : bool}
+    \and
+    \inferrule{\meta{\Gamma} \vdash \meta{e_1} : bool \and \meta{\Gamma} \vdash \meta{e_2} : \meta{\tau}\and \meta{\Gamma} \vdash\meta{e_3} : \meta{\tau} }
+              {\meta{\Gamma} \vdash \progif\ \meta{e_1}\ \progthen\ \meta{e_2}\ \progelse\ \meta{e_3} : \meta{\tau}}
+    \and
+    \inferrule{\meta{x} \in \dom{\meta{\Gamma}} \and \meta{\Gamma}(\meta{x}) = \meta{\tau}}{\meta{\Gamma} \vdash \meta{x} : \meta{\tau}}\\
+    \and
+    \inferrule{\meta{\Gamma}\vdash\meta{e_1}:\meta{\tau_1}\to\meta{\tau_2} \and \meta{\Gamma}\vdash\meta{e_2}:\meta{\tau_1}}
+              {\meta{\Gamma}\vdash\meta{e_1}\ \meta{e_2}:\meta{\tau_2}}
+    \and
+    \inferrule{\meta{\Gamma}[\meta{x}\mapsto\meta{\tau_1}]\vdash\meta{e}:\meta{\tau_2}}
+              {\meta{\Gamma}\vdash\lambda\meta{x}.\,\meta{e}:\meta{\tau_1}\to\meta{\tau_2}}
+  \end{mathpar}
+
+  \clearpage
+  \noindent Definitions for a logical relation to prove termination of \stlc{} with booleans.
+
+  \vspace{3mm}
+
+  \noindent\boxed{T(P)}
+
+  \[
+    T(P) = \set{\meta{e} | \exists\meta{v}.\, \meta{e}\to^*\meta{v} \wedge \meta{v} \in P}
+  \]
+
+  \noindent\boxed{R_{\meta{\tau}}}
+  \[
+    \begin{array}{rcl}
+      R_{bool} & = & \set{\progtrue,\progfalse}\\
+      R_{\meta{\tau_1}\to\meta{\tau_2}} & = & \set{\lambda\meta{x}.\,\meta{e} | \forall \meta{v}\in R_{\meta{\tau_1}}.\, \meta{e}[\meta{v}/\meta{x}] \in T(R_{\meta{\tau_2}})}
+    \end{array}
+  \]
+
+  \vspace{3mm}  
+
+  \[
+    \begin{array}{rcl}
+      \meta{\gamma} & \in & Var \rightharpoonup Expr
+    \end{array}
+  \]
+
+  \vspace{3mm}
+
+  \noindent\boxed{\meta{e}[\meta{\gamma}]}
+  \[
+    \begin{array}{rcll}
+      \meta{x}[\meta{\gamma}] & = & \meta{\gamma}(\meta{x}) &\text{if $\meta{x}\in\dom{\meta{\gamma}}$}\\
+      \meta{x}[\meta{\gamma}] & = & \meta{x} &\text{if $\meta{x}\not\in\dom{\meta{\gamma}}$}\\
+      \meta{b}[\meta{\gamma}] & = & \meta{b} &\\
+      (\lambda\meta{x}.\, \meta{e})[\meta{\gamma}] & = & \lambda\meta{x}.\, \meta{e}[\meta{\gamma} - \meta{x}] & (\meta{x} \not\in FV(\meta{\gamma}(\meta{y}))\text{ for any }\meta{y}\in\dom{\meta{\gamma}})\\
+      (\meta{e_1}\ \meta{e_2})[\meta{\gamma}] & = & \meta{e_1}[\meta{\gamma}]\ \meta{e_2}[\meta{\gamma}]&\\
+
+      (\progif\ \meta{e_1}\ \progthen\ \meta{e_2}\ \progelse\ \meta{e_3})[\meta{\gamma}] & = & \progif\ \meta{e_1}[\meta{\gamma}]\ \progthen\ \meta{e_2}[\meta{\gamma}]\\
+      & & \progelse\ \meta{e_3}[\meta{\gamma}] &
+    \end{array}
+  \]
+
+  \noindent\boxed{\meta{\Gamma}\vdash\meta{\gamma}}
+  \[
+    \meta{\Gamma}\vdash\meta{\gamma} \quad\iff\quad \forall\meta{x}\in\dom{\meta{\Gamma}}.\ \ \meta{x} \in\dom{\meta{\gamma}}\ \wedge\ \meta{\gamma}(\meta{x}) \in R_{\meta{\Gamma}(\meta{x})}
+  \]
+
+  \noindent\boxed{\meta{\Gamma}\vDash\meta{e} : \meta{\tau}}
+  \[
+    \meta{\Gamma}\vDash\meta{e} : \meta{\tau} \quad\iff\quad \forall\meta{\gamma}.\ \meta{\Gamma}\vdash\meta{\gamma}\Rightarrow \meta{e}[\meta{\gamma}] \in T(R_{\meta{\tau}})
+  \]
+  
+  \vspace{3mm}
+  \noindent\textbf{Fundamental theorem of the logical relation:}
+  If $\meta{\Gamma}\vdash\meta{e}:\meta{\tau}$, then $\meta{\Gamma}\vDash\meta{e}:\meta{\tau}$.
+  \begin{proof}[Proof (in class, quickly).]
+    By induction on the derivation that $\meta{\Gamma}\vdash\meta{e}:\meta{\tau}$.
+  \end{proof}
 
 \clearpage
   \noindent\stlc{} with booleans
