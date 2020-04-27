@@ -12,6 +12,7 @@ four_again SUCC ZERO;;
 pair = \x. \y. \f. f x y;;
 fst = \p. p (\x. \y. x);;
 snd = \p. p (\x. \y. y);;
+(* `snd` works since essentially, a pair is a combinator that receives two arguments as the `car` and `cdr` of the pair and a projection function `f` as the "destructor". So in `fst`, the projection function receives two arguments and returns the first one (which is `x` in `pair`) and conversely, `snd` receives two arguments and returns the second one, which is `cdr` (`y`) in `pair` *)
 
 oo = pair one one;;
 ss = \p. pair (multiply (fst p) (snd p)) (succ (snd p));;
@@ -45,6 +46,3 @@ Z = \f. (\x. (f (\y. x x y))) (\x. (f (\y. x x y)));;
 fact_f = \f. (\x. is_zero x one (\n. multiply x (f (pred x)) n));;
 
 factorial_yet_again = Z fact_f;;
-
-(* `snd` works since essentially, a pair is a combinator that receives two arguments as the `car` and `cdr` of the pair and a projection function `f` as the "destructor". So in `fst`, the projection function receives two arguments and returns the first one (which is `x` in `pair`) and conversely, `snd` receives two arguments and returns the second one, which is `cdr` (`y`) in `pair` *)
-

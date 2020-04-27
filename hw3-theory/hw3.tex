@@ -425,9 +425,9 @@ showstringspaces=false}
     Problem~\ref{prob:pairs}.
 
     \begin{align*}
-      (\meta{e_1}, \meta{e_2})[\meta{\gamma}] &= (\meta{e_1}[\meta{\gamma}], \meta{e_2}[\meta{\gamma}])
-      % (\meta{e_1}, \meta{e_2}).1[\meta{\gamma}] &= \meta{e_1}[\meta{\gamma}]\\
-      % (\meta{e_1}, \meta{e_2}).2[\meta{\gamma}] &= \meta{e_2}[\meta{\gamma}]
+      (\meta{e_1}, \meta{e_2})[\meta{\gamma}] &= (\meta{e_1}[\meta{\gamma}], \meta{e_2}[\meta{\gamma}])\\
+      (\meta{e_1}, \meta{e_2}).1[\meta{\gamma}] &= (\meta{e_1}[\meta{\gamma}], \meta{e_2}[\meta{\gamma}]).1\\
+      (\meta{e_1}, \meta{e_2}).2[\meta{\gamma}] &= (\meta{e_1}[\meta{\gamma}], \meta{e_2}[\meta{\gamma}]).2
     \end{align*}
 
   \item For each new expression you introduced in your solution to
@@ -440,7 +440,7 @@ showstringspaces=false}
       }{\meta{\Gamma}\vdash(\meta{e_1}, \meta{e_2}) : \meta{\tau_1}\times\meta{\tau_2}}$. According to the induction hypothesis, $\exists \meta{v_1} \in R_{\meta{\tau_1}}, \meta{e_1}[\meta{\gamma}] \to^* \meta{v_1}$ and $\exists \meta{v_2} \in R_{\meta{\tau_2}}, \meta{e_2}[\meta{\gamma}] \to^* \meta{v_2}$. Thus $\exists (\meta{v_1}, \meta{v_2 }), \meta{v_1} \in R_{\meta{\tau_1}}, \meta{v_2} \in R_{\meta{\tau_2}}, (\meta{e_1}[\meta{\gamma}], \meta{e_2}[\meta{\gamma}]) \to^* (\meta{v_1}, \meta{v_2})$. According to the definition of multisubstitution, subsequently we can get $(\meta{e_1}, \meta{e_2})[\meta{\gamma}] \to^* (\meta{v_1}, \meta{v_2})$, thus $(\meta{e_1}, \meta{e_2})[\meta{\gamma}] \in T(R_{\meta{\tau_1} \times \meta{\tau_2}})$.
       \item $\inferrule{
         \meta{\Gamma}\vdash\meta{e}:\meta{\tau_1}\times\meta{\tau_2}
-      }{\meta{\Gamma}\vdash\meta{e}.1 :\meta{\tau_1}}$. According to the inudction hypothesis, $\exists (\meta{v_1}, \meta{v_2}) \in R_{\meta{\tau_1} \times \meta{\tau_2}}, (\meta{e_1}, \meta{e_2})[\meta{\gamma}] \to^* (\meta{v_1}, \meta{v_2})$. Therefore, $(\meta{e_1}[\meta{\gamma}], \meta{e_1}[\meta{\gamma}]) \to^* (\meta{v_1}, \meta{v_2})$. Since projection occures only when $\meta{e}$ is a value, which is $(\meta{v_1}, \meta{v_2})$, $\meta{e}.1 = (\meta{v_1}, \meta{v_2}).1 = \meta{v_1}$. Since $\meta{v_1} \in R_{\meta{\tau_1}}$, thus $(\meta{e_1}, \meta{e_2})[\meta{\gamma}] \in T(R_{\meta{\tau_1}\times \meta{\tau_2}})$.
+      }{\meta{\Gamma}\vdash\meta{e}.1 :\meta{\tau_1}}$. Let $\meta{e} = (\meta{e_1}, \meta{e_2})$. According to the inudction hypothesis, $\exists (\meta{v_1}, \meta{v_2}) \in R_{\meta{\tau_1} \times \meta{\tau_2}}, (\meta{e_1}, \meta{e_2})[\meta{\gamma}] \to^* (\meta{v_1}, \meta{v_2})$. Therefore, $(\meta{e_1}[\meta{\gamma}], \meta{e_1}[\meta{\gamma}]).1 \to^* (\meta{v_1}, \meta{v_2}).1$. Since projection occures only when $\meta{e}$ is a value, which is $(\meta{v_1}, \meta{v_2})$, $\meta{e}.1 = (\meta{v_1}, \meta{v_2}).1 = \meta{v_1}$. Since $\meta{v_1} \in R_{\meta{\tau_1}}$, thus $\meta{e}.1[\meta{\gamma}] \in T(R_{\meta{\tau_1}\times \meta{\tau_2}})$.
       \item $\inferrule{
         \meta{\Gamma}\vdash\meta{e}:\meta{\tau_1}\times\meta{\tau_2}
       }{\meta{\Gamma}\vdash\meta{e}.2 :\meta{\tau_2}}$. Similar as the previous case.
