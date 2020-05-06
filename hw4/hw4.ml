@@ -5,6 +5,7 @@ type heap_ty = (string * vardecl) list [@@deriving show]
 
 exception EvaluationError of Syntax.location option * string
 exception AssertionError of Syntax.location option
+exception VerificationError of string
 
 (** A module for parsing arguments to our IMP verification tool. *)
 module Args : sig
@@ -318,13 +319,60 @@ let rec wp (e : Syntax.stmt) (pcond : Syntax.expr) : Syntax.expr * Syntax.expr l
                             (with_no_loc (Syntax.Literal (Syntax.VBool true)))
                             invs in
         let (p, c) = wp s inv in
-        (inv, List.append [with_no_loc (Syntax.Binop (with_no_loc (Syntax.Binop (inv, Syntax.And, e)), Syntax.Implies, p));
+        (inv, List.append [
+               with_no_loc (Syntax.Binop (with_no_loc 
+                                                (Syntax.Binop (inv,
+                                                               Syntax.And,
+                                                               e)), 
+                                          Syntax.Implies, p));
                with_no_loc (Syntax.Binop (with_no_loc 
                                                 (Syntax.Binop 
                                                     (inv,
                                                      Syntax.And, 
                                                      with_no_loc (Syntax.Unop (Syntax.Not, e)))),
                                           Syntax.Implies, pcond))] c)
+
+let rec z3_of_type (ty : Syntax.ty): string =
+  match ty with
+    | Syntax.TBool -> "Bool"
+    | Syntax.TInt  -> "Int"
+    | Syntax.TArray ty' -> Printf.sprintf "Array %s Int" (z3_of_type ty')
+
+let z3_negate (ass : string) = Printf.sprintf "(not %s)" ass
+let z3_assert e = Printf.sprintf "(assert %s)" e
+
+let z3_push (z3 : Z3.t) = Z3.raw_send z3 "(push)"
+let z3_pop  (z3 : Z3.t) = Z3.raw_send z3 "(pop)"
+
+let z3_scoped_eval (z3 : Z3.t) (func : Z3.t -> bool): bool =
+  z3_push z3;
+  let result = func z3 in
+  let () = z3_pop z3 in
+  result
+
+let z3_of_decl (id : string) (ty : Syntax.ty): string =
+  let str_ty = z3_of_type ty in
+  Printf.sprintf "(declare-const %s %s)" id str_ty
+
+let declare_consts (z3 : Z3.t) (sigma : heap_ty) =
+  let rec declare_consts_helper bindings =
+    match bindings with
+      | [] -> ()
+      | (id, ty) :: bindings' -> 
+        let () = Z3.raw_send z3 (z3_of_decl id ty.ty) in
+        declare_consts_helper bindings' in
+  declare_consts_helper sigma
+
+let check_expr (z3 : Z3.t) (e : Syntax.expr) =
+  let eval_func z3 = 
+    let z3_expr = z3_negate (z3_of_expr e) in
+    let () = Z3.raw_send z3 (z3_assert z3_expr); Z3.raw_send z3 "(check-sat)" in
+    let res = Z3.raw_read_line z3 in
+    String.equal "unsat" res in
+  if z3_scoped_eval z3 eval_func 
+  then true
+  else raise (VerificationError (Printf.sprintf "Condition Violated: %s" (z3_negate (z3_of_expr e))))
+    
 
 module StringSet = Set.Make(String)
 
@@ -370,11 +418,15 @@ let () =
   in
   try
     match args.mode with
-    | Verify -> begin
-        (* TODO: delete the following lines and write you implementation here *)
-        ignore(sigma2);
-        failwith "verification not yet implemented"
-      end
+    | Verify -> let z3 = Z3.init() in
+                let eval_func z3 = 
+                  declare_consts z3 sigma2;
+                  let (p, cs) = wp stmt (with_no_loc (Syntax.Literal (Syntax.VBool true))) in
+                  let p_unsat = check_expr z3 p in
+                  let cs_unsat = List.fold_left (fun acc cond -> acc && (check_expr z3 cond)) true cs in
+                  p_unsat && cs_unsat in
+                let is_sat = z3_scoped_eval z3 eval_func in
+                if (not is_sat) then raise (VerificationError "Impossible")
     | Interpret ->
        print_endline (show_heap h);
        let h2 = eval_stmt h stmt in
