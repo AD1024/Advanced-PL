@@ -1,0 +1,9 @@
+assume a >= 0 && b >= 0;
+ans := 0;
+n := a;
+while n > 0
+{
+  ans := ans + b;
+  n := n - 1
+};
+assert ans = a * b 

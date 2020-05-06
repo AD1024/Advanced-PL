@@ -1,0 +1,12 @@
+assume n >= 0;
+
+x := 0;
+y := n;
+while y > 0
+  invariant x + y = n
+  invariant y >= y
+{
+  x := x + 1;
+  y := y - 1
+};
+assert x = n

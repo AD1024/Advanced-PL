@@ -1,0 +1,282 @@
+\documentclass{article}
+
+\usepackage{lmodern}
+\usepackage{concrete}
+\usepackage{eulervm}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{mathpartir}
+\usepackage{stmaryrd}
+\usepackage{xcolor}
+\usepackage[shortlabels]{enumitem}
+\usepackage{listings}
+
+% copied from package braket
+% edited to remove whitespace inside braces
+% and to simplify the definition of \Set because we don't use double-vert
+{\catcode`\|=\active
+  \xdef\set{\protect\expandafter\noexpand\csname set \endcsname}
+  \expandafter\gdef\csname set \endcsname#1{\mathinner
+    {\lbrace{\mathcode`\|32768\let|\midvert #1}\rbrace}}
+  \xdef\Set{\protect\expandafter\noexpand\csname Set \endcsname}
+  \expandafter\gdef\csname Set \endcsname#1{\left\{%
+     {\mathcode`\|32768\let|\SetVert #1}\right\}}
+}
+\def\midvert{\egroup\mid\bgroup}
+\makeatletter
+\def\mid@vertical{\mskip1mu\vrule\mskip1mu}
+\def\SetVert{{\egroup\;\mid@vertical\;\bgroup}}
+\makeatother
+
+
+\lstdefinelanguage{imp}
+{morekeywords={while,assert,skip,failed},
+sensitive=true,
+morecomment=[l]{//},
+morestring=[b]",
+}
+\lstset{
+language=imp,
+basicstyle=\ttfamily,
+keywordstyle=\bfseries,
+identifierstyle=,
+showstringspaces=false}
+
+
+\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{changepage}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead[C]{Homework 4: Theory part}
+\fancyhead[R]{CSE 490P}
+\setlength{\headheight}{14pt}
+\newcommand{\meta}[1]{{\color{blue}#1}}
+\newcommand{\todo}[1]{{\huge\color{red}#1}}
+\newcommand{\imp}{\textsc{Imp}}
+\newcommand{\stlc}{\textsc{STLC}}
+\newcommand{\dom}[1]{\ensuremath{\text{dom}\ #1}}
+
+%\skip is already a LaTeX command, so we pick another name
+\newcommand{\progtext}[1]{\ensuremath{\text{\ttfamily\bfseries #1}}}
+\newcommand{\impskip}{\progtext{skip}}
+\newcommand{\assert}{\progtext{assert}}
+\newcommand{\failed}{\progtext{failed}}
+\newcommand{\while}{\progtext{while}}
+\newcommand{\assign}{\ensuremath{\mathrel{\text{\texttt{:=}}}}}
+\newcommand{\progif}{\progtext{if}}
+\newcommand{\progthen}{\progtext{then}}
+\newcommand{\progelse}{\progtext{else}}
+\newcommand{\progtrue}{\progtext{true}}
+\newcommand{\progfalse}{\progtext{false}}
+
+\begin{document}
+\noindent{}The last page of this document contains a reference for \imp{}'s operational semantics and its Hoare-style logic.
+\begin{enumerate}[start=1,label={{\bf Problem \arabic*}.},ref=\arabic*,left=0pt..0pt,widest*=10,align=left,itemindent=*]
+\item This problem covers the $\while$ case in the proof of soundness for Hoare
+  logic (Theorem~\ref{thm:hoare-sound}). Remember that the proof was by
+  induction on the derivation of $\set{\meta{P}}\meta{s}\set{\meta{Q}}$.
+  \begin{enumerate}[(a),left=1em]
+  \item Write out the statement of exactly what we need to prove in the case for the $\while$ rule.
+  
+    \textbf{Show that if $\set{\meta{I}}\ \while\ \meta{e}\ \meta{s}\ \set{\meta{I}\wedge\meta{\neg e}}$ and $\meta{H}\models \meta{I}$ and $\meta{H},\while\ \meta{e}\ \meta{s} \to^* \meta{H^\prime},\meta{s^\prime}$ then $\meta{s^\prime}\neq \failed$ and if $\meta{s^\prime}=\impskip$ then $\meta{H^\prime} \models \meta{I}\wedge \meta{\neg e}$}
+
+  \item Write out the statement of the induction hypothesis we get from rule induction.
+  
+  \textbf{Induction Hypothesis: if $\set{\meta{I}\wedge \meta{e}}\meta{s}\set{\meta{I}}$ and $\meta{H}\models\meta{\meta{I}\wedge \meta{e}}$ and $\meta{H},\meta{s}\to^* \meta{H^\prime},\meta{s^\prime}$ then $\meta{s}\neq\failed$ and if $\meta{s^\prime}=\impskip$ then $\meta{H^\prime} \models 
+  \meta{I}$}
+
+  \item Consider the special case where $\meta{s'} = \impskip$. Explain informally in one or two sentences what an execution
+    \[
+      \meta{H}, \while\ \meta{e}\ \meta{s} \to^* \meta{H'},\impskip
+    \]
+    looks like by relating the execution of the loop to the execution of its body $\meta{s}$.
+
+    Hint: If you're not sure how to proceed, check out the picture
+    on slide 8 in lecture 12 and see if you can figure out what I meant there.
+
+    \begin{itemize}
+      \item Case 1. $\meta{H}, \meta{e} \Downarrow \bot$. Then by the operational semantics, $\meta{H}, \while\ \meta{e}\ \meta{s} \to^* \meta{H}, \impskip$
+      \item Case 2. $\meta{H}, \meta{e} \Downarrow \top$. Then $\meta{s}$ is executed by at least once, until the conditional $\meta{e}$ evaluated to $\bot$, the whole expression steps to $\meta{H^\prime}, \impskip$.
+    \end{itemize}
+
+  \item\label{prob:while-to-skip-lemma} State (but do not prove) a formal lemma for this special case of the form
+    \begin{quote}
+      If $\meta{H}, \while\ \meta{e}\ \meta{s} \to^* \meta{H'},\impskip$, then ...
+    \end{quote}
+    In order to state your lemma, you will very likely need to introduce a new
+    concept/definition.  State clearly what concept you're introduce and define it
+    precisely. Again, do not attempt to prove your lemma. (It's not going to be
+    strong enough to prove, and it's not sufficient to finish the soundness proof anyway.)
+
+    \textbf{Define $\meta{H}\to_s^* \meta{H^\prime}$ denotes that the initial heap is $H$, and after executing $\meta{s}$ zero or more times, the resulted heap is $\meta{H^\prime}$}
+
+    \textbf{Lemma 1-1. $\meta{H}, \while\ \meta{e}\ \meta{s} \to^* \meta{H'},\impskip$, then $\exists \meta{H_0}, \meta{H}\to_s^* \meta{H_0}$ and $\meta{H^\prime} = \meta{H_0}$}.
+
+  \item Now consider the general case where $\meta{s'}$ can be anything. Explain informally in one or two sentences
+    what an execution
+    \[
+      \meta{H}, \while\ \meta{e}\ \meta{s} \to^* \meta{H'},\meta{s'}
+    \]
+    looks like by relating it to the execution of the loop body $\meta{s}$.
+
+    Hint: The global structure is similar to the special case where
+    $\meta{s'}=\impskip$. The only difference is on the last iteration of the
+    loop. The picture on slide 8 of lecture 12 may help again.
+
+    \begin{itemize}
+      \item Case. $\meta{s^\prime}=\impskip$. Case above.
+      \item Case. $\meta{s^\prime}=\failed$. This must be the case where $\meta{H}, \meta{e} \Downarrow \top$. Moreover, the only possibility is that $\meta{H}, \meta{s} \to^* \meta{H_1}, \meta{s}$ and then $\meta{H_1}, \meta{s} \to \meta{H^\prime}, \failed$.
+      \item Case. $\meta{s^\prime}$ is in the middle of the execution of the while loop.$\exists\ \meta{s_1}$ such that $\meta{H}, \meta{s} \to^* \meta{H^\prime}, \meta{s_1}$ under the condition that $\meta{H}, \meta{e} \Downarrow \top$
+      \item Case. $\while\ \meta{e}\ \meta{s}$. Takes zero step, so $\meta{H^\prime}=\meta{H}$. 
+    \end{itemize}
+
+  \item State (but do not prove yet) a formal lemma for this special case of the form
+    \begin{quote}
+      If $\meta{H}, \while\ \meta{e}\ \meta{s} \to^* \meta{H'},\meta{s'}$, then ...
+    \end{quote}
+    You will likely need to use the same concept you introduced in part \ref{prob:while-to-skip-lemma}.
+    The scribblings on slide 10 of lecture 12 may help you.
+
+    \textbf{Lemma 1-2. If $\meta{H}, \while\ \meta{e}\ \meta{s} \to^* \meta{H'},\meta{s'}$, then $\exists \meta{H_1}. \meta{H}\to_{\meta{s}}^* \meta{H_1}$ and one of the following holds}
+    \begin{itemize}
+      \item Case $\meta{s^\prime}=\while\ \meta{e}\ \meta{s}$. $\meta{H_1}=\meta{H^\prime}$
+      \item Case $\meta{s^\prime}=\impskip$. $\meta{H_1}=\meta{H^\prime}$ and $\meta{H^\prime}, \meta{e}\Downarrow \bot$
+      \item Case $\meta{s^\prime}=\failed$. $\meta{H_1}, \meta{s} \to \meta{H^\prime}, \failed$ and $\meta{H_1}, \meta{e} \Downarrow \top$.
+      \item Case $\meta{s^\prime}=\meta{s_1}; \while\ \meta{e}\ \meta{s}$ for some $\meta{s_1}$. $\meta{H_1}, \meta{e} \Downarrow \top$ and $\meta{H_1}, \meta{s} \to^* \meta{H^\prime}, \meta{s_1}$.
+    \end{itemize}
+
+  \item Remember that we should never attempt to prove a lemma unless we are
+    sure it help us with our bigger proof. Complete the proof of the $\while$
+    case of the soundness theorem using your lemma.
+    \begin{proof}
+      While case soundness.
+      \begin{itemize}
+        \item Case. $\inferrule{
+          \set{\meta{I}\wedge \meta{e}} \meta{s} \set{\meta{I}}
+        }{\set{\meta{I}} \while\ \meta{e}\ \meta{s} \set{\meta{I} \wedge \meta{\neg e}}}$. By applying the lemma, we split to four cases:
+        \begin{enumerate}
+          \item $\meta{s^\prime}=\impskip$. According to induction hypothesis, we have $\meta{H^\prime}\models \meta{I}$. Also, we know, by case spliting, that $\meta{H^\prime}, \meta{e} \Downarrow \bot$; therefore, since $\meta{H^\prime}$ is not empty and $\meta{H^\prime} \not\models \meta{e}$, thus $\meta{H^\prime}\models\meta{\neg e}$. Therefore, $\meta{H^\prime} \models \set{\meta{I} \wedge \meta{\neg e}}$.
+          \item $\meta{s^\prime}=\while\ \meta{e}\ \meta{s}$. Then since $\meta{s^\prime}$ is not $\failed$, and $\meta{s^\prime}$ is not $\impskip$, the conclusion holds trivially.
+          \item $\meta{s^\prime}=\failed$. According to the condition on case split, $\exists\ \meta{H_1}, \meta{s} \to \meta{H^\prime}, \failed$. However, according to our induction hypothesis, for any $\meta{H} \models \set{\meta{I}\wedge \meta{e}}$, $\meta{H}, \meta{s} \to^* \meta{H_1^\prime}, \meta{s^\prime}$, then $\meta{s^\prime}$ is not $\failed$, which contradicts to our assumption. Thus the conclusion holds trivially.
+          \item $\meta{s^\prime}$ is in the middle of the execution. Similar as Case ii.
+        \end{enumerate}
+      \end{itemize}
+    \end{proof}
+  \item Prove your lemma by rule induction on the derivation $\to^*$. Be sure to
+    use the definition of $\to^*$ included on the last page of this document,
+    and not the one in the slides from week 2, or your life will be miserable.
+    \begin{proof}
+      By induction on $\to^*$.
+      \begin{itemize}
+        \item $\inferrule{ }{\meta{H}, \while\ \meta{e}\ \meta{s} \to^* \meta{H}, \while\ \meta{e}\ \meta{s}}$. Pick $\meta{H^\prime}=\meta{H}$, and Case 1 in \textbf{Lemma 1-2} holds. 
+        \item $\inferrule{
+          \meta{H}, \while\ \meta{e}\ \meta{s} \to \meta{H_1}, \meta{s_1}\and
+          \meta{H_1}, \meta{s_1} \to^* \meta{H^\prime}, \meta{s^\prime}
+        }{\meta{H_1}\while\ \meta{e}\ \meta{s}\to^* \meta{H^\prime}, \meta{s^\prime}}$. By case analysis on $\meta{s_1}$
+        \begin{enumerate}
+          \item Case $\meta{s_1} = \meta{s}; \while\ \meta{e}\ \meta{s}$. In this case the next steps are $$\inferrule{
+            \meta{H_1}, \meta{s_1};\while\ \meta{e}\ \meta{s} \to \meta{H_1^\prime}, \meta{s_1^\prime}; \while\ \meta{e}\ \meta{s}\and
+            \meta{H_1^\prime}, \meta{s_1^\prime};\while\ \meta{e}\ \meta{s} \to^* \meta{H^\prime}, \meta{s^\prime}
+          }{\meta{H_1}, \meta{s_1};\while\ \meta{e}\ \meta{s}\to^* \meta{H^\prime}, \meta{s^\prime}}$$ with $\meta{H_1}, \meta{s_1}\to \meta{H_1^\prime}, \meta{s_1^\prime}$. By cases analysis on $\meta{s_1^\prime}$
+          \begin{enumerate}
+            \item Case $\meta{s_1^\prime}$ is not $\failed$. In this case, since we are to execute the body of while loop, according to the definition of $\to$ on $\while$, $\meta{H_1}, \meta{e} \Downarrow \top$. Since, according to the assumptions, $\meta{H_1}, \meta{s_1} \to^* \meta{H^\prime}, \meta{s^\prime}$, Case 4 of \textbf{Lemma 1-2} holds.
+            \item Case $\meta{s_1^\prime}$ is $\failed$. Then we know that $\meta{H_1}, \meta{s_1}\to \meta{H_1^\prime}, \failed$
+          \end{enumerate}
+          \item Case $\meta{s_1}=\impskip$. Then $\meta{H_1}, \meta{e} \Downarrow \bot$ according to the definition of $\to$ on $\while$. Then, since $\meta{s_1}=\impskip$, $\meta{H_1}, \impskip \to^* \meta{H^\prime}, \impskip$, where $\meta{H^\prime}=\meta{H_1}$, therefore, Case 2 of $\textbf{Lemma 1-2}$ holds.
+          \item Case $\meta{s_1} = \failed$. Impossible.
+        \end{enumerate}
+      \end{itemize}
+    \end{proof}
+  \end{enumerate}
+  The remaining subproblems are extra credit.
+  \begin{enumerate}[resume*]
+  \item \textit{Extra credit.} Explain informally in one sentence the difference between
+    the definition of $\to^*$ in this document and the one we used in week 2.
+  \item \textit{Extra credit.} Explain informally in one or two sentences why your lemma
+    would not be directly provable on the definition of $\to^*$ from week 2.
+  \item \textit{Extra credit.} Prove (by induction on various things) that the
+    two definitions of $\to^*$ are equivalent in the sense that they relate the
+    same heap-statement pairs to each other. Be sure to make it clear which
+    definition you are referring to at any given time, perhaps by giving them
+    different names like $\to_1^*$ and $\to^*_2$ or something. In our solution,
+    we needed two top-level inductions (one for each direction) and two lemmas
+    proved by induction (one for each direction).
+  \end{enumerate}
+\end{enumerate}
+
+\clearpage
+  \noindent\imp
+  \[
+    \begin{array}{rcl}
+      \meta{e} & ::= & \meta{n} \mid \meta{e} + \meta{e} \mid \meta{e} - \meta{e} \mid \meta{e} \wedge \meta{e} \mid \lnot \meta{e}
+                       \mid \meta{b} \mid \meta{e} < \meta{e} \mid \meta{e} = \meta{e} \mid \meta{x}\\
+      \meta{v} & ::= & \meta{n} \mid \meta{b}\\
+      \meta{s} & ::= & \impskip \mid \assert\ \meta{e} \mid \failed \mid \meta{x} \assign \meta{e} \mid \meta{s}; \meta{s} \mid \while\ \meta{e}\ \meta{s}\\
+      \meta{\tau} & ::= & int \mid bool
+    \end{array}
+    \qquad
+    \begin{array}{rcl}
+      \meta{n} & \in & \mathbb{Z}\\
+      \meta{b} & \in & \mathbb{B}\\
+      \meta{x} & \in & \text{Var}\ (= \text{String})\\
+      \meta{H} & \in & \text{Var} \rightharpoonup \text{Value}\\
+      \meta{\Sigma} & \in & \text{Var} \rightharpoonup \text{Type}
+    \end{array}
+  \]
+  \boxed{\meta{H},\meta{s} \to \meta{H},\meta{s}}
+  \begin{mathpar}
+    \inferrule{\meta{H},\meta{e}\Downarrow\meta{v}}{\meta{H},\meta{x}\assign\meta{e} \to \meta{H}[\meta{x}\mapsto\meta{v}],\impskip}
+    \and
+    \inferrule{\meta{H},\meta{e}\Downarrow\meta{\top}}{\meta{H},\assert\ \meta{e} \to \meta{H},\impskip}
+    \and
+    \inferrule{\meta{H},\meta{e}\Downarrow\meta{\bot}}{\meta{H},\assert\ \meta{e} \to \meta{H},\failed}
+    \and
+    \inferrule{\meta{H},\meta{s_1} \to \meta{H'},\meta{s_1'}}{\meta{H},\meta{s_1};\meta{s_2} \to \meta{H'},\meta{s_1'};\meta{s_2}}
+    \and
+    \inferrule{ }{\meta{H},\impskip;\meta{s} \to \meta{H},\meta{s}}
+    \and
+    \inferrule{ }{\meta{H},\failed;\meta{s} \to \meta{H},\failed}\\
+    \and
+    \inferrule{\meta{H},\meta{e}\Downarrow\meta{\top}}{\meta{H},\while\ \meta{e}\ \meta{s} \to \meta{H},\meta{s};\while\ \meta{e}\ \meta{s}}
+    \and
+    \inferrule{\meta{H},\meta{e}\Downarrow\meta{\bot}}{\meta{H},\while\ \meta{e}\ \meta{s} \to \meta{H},\impskip}
+  \end{mathpar}
+  \boxed{\meta{H},\meta{s} \to^* \meta{H},\meta{s}}
+  \begin{mathpar}
+    \inferrule{ }{\meta{H},\meta{s} \to^* \meta{H},\meta{s}}
+    \and
+    \inferrule{\meta{H_1},\meta{s_1} \to^* \meta{H_2},\meta{s_2} \and \meta{H_2},\meta{s_2} \to \meta{H_3},\meta{s_3}}{\meta{H_1},\meta{s_1} \to^* \meta{H_3},\meta{s_3}}
+  \end{mathpar}
+  \noindent\boxed{\set{\meta{P}}\meta{s}\set{\meta{Q}}}
+  \begin{mathpar}
+    \inferrule{ }{\set{\meta{P}}\impskip\set{\meta{P}}}
+    \and
+    \inferrule{\meta{P}\Rightarrow\meta{e}}{\set{\meta{P}}\assert\ \meta{e}\set{\meta{P}}}
+    \and
+    \inferrule{ }{\set{\meta{P}[\meta{e}/\meta{x}]}\meta{x} \assign \meta{e}\set{\meta{P}}}
+    \and
+    \inferrule{\set{\meta{P}}\meta{s_1}\set{\meta{R}}\and \set{\meta{R}}\meta{s_2}\set{\meta{Q}}}{\set{\meta{P}}\meta{s_1};\meta{s_2}\set{\meta{Q}}}
+    \and
+    \inferrule{\set{\meta{I}\wedge\meta{e}}\meta{s}\set{\meta{I}}}{\set{\meta{I}}\while\ \meta{e}\ \meta{s}\set{\meta{I}\wedge\lnot\meta{e}}}
+    \and
+    \inferrule{\meta{P}\Rightarrow \meta{P'}\and\set{\meta{P'}}\meta{s}\set{\meta{Q'}}\and\meta{Q'}\Rightarrow\meta{Q}}{\set{\meta{P}}\meta{s}\set{\meta{Q}}}
+  \end{mathpar}
+  \noindent\boxed{\meta{H}\vDash \meta{P}}
+  \[
+    \begin{array}{rcl}
+      \meta{H}\vDash \meta{P} & = & \meta{H},\meta{P}\Downarrow \meta{\top}
+    \end{array}
+  \]
+  \begin{theorem}[Soundness of the logic with respect to the operational semantics.]\label{thm:hoare-sound}
+    If $\set{\meta{P}}\meta{s}\set{\meta{Q}}$ and $\meta{H}\vDash\meta{P}$ and $\meta{H},\meta{s}\to^*\meta{H'},\meta{s'}$,
+    then $\meta{s'}\ne\failed$ and if $\meta{s'}=\impskip$ then $\meta{H'}\vDash\meta{Q}$.
+  \end{theorem}
+  \begin{proof}
+    By induction on the derivation of $\set{\meta{P}}\meta{s}\set{\meta{Q}}$. All cases but the $\while$ rule were covered in lecture.
+    (Slides 8 and 10 of Lecture 12 cover the $\while$ rule, but we didn't talk about them in lecture due to time.)
+  \end{proof}
+\end{document}

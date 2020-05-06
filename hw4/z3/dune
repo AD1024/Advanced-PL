@@ -1,0 +1,5 @@
+(library
+ (preprocess (pps ppx_deriving.show ppx_inline_test ppx_expect))
+ (libraries unix)
+ (inline_tests)
+ (name z3))

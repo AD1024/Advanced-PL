@@ -1,0 +1,2 @@
+[("n", (Syntax.VInt 10))]
+[("y", (Syntax.VInt 0)); ("x", (Syntax.VInt 10)); ("n", (Syntax.VInt 10))]

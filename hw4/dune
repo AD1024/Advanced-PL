@@ -1,0 +1,20 @@
+(ocamllex
+  (modules lexer))
+
+(menhir
+ (modules parser)
+ (flags --strict))
+
+(executable
+ (preprocess (pps ppx_deriving.show))
+ (name hw4)
+ (libraries z3))
+
+(rule
+  (with-stdout-to test.output
+  (with-stdin-from test.input
+    (run ./hw4.exe -interpret -heap n=10))))
+
+(rule
+ (alias runtest)
+ (action (diff test.expected test.output)))
