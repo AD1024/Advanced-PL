@@ -2,6 +2,8 @@ assume a >= 0 && b >= 0;
 ans := 0;
 n := a;
 while n > 0
+  invariant n >= 0
+  invariant ans = (a - n) * b
 {
   ans := ans + b;
   n := n - 1
