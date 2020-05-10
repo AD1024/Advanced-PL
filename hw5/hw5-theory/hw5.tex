@@ -88,6 +88,75 @@ showstringspaces=false}
   Homework~3, except at the type variable level rather than the term variable
   level. There is also an additional complication due to the interaction between
   $\meta{\Gamma}$ and $\meta{\Delta}$ in the typing judgment. Proceed carefully!
+
+  \begin{quote}
+    \textbf{Lemma 0. forall $\meta{\Delta}$, and type variables $\meta{\alpha}$, $\meta{\beta}$, if $\meta{\alpha} \neq \meta{\beta}$ and $\meta{\Delta}, \meta{\alpha}\vdash\meta{\beta}$ then $\meta{\Delta}\vdash\meta{\beta}$}.
+  \end{quote}
+  \begin{proof}
+    By induction on $\meta{\Delta},\meta{\alpha}\vdash\meta{\beta}$.
+    \begin{itemize}
+      \item Case $\inferrule{
+        \meta{\beta} \in \meta{\Delta}, \meta{\alpha}
+      }{\meta{\Delta},\meta{\alpha}\vdash\meta{\beta}}$. Since $\meta{\beta}\neq\meta{\alpha}$, it must be the case that $\meta{\beta}\in \meta{\Delta}$. Therefore, $\meta{\Delta}\vdash\meta{\beta}$.
+      \item Other cases are trivial since $\meta{\beta}$ is not a type variable.
+    \end{itemize}
+  \end{proof}
+
+  \begin{quote}
+      \textbf{Lemma 1-0: forall $\meta{\Delta}$, $\meta{\alpha}$, $\meta{\beta}$, if $\meta{\beta} \in FTV(\meta{\alpha}$) and $\meta{\Delta}\vdash\meta{\alpha}$ then $\meta{\Delta}\vdash\meta{\beta}$}.
+  \end{quote}
+  \begin{proof}
+    By induction on $\meta{\Delta}\vdash\meta{\alpha}$.
+    \begin{itemize}
+      \item Case $\inferrule{
+        \meta{\alpha} \in \meta{\Delta}
+      }{\meta{\Delta}\vdash\meta{\alpha}}$. In this case, $FTV(\meta{\alpha})=\emptyset$, therefore this case is vacuous.
+      \item Case $\inferrule{
+        \meta{\Delta}\vdash\meta{\tau_1}\and
+        \meta{\Delta}\vdash\meta{\tau_2}
+      }{\meta{\Delta}\vdash\meta{\tau_1}\to\meta{\tau_2}}$. $\meta{\beta}\in FTV(\meta{\tau_1}) \cup FTV(\meta{\tau_2})$, by case split on the occurence of $\meta{\beta}$:
+        \begin{enumerate}
+          \item $\meta{\beta}\in FTV(\meta{\tau_1})$. According to the induction hypothesis, $\meta{\Delta}\vdash\meta{\beta}$
+          \item $\meta{\beta}\in FTV(\meta{\tau_2})$. Similar as previous case.
+        \end{enumerate}
+      \item Case $\inferrule{
+        \meta{\alpha}\not\in \meta{\Delta}\and
+        \meta{\Delta},\meta{\alpha}\vdash\meta{\tau}
+      }{\meta{\Delta}\vdash\forall \meta{\alpha}.\ \meta{\tau}}$. According to the induction hypothesis, $\meta{\Delta}, \meta{\alpha}\vdash \meta{\beta}$. Since according to the definition of $FTV$, $\meta{\beta} \neq \meta{\alpha}$, therefore, according to \textit{Lemma 0}, $\meta{\Delta}\vdash\meta{\beta}$.
+    \end{itemize}
+  \end{proof}
+  \begin{quote}
+     \textbf{Lemma 1-1: forall $\meta{\Delta}$, $\meta{\Gamma}$, $\meta{\alpha}$, $\meta{\beta}$, $\meta{e}$, if $\meta{\beta} \in FTV(\meta{\alpha})$ and $\meta{\Delta};\meta{\Gamma}\vdash\meta{e}:\meta{\alpha}$ then $\meta{\Delta}\vdash\meta{\beta}$}
+  \end{quote}
+  \begin{proof}
+    By induction on $\meta{\Delta};\meta{\Gamma}\vdash\meta{e}:\meta{\alpha}$.
+    \begin{itemize}
+      \item Case $\inferrule{
+        \meta{x} \in \dom{\meta{\Gamma}}\and
+        \meta{\Gamma}(\meta{x}) = \meta{\alpha}\and
+        \meta{\Delta}\vdash\meta{\Gamma}
+      }{\meta{\Delta};\meta{\Gamma}\vdash\meta{x}:\meta{\alpha}}$. In this case, $\meta{\alpha}$ is a type variable, and $FTV(\meta{\alpha}) = \meta{\alpha}$, thus $\meta{\beta}=\meta{\alpha}$. Since $\meta{\Delta}\vdash\meta{\Gamma}$ and $\meta{\Gamma}(\meta{x})=\meta{\alpha}$, $\meta{\Delta}\vdash\meta{\alpha}$ and thus $\meta{\Delta}\vdash\meta{\beta}$
+      \item Case $\inferrule{\meta{\Delta}\vdash\meta{\tau_1}\and \meta{\Delta};\meta{\Gamma}[\meta{x}\mapsto\meta{\tau_1}]\vdash\meta{e} : \meta{\tau_2}}{\meta{\Delta};\meta{\Gamma}\vdash\lambda\meta{x}:\meta{\tau}.\,\meta{e} : \meta{\tau_1}\to\meta{\tau_2}}$. According to the definition of $FTV$, $\meta{\beta}\in FTV(\meta{\tau_1}) \cup FTV(\meta{\tau_2})$. By case split on the occurence of $\meta{\beta}$.
+        \begin{enumerate}
+          \item Case $\meta{\beta}\in FTV(\meta{\tau_1})$. According to \textit{Lemma 1-0}, $\meta{\Delta}\vdash\meta{\beta}$.
+          \item Case $\meta{\beta}\in FTV(\meta{\tau_2})$. According to the induction hypothesis and \textit{Lemma 1-0}, $\meta{\Delta}\vdash\meta{\beta}$.
+        \end{enumerate}
+      \item Case $\inferrule{
+        \meta{\Delta};\meta{\Gamma}\vdash\meta{e_1}:\meta{\tau_1}\to\meta{\tau_2}\and
+        \meta{\Delta};\meta{\Gamma}\vdash\meta{e_2}:\meta{\tau_1}
+      }{\meta{\Delta};\meta{\Gamma}\vdash\meta{e_1}\ \meta{e_2}:\meta{\tau_2}}$. Since $\meta{\beta}\in FTV(\meta{\tau_2})$, $\meta{\beta}\in FTV(\meta{\tau_1})\cup FTV(\meta{\tau_2})$. Therefore, according to the the induction hypothesis, $\meta{\Delta}\vdash\meta{\beta}$.
+      \item Case $\inferrule{
+        \meta{\Delta};\meta{\Gamma}\vdash\meta{e}:\forall\meta{\alpha}.\ \meta{\tau}
+      }{\meta{\Delta};\meta{\Gamma}\vdash\meta{e}\ \meta{\tau_1}:\meta{\tau[\meta{\tau_1}/\meta{\alpha}]}}$. Since there is no $\meta{\alpha}$ in $\meta{\tau}[\meta{\tau_1}/\meta{\alpha}]$, so $\meta{\beta}\neq \meta{\alpha}$. Moreover, $\meta{\beta}\in FTV(\meta{\tau[\meta{\tau_1}/\meta{\alpha}]})$, so directly we can get $\meta{\tau} - \set{\meta{\alpha}}$. Thus according to the induction hypothesis, $\meta{\Delta}\vdash \meta{\beta}$.
+    \end{itemize}
+  \end{proof}
+  \begin{quote}
+    If $\cdot;\cdot\vdash\meta{e}:\meta{\tau}$, then $FTV(\meta{\tau}) = \emptyset$.
+  \end{quote}
+  \begin{proof}
+    Suppose $FTV(\meta{\tau}) \neq \emptyset$, then $\exists \meta{\beta} \in FTV(\meta{\tau})$. According to $\textit{Lemma 1-1}$, $\cdot\vdash\meta{\beta}$. However, $\meta{\Delta}$ in this case is an empty set, this contradicts with $\cdot\vdash\meta{\beta}$. Therefore, $FTV(\meta{\tau})$ must be $\emptyset$.
+  \end{proof}
+
 \item Consider the following pseudo untyped $\lambda$-calculus program, which assumes a language with built-in integers, booleans, and pairs.
   \[
     \lambda f.\ (f\ 0, f\ \mathtt{true})
