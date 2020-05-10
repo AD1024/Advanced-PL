@@ -122,7 +122,7 @@ showstringspaces=false}
       \item Case $\inferrule{
         \meta{\alpha}\not\in \meta{\Delta}\and
         \meta{\Delta},\meta{\alpha}\vdash\meta{\tau}
-      }{\meta{\Delta}\vdash\forall \meta{\alpha}.\ \meta{\tau}}$. According to the induction hypothesis, $\meta{\Delta}, \meta{\alpha}\vdash \meta{\beta}$. Since according to the definition of $FTV$, $\meta{\beta} \neq \meta{\alpha}$, therefore, according to \textit{Lemma 0}, $\meta{\Delta}\vdash\meta{\beta}$.
+      }{\meta{\Delta}\vdash\forall \meta{\alpha}.\ \meta{\tau}}$. Since $\meta{\beta}\in FTV(\forall\meta{\alpha}.\ \meta{\tau})$, according to the definition of $FTV$, $\meta{\beta}\in FTV(\meta{\tau})-\set{\meta{\alpha}}$. By monotonicity, $\meta{\beta}\in FTV(\meta{\tau})$. According to the induction hypothesis, $\meta{\Delta}, \meta{\alpha}\vdash \meta{\beta}$. Since according to the definition of $FTV$, $\meta{\beta} \neq \meta{\alpha}$, therefore, according to \textit{Lemma 0}, $\meta{\Delta}\vdash\meta{\beta}$.
     \end{itemize}
   \end{proof}
   \begin{quote}
@@ -147,7 +147,7 @@ showstringspaces=false}
       }{\meta{\Delta};\meta{\Gamma}\vdash\meta{e_1}\ \meta{e_2}:\meta{\tau_2}}$. Since $\meta{\beta}\in FTV(\meta{\tau_2})$, $\meta{\beta}\in FTV(\meta{\tau_1})\cup FTV(\meta{\tau_2})$. Therefore, according to the the induction hypothesis, $\meta{\Delta}\vdash\meta{\beta}$.
       \item Case $\inferrule{
         \meta{\Delta};\meta{\Gamma}\vdash\meta{e}:\forall\meta{\alpha}.\ \meta{\tau}
-      }{\meta{\Delta};\meta{\Gamma}\vdash\meta{e}\ \meta{\tau_1}:\meta{\tau[\meta{\tau_1}/\meta{\alpha}]}}$. Since there is no $\meta{\alpha}$ in $\meta{\tau}[\meta{\tau_1}/\meta{\alpha}]$, so $\meta{\beta}\neq \meta{\alpha}$. Moreover, $\meta{\beta}\in FTV(\meta{\tau[\meta{\tau_1}/\meta{\alpha}]})$, so directly we can get $\meta{\tau} - \set{\meta{\alpha}}$. Thus according to the induction hypothesis, $\meta{\Delta}\vdash \meta{\beta}$.
+      }{\meta{\Delta};\meta{\Gamma}\vdash\meta{e}\ \meta{\tau_1}:\meta{\tau[\meta{\tau_1}/\meta{\alpha}]}}$. Since there is no $\meta{\alpha}$ in $\meta{\tau}[\meta{\tau_1}/\meta{\alpha}]$, so $\meta{\beta}\neq \meta{\alpha}$. Moreover, $\meta{\beta}\in FTV(\meta{\tau[\meta{\tau_1}/\meta{\alpha}]})$, so directly we can get $\meta{\beta}\in FTV(\meta{\tau}) - \set{\meta{\alpha}}$. Thus according to the induction hypothesis, $\meta{\Delta}\vdash \meta{\beta}$.
     \end{itemize}
   \end{proof}
   \begin{quote}
