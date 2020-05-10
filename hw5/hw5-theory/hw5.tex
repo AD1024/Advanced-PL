@@ -1,0 +1,436 @@
+\documentclass{article}
+
+\usepackage{lmodern}
+\usepackage{concrete}
+\usepackage{eulervm}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{mathpartir}
+\usepackage{stmaryrd}
+\usepackage{xcolor}
+\usepackage[shortlabels]{enumitem}
+\usepackage{listings}
+
+% copied from package braket
+% edited to remove whitespace inside braces
+% and to simplify the definition of \Set because we don't use double-vert
+{\catcode`\|=\active
+  \xdef\set{\protect\expandafter\noexpand\csname set \endcsname}
+  \expandafter\gdef\csname set \endcsname#1{\mathinner
+    {\lbrace{\mathcode`\|32768\let|\midvert #1}\rbrace}}
+  \xdef\Set{\protect\expandafter\noexpand\csname Set \endcsname}
+  \expandafter\gdef\csname Set \endcsname#1{\left\{%
+     {\mathcode`\|32768\let|\SetVert #1}\right\}}
+}
+\def\midvert{\egroup\mid\bgroup}
+\makeatletter
+\def\mid@vertical{\mskip1mu\vrule\mskip1mu}
+\def\SetVert{{\egroup\;\mid@vertical\;\bgroup}}
+\makeatother
+
+
+\lstdefinelanguage{imp}
+{morekeywords={while,assert,skip,failed},
+sensitive=true,
+morecomment=[l]{//},
+morestring=[b]",
+}
+\lstset{
+language=imp,
+basicstyle=\ttfamily,
+keywordstyle=\bfseries,
+identifierstyle=,
+showstringspaces=false}
+
+
+\theoremstyle{definition}
+\newtheorem{theorem}{Theorem}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{changepage}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead[C]{Homework 5: Theory part}
+\fancyhead[R]{CSE 490P}
+\setlength{\headheight}{14pt}
+\newcommand{\meta}[1]{{\color{blue}#1}}
+\newcommand{\todo}[1]{{\huge\color{red}#1}}
+\newcommand{\imp}{\textsc{Imp}}
+\newcommand{\stlc}{\textsc{STLC}}
+\newcommand{\dom}[1]{\ensuremath{\text{dom}\ #1}}
+
+%\skip is already a LaTeX command, so we pick another name
+\newcommand{\progtext}[1]{\ensuremath{\text{\ttfamily\bfseries #1}}}
+\newcommand{\impskip}{\progtext{skip}}
+\newcommand{\assert}{\progtext{assert}}
+\newcommand{\failed}{\progtext{failed}}
+\newcommand{\while}{\progtext{while}}
+\newcommand{\assign}{\ensuremath{\mathrel{\text{\texttt{:=}}}}}
+\newcommand{\progif}{\progtext{if}}
+\newcommand{\progthen}{\progtext{then}}
+\newcommand{\progelse}{\progtext{else}}
+\newcommand{\progtrue}{\progtext{true}}
+\newcommand{\progfalse}{\progtext{false}}
+
+\begin{document}
+\noindent{}The last two pages of this document contain a reference on the syntax, operational semantics, type system, and (unary) logical relation for System F.
+\begin{enumerate}[start=1,label={{\bf Problem \arabic*}.},ref=\arabic*,left=0pt..0pt,widest*=10,align=left,itemindent=*]
+\item Prove (by induction on a thing of your choice) the following statement about System F's type system.
+  \begin{quote}
+    If $\cdot;\cdot\vdash\meta{e}:\meta{\tau}$, then $\meta{\tau}$ is closed (that is, $FTV(\meta{\tau}) = \emptyset$).
+  \end{quote}
+
+  Hint: This is similar to Problem~1 on Homework~3, except that we are talking about the free \emph{type} variables of the \emph{type} $\meta{\tau}$,
+  rather than the free term variables of $\meta{e}$.
+
+  Hint: You will need a similar generalization as you did with Problem~1 on
+  Homework~3, except at the type variable level rather than the term variable
+  level. There is also an additional complication due to the interaction between
+  $\meta{\Gamma}$ and $\meta{\Delta}$ in the typing judgment. Proceed carefully!
+\item Consider the following pseudo untyped $\lambda$-calculus program, which assumes a language with built-in integers, booleans, and pairs.
+  \[
+    \lambda f.\ (f\ 0, f\ \mathtt{true})
+  \]
+  \begin{enumerate}[(a),left=1em]
+  \item Suppose you transcribed this program into OCaml (no need to turn in any
+    such transcription). Explain briefly and informally why it would not
+    typecheck. (It's ok to base your explanation purely on your intuition about
+    how the OCaml type system works, not on any formal system.)
+  \item\label{principle:first} Show how to transcribe (by adding type
+    annotations, type abstractions, and type applications) this program into
+    System F (assume you have built-in integers, booleans, and pairs) such that
+    it has the following type.
+    \[
+      (\forall\alpha.\, \alpha\to\alpha)\to int\times bool
+    \]
+    No need to prove formally that your transcription has this type. Just convince yourself.
+  \item Using your understanding of parametricity, say what the ``only''
+    possible value to pass for $f$ is in your transcription in part~\ref{principle:first}.
+    No need to prove your answer.
+  \item\label{principle:second} Show how to \emph{again} transcribe (by adding type
+    annotations, type abstractions, and type applications) this program into
+    System F (assume you have built-in integers, booleans, and pairs) such that
+    it has the following (different!) type.
+    \[
+      \forall\alpha.\, (\forall\beta.\, \beta\to\alpha)\to \alpha\times\alpha
+    \]
+    No need to prove formally that your transcription has this type. Just convince yourself.
+  \item\label{principle:second-f} Using your understanding of parametricity, describe the possible values
+    to pass in for $f$ in your transcription form part~\ref{principle:second}.
+    No need to prove your answer.
+
+    Hint: There are infinitely many, but they all have a clean description.
+  \item Given your answer to part~\ref{principle:second-f}, what can you say
+    about the pair returned by the System F program from part~\ref{principle:second}?
+    No need to prove your answer.
+  \end{enumerate}
+  As an aside, the examples in this problem demonstrate the lack of ``principle
+  types'' for System F. A principle type for an expression is its most general
+  type, in the sense that if it has any other type, then it is a special case of
+  its principle type. Principle types exist in ML, but not in System F, as
+  demonstrated by this problem. The lack of principle types poses a serious
+  difficulty to type inference, because it means there is no ``best answer'' to
+  return for the type of an expression.
+
+\clearpage
+\item We will use a dot ``$\cdot$'' to represent an empty partial function for
+  the $\meta{\rho}$ argument to $R$.
+  \begin{enumerate}[(a),left=1em]
+  \item Translate the meaning of $R_{\forall\alpha.\, \alpha\to\alpha}^{\cdot}$ into English. (You can use symbols in your English.)
+  \item
+  Show directly from the definition of $R$ that
+  \[
+    \Lambda\alpha.\,\lambda x:\alpha.\, x \quad\in\quad R_{\forall\alpha.\, \alpha\to\alpha}^{\cdot}
+  \]
+  \end{enumerate}
+\item This question is about the definition of $R$ itself, and specifically its
+  ``presupposition''.  A presupposition is kind of like a precondition, but on a
+  mathematical object instead of a program.  It means that the mathematical
+  object doesn't make sense unless the presupposition is true. According to the
+  last page of this document, the presupposition of
+  $R_{\meta{\tau}}^{\meta{\rho}}$ is that
+  $FTV(\meta{\tau})\subseteq\dom{\meta{\rho}}$.
+  \begin{enumerate}[(a),left=1em]
+  \item In the base case of the definition of $R$, when looking at a type
+    variable $\meta{\alpha}$, we look up the type variable in
+    $\meta{\rho}$. Since $\meta{\rho}$ is a partial function, this only makes
+    sense if $\meta{\alpha}\in\dom{\meta{\rho}}$.  Prove in one short sentence
+    that the presupposition of $R$ guarantees
+    $\meta{\alpha}\in\dom{\meta{\rho}}$.
+  \item Since $R$ is defined by recursion on $\meta{\tau}$, we should technically check
+    that any recursive calls to $R$ satisfy their presupposition,
+    \emph{assuming} the presupposition of the ``outer'' $R$. There are three
+    recursive calls in the definition of $R$. Prove that each of them satisfy
+    the presupposition.
+  \end{enumerate}
+\item In Homework~3 (programming part) we saw how to Church-encode pairs in the
+  untyped $\lambda$-calculus, as follows
+\begin{verbatim}
+    pair = \x. \y. \f. f x y
+    fst = \p. p (\x. \y. x)
+\end{verbatim}
+  This encoding can be typed in System F as follows. The type of pairs whose
+  first components have type $\meta{\tau_1}$ and whose second components have
+  type $\meta{\tau_2}$ will be \emph{abbreviated}
+  $Pair\ \meta{\tau_1}\ \meta{\tau_2}$, which is defined as follows:
+  \[
+    Pair\ \meta{\tau_1}\ \meta{\tau_2} = \forall\alpha.\, (\meta{\tau_1}\to\meta{\tau_2}\to\alpha)\to\alpha.
+  \]
+  \begin{enumerate}[(a),left=1em]
+  \item
+    The type of $\mathtt{pair}$ is then
+    \[
+      \forall\alpha.\,\forall\beta.\, \alpha\to\beta\to Pair\ \alpha\ \beta,
+    \]
+    or, expanding the definition of $Pair$,
+    \[
+      \forall\alpha.\,\forall\beta.\, \alpha\to\beta\to \forall\gamma.\, (\alpha\to\beta\to\gamma)\to\gamma.
+    \]
+
+    Show how to transcribe the untyped program \texttt{pair} from Homework~3
+    given above into System F (by adding type annotations, type abstractions,
+    and type applications) such that it has the above type. No need to formally
+    prove it has the type. Just convince yourself.
+  \item
+    Similarly, the type of $\mathtt{fst}$ is then
+    \[
+      \forall\alpha.\,\forall\beta.\, Pair\ \alpha\ \beta \to \alpha,
+    \]
+    or, expanding the definition of $Pair$,
+    \[
+      \forall\alpha.\,\forall\beta.\, (\forall\gamma.\, (\alpha\to\beta\to\gamma)\to\gamma) \to \alpha,
+    \]
+    Show how to transcribe the untyped program \texttt{fst} from Homework~3
+    given above into System F (by adding type annotations, type abstractions,
+    and type applications) such that it has the above type. No need to formally
+    prove it has the type. Just convince yourself.
+  \item Prove directly using the operational semantics that, for any values
+    $\meta{v_1}:\meta{\tau_1}$ and $\meta{v_2}:\meta{\tau_2}$,
+    \[
+      \mathtt{fst}\ \meta{\tau_1}\ \meta{\tau_2}\ (\mathtt{pair}\ \meta{\tau_1}\ \meta{\tau_2}\ \meta{v_1}\ \meta{v_2}) \to^* \meta{v_1}.
+    \]
+    where \texttt{fst} and \texttt{pair} refer to your transcribed versions in System F.
+  \item Now suppose $\meta{p}$ is \emph{any} System F expression such that
+    \[
+      \cdot;\cdot\vdash \meta{p}:\forall\alpha.\,\forall\beta.\, \alpha\to\beta\to \forall\gamma.\, (\alpha\to\beta\to\gamma)\to\gamma.
+    \]
+    In other words, $\meta{p}$ is just some program with the same type as
+    \texttt{pair}.  Similarly, suppose that $\meta{f}$ is some System F
+    expression such that
+    \[
+      \cdot;\cdot\vdash \meta{f}:\forall\alpha.\,\forall\beta.\, (\forall\gamma.\, (\alpha\to\beta\to\gamma)\to\gamma) \to \alpha.
+    \]
+    In other words, $\meta{f}$ has the same type as \texttt{fst}.
+
+    Use the fundamental theorem of the logical relation to prove that, for any values
+    $\meta{v_1}:\meta{\tau_1}$ and $\meta{v_2}:\meta{\tau_2}$,
+    \[
+      \meta{f}\ \meta{\tau_1}\ \meta{\tau_2}\ (\meta{p}\ \meta{\tau_1}\ \meta{\tau_2}\ \meta{v_1}\ \meta{v_2}) \to^* \meta{v_1}.
+    \]
+  \end{enumerate}
+\end{enumerate}
+
+\noindent{}The remaining problem is extra credit.
+
+\begin{enumerate}[resume*]
+\item This extra credit problem considers adding a new expression to System F, called \texttt{choose}.
+  The idea is that $\mathtt{choose}\ \meta{v_1}\ \meta{v_2}$ nondeterministically evaluates to
+  either $\meta{v_1}$ or $\meta{v_2}$.
+  \begin{enumerate}[(a),left=1em]
+  \item Give operational semantics for \texttt{choose} that first evaluate its
+    first argument to a value, then evaluate its second argument to a value, and
+    then \emph{either} evaluate to the first value \emph{or} the second.
+
+    Hint: Use four rules. One to make recursive progress on the first argument,
+    and a similar one for the second argument. Then one to ``choose'' the first
+    value, and one to ``choose'' the second.
+  \item Give a typing rule for \texttt{choose}.
+
+    Hint: Use one rule. It is vaguely similar to \texttt{if}, except there is no
+    branch condition.
+  \item\label{choose:bool} Use \texttt{choose} to define a Church boolean that is not ``equivalent'' to true or false,
+    in the sense that can return either its first argument or its second, and change its mind each time it's called.
+  \item Prove that the fundamental theorem of the (unary) logical relation still holds
+    on this extended language extending the proof with a case for \texttt{choose}.
+  \item Explain how the existence of your program from part~\ref{choose:bool}
+    does \emph{not} contradict the result we proved on slide 13 of Lecture 15 about
+    Church booleans using the (unary) logical relation.
+  \item Extra extra credit (requires bonus material from Lecture 15 on binary logical relations).
+    Explain how the existence of your program from part~\ref{choose:bool}
+    \emph{does} contradict the result we proved on slide 17 of Lecture 15 about
+    Church booleans using the \emph{binary} logical relation.
+  \item Extra extra credit (requires bonus material from Lecture 15 on binary logical
+    relations).  Attempt to prove the case for \texttt{choose} in the
+    fundamental theorem of the \emph{binary} logical relation. Point to exactly
+    where you get stuck.
+  \end{enumerate}
+\end{enumerate}
+
+\clearpage
+  \noindent System F\hfill{}Syntax\hspace{1cm}\hfill{}
+  \[
+    \begin{array}{rcl}
+      \meta{e} & ::= & \meta{x} \mid \meta{e}\ \meta{e} \mid \lambda\meta{x}:\meta{\tau}.\,\meta{e} \mid \Lambda\meta{\alpha}.\,\meta{e} \mid \meta{e}\ \meta{\tau}\\
+      \meta{v} & ::= & \lambda\meta{x}.\,\meta{e} \mid \Lambda\meta{\alpha}.\,\meta{e}\\
+      \meta{\tau} & ::= & \meta{\alpha} \mid \meta{\tau}\to\meta{\tau} \mid \forall\meta{\alpha}.\meta{\tau} \\
+      \meta{\Gamma} & \in & Var \rightharpoonup Type\\
+      \meta{\Delta} & \subseteq & TyVar
+
+    \end{array}
+  \]
+  \boxed{\meta{e}\to\meta{e}}\hfill{}Operational Semantics\hspace{1cm}\hfill{}
+  \begin{mathpar}
+    \inferrule{\meta{e_1}\to\meta{e_1'}}{\meta{e_1}\ \meta{e_2}\to\meta{e_1'}\ \meta{e_2}}
+    \and
+    \inferrule{\meta{e_2}\to\meta{e_2'}}{\meta{v_1}\ \meta{e_2}\to\meta{v_1}\ \meta{e_2'}}
+    \and
+    \inferrule{ }{(\lambda\meta{x}:\meta{\tau}.\,\meta{e})\ \meta{v}\to \meta{e}[\meta{v}/\meta{x}]}
+    \and
+    \inferrule{\meta{e}\to\meta{e'}}{\meta{e}\ \meta{\tau}\to\meta{e'}\ \meta{\tau}}
+    \and
+    \inferrule{ }{(\Lambda\meta{\alpha}.\,\meta{e})\ \meta{\tau} \to \meta{e}[\meta{\tau}/\meta{\alpha}]}
+  \end{mathpar}
+  \boxed{\meta{e}\to^*\meta{e}}\vspace{-7mm}
+  \begin{mathpar}
+    \inferrule{ }{\meta{e}\to^*\meta{e}}
+    \and
+    \inferrule{\meta{e_1}\to^*\meta{e_2}\and\meta{e_2}\to\meta{e_3}}{\meta{e_1}\to^*\meta{e_3}}
+  \end{mathpar}
+  \noindent\boxed{\meta{e}[\meta{e_1}/\meta{x}]}\hfill{}Substitution functions\hspace{1cm}\hfill{}
+  \[
+    \begin{array}{rcll}
+      \meta{x}[\meta{e_1}/\meta{x}] & = & \meta{e_1} & \\
+      \meta{y}[\meta{e_1}/\meta{x}] & = & \meta{y} & \qquad \meta{y} \ne \meta{x}\\
+      (\meta{e_2}\ \meta{e_3})[\meta{e_1}/\meta{x}] & = & \meta{e_2}[\meta{e_1}/\meta{x}]\ \meta{e_3}[\meta{e_1}/\meta{x}]&\\
+      (\lambda\meta{y}:\meta{\tau}.\,\meta{e})[\meta{e_1}/\meta{x}] & = & \lambda\meta{y}:\meta{\tau}.\,\meta{e}[\meta{e_1}/\meta{x}]& \qquad \meta{y}\ne\meta{x}\text{ and }\meta{y}\not\in FV(\meta{e_1})\\
+      (\meta{e}\ \meta{\tau})[\meta{e_1}/\meta{x}] & = & \meta{e}[\meta{e_1}/\meta{x}]\ \meta{\tau}&\\
+      (\Lambda\meta{\alpha}.\,\meta{e})[\meta{e_1}/\meta{x}] & = & \Lambda\meta{\alpha}.\,\meta{e}[\meta{e_1}/\meta{x}]&\qquad\meta{\alpha}\not\in FTV(\meta{e_1})
+    \end{array}
+  \]
+  \noindent\boxed{\meta{e}[\meta{\tau}/\meta{\alpha}]}
+  \[
+    \begin{array}{rcll}
+      \meta{x}[\meta{\tau}/\meta{\alpha}] & = & \meta{e_1} & \\
+      (\meta{e_2}\ \meta{e_3})[\meta{\tau}/\meta{\alpha}] & = & \meta{e_2}[\meta{\tau}/\meta{\alpha}]\ \meta{e_3}[\meta{\tau}/\meta{\alpha}]&\\
+      (\lambda\meta{x}:\meta{\tau_1}.\,\meta{e})[\meta{\tau}/\meta{\alpha}] & = & \lambda\meta{x}:\meta{\tau_1}[\meta{\tau}/\meta{\alpha}].\,\meta{e}[\meta{\tau}/\meta{\alpha}]& \\
+      (\meta{e}\ \meta{\tau_1})[\meta{\tau}/\meta{\alpha}] & = & \meta{e}[\meta{\tau}/\meta{\alpha}]\ \meta{\tau_1}[\meta{\tau}/\meta{\alpha}]&\\
+      (\Lambda\meta{\beta}.\,\meta{e})[\meta{\tau}/\meta{\alpha}] & = & \Lambda\meta{\beta}.\,\meta{e}[\meta{\tau}/\meta{\alpha}]& \qquad \meta{\beta}\ne\meta{\alpha}\text{ and }\meta{\beta}\not\in FTV(\meta{\tau})
+    \end{array}
+  \]
+  \noindent\boxed{\meta{\tau}[\meta{\tau_1}/\meta{\alpha}]}
+  \[
+    \begin{array}{rcll}
+      \meta{\alpha}[\meta{\tau_1}/\meta{\alpha}] & = & \meta{\tau_1} & \\
+      \meta{\beta}[\meta{\tau_1}/\meta{\alpha}] & = & \meta{\beta} & \qquad\meta{\beta}\ne\meta{\alpha}\\
+      (\meta{\tau_2}\to\meta{\tau_3})[\meta{\tau_1}/\meta{\alpha}] & = & \meta{\tau_2}[\meta{\tau_1}/\meta{\alpha}]\to\meta{\tau_3}[\meta{\tau_1}/\meta{\alpha}] & \\
+      (\forall\meta{\beta}.\,\meta{\tau})[\meta{\tau_1}/\meta{\alpha}] & = & \forall\meta{\beta}.\,\meta{\tau}[\meta{\tau_1}/\meta{\alpha}] & \qquad \meta{\beta}\ne\meta{\alpha}\text{ and }\meta{\beta}\not\in FTV(\meta{\tau_1})
+    \end{array}
+  \]
+  \noindent\boxed{FTV(\meta{\tau})}\hfill{}Free type variables of a type or expression\hspace{1cm}\hfill{}
+  \[
+    \begin{array}{rcl}
+      FTV(\meta{\alpha}) & = & \set{\meta{\alpha}}\\
+      FTV(\meta{\tau_1}\to\meta{\tau_2}) & = & FTV(\meta{\tau_1}) \cup FTV(\meta{\tau_2})\\
+      FTV(\forall\meta{\alpha}.\,\meta{\tau}) & = & FTV(\meta{\tau}) - \set{\meta{\alpha}}
+    \end{array}
+  \]
+  \noindent\boxed{FTV(\meta{e})}\hfill{}Note that we overload $FTV$ on expressions and types.\hspace{8mm}\hfill{}
+  \[
+    \begin{array}{rcl}
+      FTV(\meta{x}) & = & \emptyset\\
+      FTV(\lambda\meta{x}:\meta{\tau}.\,\meta{e}) & = & FTV(\meta{\tau}) \cup FTV(\meta{e})\\
+      FTV(\meta{e_1}\ \meta{e_2}) & = & FTV(\meta{e_1}) \cup FTV(\meta{e_2})\\
+      FTV(\Lambda\meta{\alpha}.\,\meta{e}) & = & FTV(\meta{e}) - \set{\meta{\alpha}}\\
+      FTV(\meta{e}\ \meta{\tau}) & = & FTV(\meta{e}) \cup FTV(\meta{\tau})
+    \end{array}
+  \]
+  \noindent\boxed{FV(\meta{e})}\hfill{}Free variables of an expression\hspace{1cm}\hfill{}
+  \[
+    \begin{array}{rcll}
+      FV(\meta{x}) & = & \set{\meta{x}}\\
+      FV(\lambda\meta{x}:\meta{\tau}.\,\meta{e}) & = & FV(\meta{e}) - \set{\meta{x}}\\
+      FV(\meta{e_1}\ \meta{e_2}) & = & FV(\meta{e_1}) \cup FV(\meta{e_2})\\
+      FV(\Lambda\meta{\alpha}.\,\meta{e}) & = & FV(\meta{e})\\
+      FV(\meta{e}\ \meta{\tau}) & = & FV(\meta{e})
+
+    \end{array}
+  \]
+  \noindent\boxed{\meta{\Delta};\meta{\Gamma}\vdash\meta{e}:\meta{\tau}}\hfill{}Type System\hspace{2cm}\hfill{}
+  \begin{mathpar}
+    \inferrule{\meta{x}\in\dom{\meta{\Gamma}} \and \meta{\Gamma}(\meta{x}) = \meta{\tau}}{\meta{\Delta};\meta{\Gamma}\vdash\meta{x}:\meta{\tau}}\\
+    \and
+    \inferrule{\meta{\Delta}\vdash\meta{\tau_1}\and \meta{\Delta};\meta{\Gamma}[\meta{x}\mapsto\meta{\tau_1}]\vdash\meta{e} : \meta{\tau_2}}{\meta{\Delta};\meta{\Gamma}\vdash\lambda\meta{x}:\meta{\tau}.\,\meta{e} : \meta{\tau_1}\to\meta{\tau_2}}
+    \and
+    \inferrule{\meta{\Delta};\meta{\Gamma}\vdash\meta{e_1} : \meta{\tau_1}\to\meta{\tau_2}\and\meta{\Delta};\meta{\Gamma}\vdash\meta{e_2} : \meta{\tau_1}}{\meta{\Delta};\meta{\Gamma}\vdash\meta{e_1}\ \meta{e_2} : \meta{\tau_2}}\\
+    \and
+    \inferrule{\meta{\alpha}\not\in\meta{\Delta}\and\meta{\Delta},\meta{\alpha};\meta{\Gamma}\vdash\meta{e}:\meta{\tau}}{\meta{\Delta};\meta{\Gamma}\vdash\Lambda\meta{\alpha}.\, \meta{e}:\forall\meta{\alpha}.\,\meta{\tau}}
+    \and
+    \inferrule{\meta{\Delta}\vdash\meta{\tau_1}\and\meta{\Delta};\meta{\Gamma}\vdash\meta{e}:\forall\meta{\alpha}.\,\meta{\tau}}{\meta{\Delta};\meta{\Gamma}\vdash\meta{e}\ \meta{\tau_1}:\meta{\tau}[\meta{\tau_1}/\meta{\alpha}]}
+  \end{mathpar}
+  \boxed{\meta{\Delta}\vdash\meta{\Gamma}}\vspace{-3mm}
+  \[
+    \meta{\Delta}\vdash\meta{\Gamma} = \forall\meta{x}\in\dom{\meta{\Gamma}}.\ \meta{\Delta}\vdash\meta{\Gamma}(\meta{x})
+  \]
+  \boxed{\meta{\Delta}\vdash\meta{\tau}}\vspace{-7mm}
+  \begin{mathpar}
+    \inferrule{\meta{\alpha}\in\meta{\Delta}}{\meta{\Delta}\vdash\meta{\alpha}}
+    \and
+    \inferrule{\meta{\Delta}\vdash\meta{\tau_1}\and\meta{\Delta}\vdash\meta{\tau_2}}{\meta{\Delta}\vdash\meta{\tau_1}\to\meta{\tau_2}}
+    \and
+    \inferrule{\meta{\Delta},\meta{\alpha}\vdash\meta{\tau}}{\meta{\Delta}\vdash\forall\meta{\alpha}.\,\meta{\tau}}
+  \end{mathpar}
+  \hfill{}Preparation for the definition of the logical relation\hfill{}
+  \[
+    \begin{array}{rcl}
+      Spec & = & \set{\meta{S} \subseteq Val \mid \forall\meta{e}\in \meta{S}.\,\meta{e}\text{ closed}}\\
+      \meta{\rho} & \in & TyVar \rightharpoonup Spec\\
+      \meta{\gamma} & \in & Var \rightharpoonup Val\\
+      T(\meta{S}) & = & \set{\meta{e} \mid\exists{\meta{v}}.\, \meta{e}\to^*\meta{v} \wedge \meta{v}\in\meta{S}}
+    \end{array}
+  \]
+  \hfill{}Definition of the logical relation on closed terms\hfill{}
+
+  \noindent\boxed{R_{\meta{\tau}}^{\meta{\rho}}} $\text{presupposes }FTV(\meta{\tau}) \subseteq\dom{\meta{\rho}}$
+  \[
+    \begin{array}{rcl}
+      R_{\meta{\alpha}}^{\meta{\rho}} & = & \meta{\rho}(\meta{\alpha})\\
+      R_{\meta{\tau_1}\to\meta{\tau_2}}^{\meta{\rho}} & = & \set{\lambda\meta{x}.\,\meta{e} \mid \forall\meta{v}\in R_{\meta{\tau_1}}^{\meta{\rho}}.\ \meta{e}[\meta{x}/\meta{v}]\in T(R_{\meta{\tau_2}}^{\meta{\rho}})}\\
+      R_{\forall\meta{\alpha}.\,\meta{\tau}}^{\meta{\rho}} & = & \set{\Lambda\meta{\alpha}.\,\meta{e} \mid \forall\meta{S}\in Spec.\, \meta{e}\in T(R_{\meta{\tau}}^{\meta{\rho}[\meta{\alpha}\mapsto\meta{S}]})}\\
+    \end{array}
+  \]
+  \noindent\boxed{\meta{e}[\meta{\gamma}]}\hfill{}Multisubstitution\hfill{}
+  \[
+    \begin{array}{rcll}
+      \meta{x}[\meta{\gamma}] & = & \meta{\gamma}(\meta{x}) & \qquad\text{if } \meta{x}\in\dom{\meta{\gamma}}\\
+      \meta{x}[\meta{\gamma}] & = & \meta{x} & \qquad\text{if } \meta{x}\not\in\dom{\meta{\gamma}}\\
+
+      (\meta{e_2}\ \meta{e_3})[\meta{\gamma}] & = & \meta{e_2}[\meta{\gamma}]\ \meta{e_3}[\meta{\gamma}]&\\
+      (\lambda\meta{x}:\meta{\tau}.\,\meta{e})[\meta{\gamma}] & = & \lambda\meta{x}:\meta{\tau}.\,\meta{e}[\meta{\gamma}]& \qquad \meta{x}\not\in\dom{\meta{\gamma}}\text{ and }\forall\meta{y}\in\dom{\meta{\gamma}}.\,\meta{x}\not\in FV(\meta{\gamma}(\meta{y}))\\
+      (\meta{e}\ \meta{\tau})[\meta{\gamma}] & = & \meta{e}[\meta{\gamma}]\ \meta{\tau}&\\
+      (\Lambda\meta{\alpha}.\,\meta{e})[\meta{\gamma}] & = & \Lambda\meta{\alpha}.\,\meta{e}[\meta{\gamma}]&\qquad
+\forall\meta{x}\in\dom{\meta{\gamma}}.\,\meta{\alpha}\not\in FTV(\meta{\gamma}(\meta{x}))
+    \end{array}
+  \]
+  \hfill{}Preparation and definition of the open logical relation\hfill{}
+
+  \noindent\boxed{\meta{\rho};\meta{\Gamma}\vdash\meta{\gamma}}\vspace{-3mm}
+  \[
+    \meta{\rho};\meta{\Gamma}\vdash\meta{\gamma} =
+    \forall\meta{x}\in\dom{\meta{\Gamma}}.\
+    \meta{x}\in\dom{\meta{\gamma}} \wedge \meta{\gamma}(\meta{x})\in R_{\meta{\Gamma}(\meta{x})}^{\meta{\rho}}
+  \]
+  \boxed{\meta{\Delta};\meta{\Gamma}\vDash\meta{e}:\meta{\tau}}\vspace{-3mm}
+  \[
+    \meta{\Delta};\meta{\Gamma}\vDash\meta{e}:\meta{\tau} \quad=\quad
+    \forall\meta{\rho}.\
+    \dom{\meta{\Delta}}\subseteq \dom{\meta{\rho}}\Rightarrow
+    \forall\meta{\gamma}.\
+    \meta{\rho};\meta{\Gamma}\vdash\meta{\gamma}\Rightarrow
+    \meta{e}[\meta{\gamma}]\in T(R_{\meta{\tau}}^{\meta{\rho}})
+  \]
+  \begin{theorem}[Fundamental theorem of the logical relation]
+    If $\meta{\Delta};\meta{\Gamma}\vdash\meta{e}:\meta{\tau}$ then
+    $\meta{\Delta};\meta{\Gamma}\vDash\meta{e}:\meta{\tau}$.
+  \end{theorem}
+\end{document}
