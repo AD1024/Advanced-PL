@@ -6,6 +6,7 @@
 %token PLUS
 %token MINUS
 %token STAR
+%token SLASH
 %token DOUBLEAMP
 %token DOUBLEPIPE
 %token IMPLIES
@@ -24,7 +25,7 @@
 %left DOUBLEAMP
 %nonassoc EQ NEQ LT LE GT GE
 %left PLUS MINUS
-%left STAR
+%left STAR SLASH
 %nonassoc UMINUS BANG
 
 %start <Syntax.stmt> main
@@ -65,6 +66,7 @@ binop:
 | PLUS         { Syntax.Add }
 | MINUS        { Syntax.Sub }
 | STAR         { Syntax.Mul }
+| SLASH        { Syntax.Div }
 | DOUBLEAMP    { Syntax.And }
 | DOUBLEPIPE   { Syntax.Or }
 | IMPLIES      { Syntax.Implies }

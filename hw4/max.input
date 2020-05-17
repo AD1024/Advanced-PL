@@ -1,0 +1,7 @@
+ans := a;
+if b >= a { 
+    ans := b
+} else {
+    ans := a
+};
+assert (a <= b) ==> ans = b && (a > b) ==> ans = a

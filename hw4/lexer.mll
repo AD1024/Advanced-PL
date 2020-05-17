@@ -23,6 +23,7 @@ rule token = parse
 | '+'                    { PLUS }
 | '-'                    { MINUS }
 | '*'                    { STAR }
+| '/'                    { SLASH }
 | "&&"                   { DOUBLEAMP }
 | "||"                   { DOUBLEPIPE }
 | "==>"                  { IMPLIES }

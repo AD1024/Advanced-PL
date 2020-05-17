@@ -1,0 +1,17 @@
+ans := a;
+if ans < b {
+    ans := b
+} else {
+    ans := ans
+};
+if ans < c {
+    ans := c
+} else {
+    ans := ans
+};
+assert a < b && b < c ==> ans = c;
+assert b < a && a < c ==> ans = c;
+assert a < c && c < b ==> ans = b;
+assert c < a && a < b ==> ans = b;
+assert b < c && c < a ==> ans = a;
+assert c < b && b < a ==> ans = a

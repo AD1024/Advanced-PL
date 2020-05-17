@@ -13,6 +13,7 @@ type binop =
   | Add
   | Sub
   | Mul
+  | Div
 
   | And
   | Or

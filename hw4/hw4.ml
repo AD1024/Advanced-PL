@@ -131,6 +131,7 @@ let rec eval_expr (h : heap) (e : Syntax.expr) : Syntax.value =
   | Binop (e1, Add, e2) -> Syntax.VInt (eval_expr_int h e1 + eval_expr_int h e2)
   | Binop (e1, Sub, e2) -> Syntax.VInt (eval_expr_int h e1 - eval_expr_int h e2)
   | Binop (e1, Mul, e2) -> Syntax.VInt (eval_expr_int h e1 * eval_expr_int h e2)
+  | Binop (e1, Div, e2) -> Syntax.VInt (eval_expr_int h e1 / eval_expr_int h e2)
   | Binop (e1, And, e2) -> Syntax.VBool (eval_expr_bool h e1 && eval_expr_bool h e2)
   | Binop (e1, Or, e2) -> Syntax.VBool (eval_expr_bool h e1 || eval_expr_bool h e2)
   | Binop (e1, Implies, e2) -> Syntax.VBool (not (eval_expr_bool h e1) || eval_expr_bool h e2)
@@ -194,7 +195,7 @@ let rec type_infer_expr (sigma : heap_ty) (e : Syntax.expr) : Syntax.ty =
   | Var x -> check_var e.loc sigma x
   | Unop (Not, e) -> type_check_expr sigma e Syntax.TBool; Syntax.TBool
   | Unop (Neg, e) -> type_check_expr sigma e Syntax.TInt; Syntax.TInt
-  | Binop (e1, (Add | Sub | Mul), e2) ->
+  | Binop (e1, (Add | Sub | Mul | Div), e2) ->
      type_check_expr sigma e1 Syntax.TInt;
      type_check_expr sigma e2 Syntax.TInt;
      TInt
@@ -247,6 +248,7 @@ let z3_of_binop (op : Syntax.binop): string =
     | Syntax.Add -> "+"
     | Syntax.Sub -> "-"
     | Syntax.Mul -> "*"
+    | Syntax.Div -> "/"
 
     | Syntax.Eq -> "="
     | Syntax.Neq -> "!=" (* This should not be called since it will be unrolled *)
@@ -363,12 +365,25 @@ let declare_consts (z3 : Z3.t) (sigma : heap_ty) =
         declare_consts_helper bindings' in
   declare_consts_helper sigma
 
+let rec print_model z3 (e : Syntax.expr): unit =
+  match e.value with
+    | Syntax.Var x ->
+      let () = Z3.raw_send z3 (Printf.sprintf "(eval %s)" x) in
+      Printf.printf "%s = %s\n" x (Z3.raw_read_line z3)
+    | Syntax.Binop (e1, _, e2) -> print_model z3 e1; print_model z3 e2
+    | Syntax.Unop (_, e)       -> print_model z3 e
+    | _ -> ()
+
 let check_expr (z3 : Z3.t) (e : Syntax.expr) =
   let eval_func z3 = 
     let z3_expr = z3_negate (z3_of_expr e) in
     let () = Z3.raw_send z3 (z3_assert z3_expr); Z3.raw_send z3 "(check-sat)" in
     let res = Z3.raw_read_line z3 in
-    String.equal "unsat" res in
+    if String.equal "unsat" res
+    then true 
+    else 
+      let () = print_endline "Counter-Model:"; print_model z3 e in
+      false in
   if z3_scoped_eval z3 eval_func 
   then true
   else raise (VerificationError (Printf.sprintf "Condition Violated: %s" (z3_negate (z3_of_expr e))))

@@ -114,6 +114,21 @@ showstringspaces=false}
 
     \textbf{Define $\meta{H}\to_s^* \meta{H^\prime}$ denotes that the initial heap is $H$, and after executing $\meta{s}$ zero or more times, the resulted heap is $\meta{H^\prime}$}
 
+    Formally, we define $\meta{H} \to_s \meta{H^\prime}$ and $\meta{H}\to_s^* \meta{H^\prime}$ as follow.
+
+    \begin{mathpar}
+      \inferrule{
+        \meta{H}, \meta{s} \to^* \meta{H^\prime}, \impskip
+      }{\meta{H} \to_s \meta{H^\prime}}\and
+      \inferrule{ }{
+        \meta{H} \to_s^* \meta{H}
+      }\and
+      \inferrule{
+        \meta{H} \to_s^* \meta{H_1}\and
+        \meta{H_1} \to_s \meta{H^\prime}
+      }{\meta{H} \to_s^* \meta{H^\prime}}
+    \end{mathpar}
+
     \textbf{Lemma 1-1. $\meta{H}, \while\ \meta{e}\ \meta{s} \to^* \meta{H'},\impskip$, then $\exists \meta{H_0}, \meta{H}\to_s^* \meta{H_0}$ and $\meta{H^\prime} = \meta{H_0}$}.
 
   \item Now consider the general case where $\meta{s'}$ can be anything. Explain informally in one or two sentences
@@ -145,7 +160,7 @@ showstringspaces=false}
     \begin{itemize}
       \item Case $\meta{s^\prime}=\while\ \meta{e}\ \meta{s}$. $\meta{H_1}=\meta{H^\prime}$
       \item Case $\meta{s^\prime}=\impskip$. $\meta{H_1}=\meta{H^\prime}$ and $\meta{H^\prime}, \meta{e}\Downarrow \bot$
-      \item Case $\meta{s^\prime}=\failed$. $\meta{H_1}, \meta{s} \to \meta{H^\prime}, \failed$ and $\meta{H_1}, \meta{e} \Downarrow \top$.
+      \item Case $\meta{s^\prime}=\failed$. $\meta{H_1}, \meta{s} \to^* \meta{H^\prime}, \failed$ and $\meta{H_1}, \meta{e} \Downarrow \top$.
       \item Case $\meta{s^\prime}=\meta{s_1}; \while\ \meta{e}\ \meta{s}$ for some $\meta{s_1}$. $\meta{H_1}, \meta{e} \Downarrow \top$ and $\meta{H_1}, \meta{s} \to^* \meta{H^\prime}, \meta{s_1}$.
     \end{itemize}
 
@@ -161,7 +176,7 @@ showstringspaces=false}
         \begin{enumerate}
           \item $\meta{s^\prime}=\impskip$. According to induction hypothesis, we have $\meta{H^\prime}\models \meta{I}$. Also, we know, by case spliting, that $\meta{H^\prime}, \meta{e} \Downarrow \bot$; therefore, since $\meta{H^\prime}$ is not empty and $\meta{H^\prime} \not\models \meta{e}$, thus $\meta{H^\prime}\models\meta{\neg e}$. Therefore, $\meta{H^\prime} \models \set{\meta{I} \wedge \meta{\neg e}}$.
           \item $\meta{s^\prime}=\while\ \meta{e}\ \meta{s}$. Then since $\meta{s^\prime}$ is not $\failed$, and $\meta{s^\prime}$ is not $\impskip$, the conclusion holds trivially.
-          \item $\meta{s^\prime}=\failed$. According to the condition on case split, $\exists\ \meta{H_1}, \meta{s} \to \meta{H^\prime}, \failed$. However, according to our induction hypothesis, for any $\meta{H} \models \set{\meta{I}\wedge \meta{e}}$, $\meta{H}, \meta{s} \to^* \meta{H_1^\prime}, \meta{s^\prime}$, then $\meta{s^\prime}$ is not $\failed$, which contradicts to our assumption. Thus the conclusion holds trivially.
+          \item $\meta{s^\prime}=\failed$. According to the condition on case split, $\exists\ \meta{H_1}, \meta{s} \to^* \meta{H^\prime}, \failed$. However, according to our induction hypothesis, for any $\meta{H} \models \set{\meta{I}\wedge \meta{e}}$, $\meta{H}, \meta{s} \to^* \meta{H_1^\prime}, \meta{s^\prime}$, then $\meta{s^\prime}$ is not $\failed$, which contradicts to our assumption. Thus the conclusion holds trivially.
           \item $\meta{s^\prime}$ is in the middle of the execution. Similar as Case ii.
         \end{enumerate}
       \end{itemize}
@@ -174,21 +189,34 @@ showstringspaces=false}
       \begin{itemize}
         \item $\inferrule{ }{\meta{H}, \while\ \meta{e}\ \meta{s} \to^* \meta{H}, \while\ \meta{e}\ \meta{s}}$. Pick $\meta{H^\prime}=\meta{H}$, and Case 1 in \textbf{Lemma 1-2} holds. 
         \item $\inferrule{
-          \meta{H}, \while\ \meta{e}\ \meta{s} \to \meta{H_1}, \meta{s_1}\and
-          \meta{H_1}, \meta{s_1} \to^* \meta{H^\prime}, \meta{s^\prime}
-        }{\meta{H_1}\while\ \meta{e}\ \meta{s}\to^* \meta{H^\prime}, \meta{s^\prime}}$. By case analysis on $\meta{s_1}$
+          \meta{H}, \while\ \meta{e}\ \meta{s} \to^* \meta{H_1}, \meta{s_1}\and
+          \meta{H_1}, \meta{s_1} \to \meta{H^\prime}, \meta{s^\prime}
+        }{\meta{H_1}\while\ \meta{e}\ \meta{s}\to^* \meta{H^\prime}, \meta{s^\prime}}$. According to the induction hypothesis, $\exists \meta{H_1^\prime}.\ \meta{H} \to_s^* \meta{H_1^\prime}$, and one of the following holds:
         \begin{enumerate}
-          \item Case $\meta{s_1} = \meta{s}; \while\ \meta{e}\ \meta{s}$. In this case the next steps are $$\inferrule{
-            \meta{H_1}, \meta{s_1};\while\ \meta{e}\ \meta{s} \to \meta{H_1^\prime}, \meta{s_1^\prime}; \while\ \meta{e}\ \meta{s}\and
-            \meta{H_1^\prime}, \meta{s_1^\prime};\while\ \meta{e}\ \meta{s} \to^* \meta{H^\prime}, \meta{s^\prime}
-          }{\meta{H_1}, \meta{s_1};\while\ \meta{e}\ \meta{s}\to^* \meta{H^\prime}, \meta{s^\prime}}$$ with $\meta{H_1}, \meta{s_1}\to \meta{H_1^\prime}, \meta{s_1^\prime}$. By cases analysis on $\meta{s_1^\prime}$
-          \begin{enumerate}
-            \item Case $\meta{s_1^\prime}$ is not $\failed$. In this case, since we are to execute the body of while loop, according to the definition of $\to$ on $\while$, $\meta{H_1}, \meta{e} \Downarrow \top$. Since, according to the assumptions, $\meta{H_1}, \meta{s_1} \to^* \meta{H^\prime}, \meta{s^\prime}$, Case 4 of \textbf{Lemma 1-2} holds.
-            \item Case $\meta{s_1^\prime}$ is $\failed$. Then we know that $\meta{H_1}, \meta{s_1}\to \meta{H_1^\prime}, \failed$
-          \end{enumerate}
-          \item Case $\meta{s_1}=\impskip$. Then $\meta{H_1}, \meta{e} \Downarrow \bot$ according to the definition of $\to$ on $\while$. Then, since $\meta{s_1}=\impskip$, $\meta{H_1}, \impskip \to^* \meta{H^\prime}, \impskip$, where $\meta{H^\prime}=\meta{H_1}$, therefore, Case 2 of $\textbf{Lemma 1-2}$ holds.
-          \item Case $\meta{s_1} = \failed$. Impossible.
+          \item Case $\meta{s_1}=\while\ \meta{e}\ \meta{s}$. $\meta{H_1^\prime}=\meta{H_1}$
+          \item Case $\meta{s_1}=\impskip$. $\meta{H_1^\prime}=\meta{H_1}$ and $\meta{H_1^\prime}, \meta{e}\Downarrow \bot$
+          \item Case $\meta{s_1}=\failed$. $\meta{H_1^\prime}, \meta{s} \to^* \meta{H_1}, \failed$ and $\meta{H_1}, \meta{e} \Downarrow \top$.
+          \item Case $\meta{s_1}=\meta{s_2}; \while\ \meta{e}\ \meta{s}$ for some $\meta{s_2}$. $\meta{H_1^\prime}, \meta{e} \Downarrow \top$ and $\meta{H_1^\prime}, \meta{s} \to^* \meta{H_1}, \meta{s_2}$.
         \end{enumerate}
+        By case analysis on each cases:
+        \begin{itemize}
+          \item $\meta{s_1}=\while\ \meta{e}\ \meta{s}$. Then, by case analysis on $\meta{H_1}, \meta{s_1} \to \meta{H^\prime}, \meta{s^\prime}$:
+            \begin{enumerate}
+              \item $\meta{H_1}, \while\ \meta{e}\ \meta{s} \to \meta{H^\prime}, \impskip$. Since the loop does not unroll, $\meta{H^\prime}, \meta{e} \Downarrow \bot$. So pick $\meta{H_1}$ in the Lemma to be $\meta{H}$, and Case 2 of the lemma holds. 
+              \item $\meta{H_1}, \while\ \meta{e}\ \meta{s} \to \meta{H^\prime}, \meta{s};\while\ \meta{e}\ \meta{s}$. In this case, the loop unrolls, so $\meta{H^\prime}, \meta{e} \Downarrow \top$. According to the induction hypothesis, $\meta{H_1^\prime} = \meta{H_1}$. Since $\meta{H_1}, \meta{s_1} \to \meta{H^\prime}, \meta{s}; \while\ \meta{e}\ \meta{s}$, $\meta{H_1^\prime}, \meta{s_1} \to \meta{H^\prime}, \meta{s}; \while\ \meta{e}\ \meta{s}$. Therefore, Case 4 of the lemma holds. 
+            \end{enumerate}
+          \item $\meta{s_1}=\impskip$. Vacuous, $\meta{s_1}$ cannot step in this case. 
+          \item $\meta{s_1}=\failed$. Similar as $\impskip$ case. 
+          \item $\meta{s_1}=\meta{s_2}; \while\ \meta{e}\ \meta{s}$ for some $\meta{s_2}$. By case analysis on $\meta{H_1}, \meta{s_2}; \while\ \meta{e}\ \meta{s} \to \meta{H^\prime}, \meta{s^\prime}$.
+            \begin{enumerate}
+              \item Case where $\meta{s_2}$ is $\failed$. Then, $\meta{H_1}, \meta{s_2}; \while\ \meta{e}\ \meta{s} \to \meta{H^\prime}, \failed$. According to the induction hypothesis, $\exists \meta{H_1^\prime}. \meta{H_1^\prime}, \meta{s} \to^* \meta{H_1}, \failed$, $\meta{H_1^\prime}, \meta{e} \Downarrow \top$ and $\meta{H} \to_s^* \meta{H_1^\prime}$. Also, since $\meta{H_1} = \meta{H^\prime}$ according to the $\failed$ rule, $\meta{H_1^\prime}, \meta{s} \to^* \meta{H^\prime}, \failed$.
+              \item Case where $\meta{s_2}$ is $\impskip$. Since $\meta{H_1}, \impskip;\while\ \meta{e}\ \meta{s} \to \meta{H_1}, \while\ \meta{e}\ \meta{s}$, $\meta{H^\prime} = \meta{H_1}$. Pick $\meta{H_1}$ in the lemma to be $\meta{H_1}$ here.
+              \item $\meta{H_1}, \meta{s_2} \to \meta{H^\prime}, \meta{s_2^\prime}$, According to the induction hypothesis and the assumption, $\meta{H_1^\prime}, \meta{e} \Downarrow \top$ and $$\inferrule{
+                \meta{H_1^\prime}, \meta{s} \to^* \meta{H_1}, \meta{s_2}\and
+                \meta{H_1}, \meta{s_2} \to \meta{H^\prime}, \meta{s_2^\prime}
+              }{\meta{H_1^\prime}, \meta{s} \to^* \meta{H^\prime}, \meta{s_2^\prime}}$$ We can pick $\meta{H_1^\prime}$ to be $\meta{H_1}$ in the lemma. 
+            \end{enumerate}
+        \end{itemize}
       \end{itemize}
     \end{proof}
   \end{enumerate}
