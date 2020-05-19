@@ -26,7 +26,7 @@ let () =
   print_endline (pretty e');
   check_equiv alpha_equiv (lambda "w" Ty.bool (var "z")) e' ~test_name:"subst 0" pretty
 
-(* 
+
 let () =
   let e = lambda "x" Ty.bool (var "y") in
   print_endline (pretty e);
@@ -58,7 +58,7 @@ let () =
   let e' = subst x0 (var "x") e in
   print_endline (pretty e');
   check_equiv alpha_equiv (lambda "z" Ty.bool (var "z")) e' ~test_name:"subst 3" pretty
- *)
+
 
 
 (* after all the tests have run, print all the failures. *)

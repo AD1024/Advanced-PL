@@ -80,12 +80,29 @@ let rec free_vars e =
  *
  * throws an exception if capture would occur
  *)
+
+let rec bounded_vars (e : expr): StringSet.t =
+  match e.value with
+    | Lambda (x, _, body) -> StringSet.add x (bounded_vars body)
+    | _ -> StringSet.empty
+
+let rec fresh avoid varname =
+  if not (StringSet.mem varname avoid)
+  then varname
+  else fresh avoid (varname ^ "0")
+
 let rec subst from to_ e =
   match e.value with
   | Var x -> if x = from then to_ else e
   | Lambda (x, ty, body) ->
      if x = from then e
-     else if StringSet.mem x (free_vars to_) then failwith "subst: capture would occur!"
+     else if StringSet.mem x (free_vars to_)
+     then
+        let fresh_name = fresh (StringSet.union (StringSet.singleton from) 
+                                  (StringSet.union (free_vars e)
+                                    (StringSet.union (bounded_vars e) (free_vars to_)))) x in
+        let body' = subst x (with_no_loc (Var fresh_name)) body in
+        lambda fresh_name ty (subst from to_ body')
      else lambda x ty (subst from to_ body)
   | App (e1, e2) -> app (subst from to_ e1) (subst from to_ e2)
   | Bool b -> bool b
@@ -97,11 +114,6 @@ let rec find_idx_opt (x : 'a)  (l : 'a list) : int option =
   match l with
   | [] -> None
   | x0 :: xs -> if x0 = x then Some 0 else Option.map (fun n -> n + 1) (find_idx_opt x xs)
-
-let fresh avoid varname =
-  if not (StringSet.mem varname avoid)
-  then varname
-  else failwith "fresh is not yet implemented"
 
 (* return booleans indicating whether e1 is alpha equivalent to e2.
  *
