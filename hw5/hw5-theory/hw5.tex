@@ -352,6 +352,24 @@ showstringspaces=false}
       \meta{f}\ \meta{\tau_1}\ \meta{\tau_2}\ (\meta{p}\ \meta{\tau_1}\ \meta{\tau_2}\ \meta{v_1}\ \meta{v_2}) \to^* \meta{v_1}.
     \]
   \end{enumerate}
+  First, we prove the property of $\meta{p}$:
+  Since $\meta{p}$ is well-typed in empty $\Delta$ and empty $\Gamma$, according to the fundamental theorem (since we are doing with empty substitution, we use $\meta{p}$ directly instead of writing out $\meta{p}[]$), $$\exists \meta{v_p}.\ \meta{p} \to^* \meta{v_p}, \meta{v_p} \in R^\cdot_{\forall \alpha.\ \forall \beta.\ \alpha \to \beta \to \forall \gamma.\ (\alpha \to \beta \to \gamma) \to \gamma}$$
+  where $\meta{v_p}$ is in the form of $\Lambda \alpha. \meta{e_1}$. Then we know, according to the definition of $\forall\alpha. \tau$ case of $R$, that $$\forall \meta{S_1} \in \mathtt{Spec}.\ \meta{e_1} \in T(R^{[\alpha\mapsto \meta{S_1}]}_{\forall \beta.\ \alpha \to \beta \to \forall \gamma.\ (\alpha \to \beta \to \gamma) \to \gamma})$$
+  Therefore, $$\exists \meta{v_{e_1}}.\ \meta{e_1} \to^* \meta{v_{e_1}}, \meta{v_{e_1}} \in R^{[\alpha\mapsto\meta{S_1}]}_{\forall \beta.\ \alpha \to \beta \to \forall \gamma.\ (\alpha \to \beta \to \gamma) \to \gamma})$$
+  where $\meta{v_{e_1}}$ is in the form of $\Lambda \beta. \meta{e_1}$. Similarly, we know that $$\forall \meta{S_1}\in \mathtt{Spec}.\ \meta{e_2}\in T(R^{[\alpha\mapsto\meta{S_1};\beta\mapsto\meta{S_2}]}_{\alpha \to \beta \to \forall \gamma.\ (\alpha \to \beta \to \gamma) \to \gamma})$$
+  Therefore, $$\exists \meta{v_3}.\ \meta{e_2} \to^* \meta{v_3}, \meta{v_3}\in T(R^{[\alpha\mapsto\meta{S_1};\beta\mapsto\meta{S_2}]}_{\alpha \to \beta \to \forall \gamma.\ (\alpha \to \beta \to \gamma) \to \gamma})$$
+  where $\meta{v_3}$ is in the form of $\lambda x.\ \meta{e_3}$. According to the definition of $R$, we know that
+  $$\forall \meta{v_x}\in R^{[\alpha\mapsto\meta{S_1};\beta\mapsto\meta{S_2}]}_{\alpha}, \meta{e_3}[\meta{v_x}/\meta{x}] \in T(R^{[\alpha\mapsto\meta{S_1};\beta\mapsto\meta{S_2}]}_{\beta \to \forall \gamma.\ (\alpha \to \beta \to \gamma) \to \gamma})$$
+  That is, according to the base case definition of $R$, for any value $\meta{v_x}$ in $\meta{S_1}$, substituting $x$ with $\meta{v_x}$ in $\meta{e_3}$ yields an expression that terminates in $R^{[\alpha\mapsto\meta{S_1};\beta\mapsto\meta{S_2}]}_{\beta \to \forall \gamma.\ (\alpha \to \beta \to \gamma) \to \gamma}$. 
+
+  Then, apply the similar procedure for $\meta{e_3}[\meta{v_x}/\meta{x}]$, which terminates in $\lambda y.\ \meta{e_4}$, we know that for all value $\meta{v_y}$ in $\meta{S_2}$, if we substitute $\meta{y}$ in $\meta{e_4}$ with $\meta{v_y}$, we can get a term that terminates in $R^{[\alpha\mapsto\meta{S_1};\beta\mapsto\meta{S_2}]}_{\forall \gamma.\ (\alpha \to \beta \to \gamma) \to \gamma}$.
+
+  Therefore, given any value in $\meta{S_1}$ and any value in $\meta{S_2}$, $\meta{p}$ always yields a value $\meta{p^\prime} \in R^{[\alpha\mapsto\meta{S_1};\beta\mapsto\meta{S_2}]}_{\forall \gamma.\ (\alpha \to \beta \to \gamma) \to \gamma}$.
+
+  Then, we prove the property of $\meta{f}$. For the $\Lambda \alpha. \meta{e}$ case, we apply the similar procedure. Then we get a $\lambda x.\ \meta{e}$, such that $$\forall \meta{v_x} \in R^{[\alpha\mapsto\meta{S_3};\beta\mapsto\meta{S_4}]}_{\forall \gamma.\ (\alpha \to \beta \to \gamma) \to \gamma}, \meta{e}[\meta{v_x}/\meta{x}] \in T(R^{[\alpha\mapsto\meta{S_3};\beta\mapsto\meta{S_4}]}_\alpha)$$
+  Which means, $\meta{e}[\meta{v_x}/\meta{x}]$ terminates in values in the set $\meta{S_3}$ for all values in $R^{[\alpha\mapsto\meta{S_3};\beta\mapsto\meta{S_4}]}_{\forall \gamma.\ (\alpha \to \beta \to \gamma) \to \gamma}$. Since in the application $$\meta{f}\ \meta{\tau_1}\ \meta{\tau_2}\ (\meta{p}\ \meta{\tau_1}\ \meta{\tau_2}\ \meta{v_1}\ \meta{v_2}) \to^* \meta{v_1}$$
+  we assign $\meta{\tau_1}$ to $\alpha$ in both $\meta{p}$ and $\meta{f}$, and we assign $\meta{\tau_2}$ to $\beta$ in both $\meta{p}$ and $\meta{f}$, $\meta{S_1} \equiv \meta{S_3}$ and $\meta{S_2}\equiv \meta{S_4}$.Thus, this fact also holds for $\meta{p^\prime}$ since it is a value in $$R^{[\alpha\mapsto\meta{S_3};\beta\mapsto\meta{S_4}]}_{\forall \gamma.\ (\alpha \to \beta \to \gamma) \to \gamma}$$
+  According to our assumption that $\cdot;\cdot\vdash \meta{v_1}:\meta{\tau_1}$ and $\cdot;\cdot\vdash\meta{v_2}:\meta{\tau_2}$, we choose $\meta{S_1}$ and $\meta{S_2}$ to be $\set{\meta{v_1}}$ and $\set{\meta{v_2}}$. Then, the according to the theorem, $\meta{f}$ always terminates in $\meta{S_3}$, which also is $\set{\meta{v_1}}$. Thus, $\meta{f}$ always terminates with $\meta{v_1}$.
 \end{enumerate}
 
 \noindent{}The remaining problem is extra credit.
