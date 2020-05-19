@@ -1,0 +1,33 @@
+(ocamllex
+  (modules lexer))
+
+(menhir
+ (modules parser)
+ (flags --strict))
+
+(library
+ (preprocess (pps ppx_deriving.show))
+ (modules syntax parser lexer)
+ (name hw5lib))
+
+(executable
+ (preprocess (pps ppx_deriving.show))
+ (libraries hw5lib)
+ (modules hw5)
+ (name hw5))
+
+(rule
+  (with-stdout-to test.output
+  (with-stdin-from test.input
+    (run ./hw5.exe))))
+
+(rule
+ (alias runtest)
+ (action (diff test.expected test.output)))
+
+(test
+ (preprocess (pps ppx_deriving.show))
+ (name test_syntax)
+ (libraries hw5lib)
+ (modules test_syntax))
+

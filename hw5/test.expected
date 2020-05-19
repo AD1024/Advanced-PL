@@ -1,0 +1,3 @@
+\x:bool. if true then x else false
+\x:bool. x
+bye!
