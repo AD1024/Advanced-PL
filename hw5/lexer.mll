@@ -17,6 +17,8 @@ rule token = parse
 | "if"                                                 { IF }
 | "then"                                               { THEN }
 | "else"                                               { ELSE }
+| "forall"                                             { FORALL }
+| "/\\"                                                { LAMBDA }
 | '('                                                  { LPAREN }
 | ')'                                                  { RPAREN }
 | ";;"                                                 { DOUBLESEMI }
@@ -27,6 +29,7 @@ rule token = parse
 
 (* expression variables are restricted to start with lowercase letter or underscore *)
 | ['a'-'z''_']['a'-'z''A'-'Z''0'-'9''\'''_']* as x     { ID x }
+| ['A'-'Z''-']['a'-'z''A'-'Z''0'-'9''\'''_']* as x     { TVAR x }
 
 | _                                         {
     let msg = Printf.sprintf "unexpected character %C" (Lexing.lexeme_char lexbuf 0)

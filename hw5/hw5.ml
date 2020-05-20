@@ -2,33 +2,46 @@ open Hw5lib
 
 exception TypeError of Syntax.location option * string
 
-let rec type_infer (gamma : (string * Syntax.Ty.t) list) (e : Syntax.expr) : Syntax.Ty.t =
+let rec type_eq (tau_1 : Syntax.Ty.t) (tau_2 : Syntax.Ty.t): bool =
+  match (tau_1.value, tau_2.value) with
+    | (Syntax.Ty.Bool, Syntax.Ty.Bool) -> true
+    | (Syntax.Ty.Fun (t1, t2), Syntax.Ty.Fun(t1', t2')) -> (type_eq t1 t1') && (type_eq t2 t2')
+    | (Syntax.Ty.TypeVar v1, Syntax.Ty.TypeVar v2) -> v1 = v2
+    | (_, _) -> false
+
+let rec type_infer (delta : string list) (gamma : (string * Syntax.Ty.t) list) (e : Syntax.expr) : Syntax.Ty.t =
   (* delete these lines and implement as a recursive function returning the type of e *)
   (* if e is not well typed, throw a TypeError with appropriate location info and msg. *)
   match e.value with
     | Var x   -> (match List.find_opt (fun (name, _) -> String.equal name x) gamma with
                 | None -> raise (TypeError (e.loc, Printf.sprintf "%s is not found in gamma" x))
                 | Some ty -> snd ty)
-    | Bool _  -> Syntax.with_loc e.loc Syntax.Ty.Bool
+    | Bool _  -> Syntax.with_no_loc Syntax.Ty.Bool
     | Lambda (bound_var, ty, expr') ->
-        let e_type = type_infer (List.cons (bound_var, ty) gamma) expr' in
-        Syntax.with_loc e.loc (Syntax.Ty.Fun (ty, e_type))
+        let e_type = type_infer delta (List.cons (bound_var, ty) gamma) expr' in
+        Syntax.with_no_loc (Syntax.Ty.Fun (ty, e_type))
     | App (e1, e2) ->
-        let tau_arr = type_infer gamma e1 in
+        let tau_arr = type_infer delta gamma e1 in
         (match tau_arr.value with
           | Syntax.Ty.Fun (tau_1, tau_2) ->
-              let () = type_check gamma e2 tau_1 in tau_2
+              let () = type_check delta gamma e2 tau_1 in tau_2
           | _ -> raise (TypeError (e.loc, "Cannot apply on non arrow type")))
     | IfThenElse (cond, lb, rb) ->
-        let () = type_check gamma cond (Syntax.with_loc cond.loc Syntax.Ty.Bool) in
-        let ty_lb = type_infer gamma lb in
-        let () = type_check gamma rb ty_lb in ty_lb
+        let () = type_check delta gamma cond (Syntax.with_no_loc Syntax.Ty.Bool) in
+        let ty_lb = type_infer delta gamma lb in
+        let () = type_check delta gamma rb ty_lb in ty_lb
+    | TypeApp (e, t1) -> 
+        let e_ty = type_infer delta gamma e in
+        (match e_ty.value with
+          | Syntax.Ty.Forall (var, ty) -> Syntax.Ty.subst var t1 ty
+          | _ -> raise (TypeError (e.loc, "Cannot apply type on non Forall type")))
+    | LAMBDA (ty, e) -> Syntax.with_no_loc (Syntax.Ty.Forall (ty, (type_infer (List.cons ty delta) gamma e)))
 
 (* You might find this helper function useful when defining type_infer. It checks that 
    [type_infer] returns the given expected type. *)
-and type_check gamma e ty =
-  let ty' = type_infer gamma e in
-  if ty.value <> ty'.value
+and type_check delta gamma e ty =
+  let ty' = type_infer delta gamma e in
+  if not (type_eq ty ty')
   then raise (TypeError (e.Syntax.loc, Printf.sprintf "expected type %s but got %s" (Syntax.Ty.pretty ty) (Syntax.Ty.pretty ty')))
 
 let get_lexbuf () =
@@ -54,7 +67,7 @@ let () =
     let process ox e =
       let e_expanded = subst_all abbrevs e in
        begin try
-         (* ignore (type_infer [] e_expanded); *) (* ignore means just make sure it has *some* type, we don't care what it is. *)
+         ignore (type_infer [] [] e_expanded); (* ignore means just make sure it has *some* type, we don't care what it is. *)
          let e' = step_loop e_expanded in
          print_endline (Syntax.pretty (Syntax.normalize e'));
          match ox with

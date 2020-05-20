@@ -1,1 +1,7 @@
 \x:bool. if true then x else false;;
+\f:bool->bool. \x : bool. f x;;
+\f:bool->bool. \x : bool. if (f x) then f else (\y : bool. y);;
+
+\f:bool->bool. \x : bool. if x then x else f;;
+\f:bool->bool. \x : bool. if f then f else x;;
+/\A. \f : A -> A. \x : A. f x;;
