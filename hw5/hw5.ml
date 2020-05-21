@@ -25,31 +25,31 @@ let rec type_eq (tau_1 : Syntax.Ty.t) (tau_2 : Syntax.Ty.t): bool =
 let rec type_infer (delta : string list) (gamma : (string * Syntax.Ty.t) list) (e : Syntax.expr) : Syntax.Ty.t =
   match e.value with
     | Var x   -> (match List.find_opt (fun (name, _) -> String.equal name x) gamma with
-                | None -> raise (TypeError (e.loc, Printf.sprintf "%s is not found in gamma" x))
+                | None -> raise (TypeError (e.Syntax.loc, Printf.sprintf "%s is not found in gamma" x))
                 | Some ty -> 
                   if not (List.fold_left (&&) true (List.map ((kind_check delta) <<< snd) gamma))
-                  then raise (TypeError (e.loc, "Delta is not well-formed with Gamma"))
+                  then raise (TypeError (e.Syntax.loc, "Delta is not well-formed with Gamma"))
                   else snd ty)
-    | Bool _  -> Syntax.with_loc e.loc Syntax.Ty.Bool
+    | Bool _  -> Syntax.with_loc e.Syntax.loc Syntax.Ty.Bool
     | Lambda (bound_var, ty, expr') ->
         let e_type = type_infer delta (List.cons (bound_var, ty) gamma) expr' in
-        Syntax.with_loc e.loc (Syntax.Ty.Fun (ty, e_type))
+        Syntax.with_loc e.Syntax.loc (Syntax.Ty.Fun (ty, e_type))
     | App (e1, e2) ->
         let tau_arr = type_infer delta gamma e1 in
         (match tau_arr.value with
           | Syntax.Ty.Fun (tau_1, tau_2) ->
               let () = type_check delta gamma e2 tau_1 in tau_2
-          | _ -> raise (TypeError (e.loc, "Cannot apply on non arrow type")))
+          | _ -> raise (TypeError (e1.Syntax.loc, Printf.sprintf "Cannot apply on non arrow type: got type %s" (Syntax.Ty.pretty tau_arr))))
     | IfThenElse (cond, lb, rb) ->
-        let () = type_check delta gamma cond (Syntax.with_loc cond.loc Syntax.Ty.Bool) in
+        let () = type_check delta gamma cond (Syntax.with_loc cond.Syntax.loc Syntax.Ty.Bool) in
         let ty_lb = type_infer delta gamma lb in
         let () = type_check delta gamma rb ty_lb in ty_lb
     | TypeApp (e, t1) -> 
         let e_ty = type_infer delta gamma e in
         (match e_ty.value with
           | Syntax.Ty.Forall (var, ty) -> Syntax.Ty.subst var t1 ty
-          | _ -> raise (TypeError (e.loc, "Cannot apply type on non Forall type")))
-    | LAMBDA (ty, e) -> Syntax.with_loc e.loc (Syntax.Ty.Forall (ty, (type_infer (List.cons ty delta) gamma e)))
+          | _ -> raise (TypeError (e.Syntax.loc, "Cannot apply type on non Forall type")))
+    | LAMBDA (ty, e) -> Syntax.with_loc e.Syntax.loc (Syntax.Ty.Forall (ty, (type_infer (List.cons ty delta) gamma e)))
 
 (* You might find this helper function useful when defining type_infer. It checks that 
    [type_infer] returns the given expected type. *)

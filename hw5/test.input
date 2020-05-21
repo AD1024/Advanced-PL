@@ -116,6 +116,9 @@ or tru tru;;
 or fls tru;;
 or fls fls;;
 
+not tru;;
+not fls;;
+
 eq = \x : Nat. \y : Nat. and (is_zero (x Nat pred y)) (is_zero (y Nat pred x));;
 
 eq one one;;
@@ -136,3 +139,79 @@ le = \x : Nat. \y : Nat. or (eq x y) (is_zero (y Nat pred x));;
 le two one;;
 le one two;;
 le one four;;
+le one one;;
+
+# insert : Nat -> NatList -> NatList
+
+is_nil = \l : NatList. l Bool (\x : Nat. \tl : Bool. fls) tru;;
+
+BoolNatListPair = forall C. (Bool -> NatList -> C) -> C;;
+
+insert_init = pair Bool NatList tru (nil Nat);;
+
+insert = \x : Nat. \xs : NatList. 
+            (is_nil xs) NatList 
+                (cons Nat x xs) 
+                (snd Bool NatList 
+                    (xs BoolNatListPair 
+                        (\hd : Nat. \tl : BoolNatListPair.
+                            (le x hd) BoolNatListPair 
+                                ((fst Bool NatList tl) BoolNatListPair 
+                                    (pair Bool NatList 
+                                        fls 
+                                        (cons Nat hd (cons Nat x (snd Bool NatList tl)))) 
+                                    (pair Bool NatList 
+                                        fls 
+                                        (cons Nat hd (snd Bool NatList tl)))) 
+                                ((eq 
+                                    (length Nat (snd Bool NatList tl)) 
+                                    (pred (length Nat xs))) BoolNatListPair 
+                                
+                                    (pair Bool NatList 
+                                        fls 
+                                        (cons Nat x (cons Nat hd (snd Bool NatList tl)))) 
+                                    (pair Bool NatList 
+                                        (fst Bool NatList tl) 
+                                        (cons Nat hd (snd Bool NatList tl))))) insert_init));;
+
+insert one (nil Nat);;
+
+inserted = (insert three (cons Nat four (cons Nat two (cons Nat one (nil Nat)))));;
+map Nat Nat (\x : Nat. succ x) inserted;;
+
+five = succ four;;
+
+lst = (cons Nat five (cons Nat one (cons Nat four (cons Nat two (cons Nat three (nil Nat))))));;
+
+is_nil lst;;
+is_nil (nil Nat);;
+
+insert two (insert one (nil Nat));;
+
+insert one (insert four (insert two (insert three (nil Nat))));;
+
+# insertion_sort : NatList -> NatList
+insertion_sort = \xs : NatList. xs NatList (\x : Nat. \tl : NatList. insert x tl) (nil Nat);;
+
+insertion_sort lst;;
+
+# append : List A -> List A
+append = /\A. \xs : (forall B. (A -> B -> B) -> B -> B).
+            \ys : (forall B. (A -> B -> B) -> B -> B).
+                xs (forall B. (A -> B -> B) -> B -> B)
+                   (\x : A. \tl : (forall B. (A -> B -> B) -> B -> B).
+                        cons A x tl) ys;;
+
+append Nat lst (insertion_sort lst);;
+
+# revserse : List A -> List A
+reverse = /\A. \xs : (forall B. (A -> B -> B) -> B -> B).
+                    xs (forall B. (A -> B -> B) -> B -> B)
+                       (\x : A. \tl : (forall B. (A -> B -> B) -> B -> B).
+                            append A tl (cons A x (nil A)))
+                       (nil A);;
+
+reverse Nat (insertion_sort lst);;
+
+append Nat (seq four) (seq four);;
+reverse Nat (append Nat (seq four) (seq four));;
