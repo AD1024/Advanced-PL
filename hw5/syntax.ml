@@ -27,10 +27,11 @@ module StringSet = Set.Make(String)
 let with_no_loc re = {loc = None; value = re}
 let with_loc loc re = {loc; value = re}
 
-let rec fresh avoid varname =
-  if not (StringSet.mem varname avoid)
-  then varname
-  else fresh avoid (varname ^ "0")
+let fresh avoid varname =
+  let rec fresh_impl dep avoid varname old =
+    if not (StringSet.mem varname avoid) then varname
+    else fresh_impl (dep + 1) avoid (old ^ (string_of_int dep)) old in
+  fresh_impl 0 avoid varname varname
 
 module Ty = struct
   type raw_t = 

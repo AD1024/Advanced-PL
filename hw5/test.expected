@@ -1,3 +1,253 @@
 \x:bool. if true then x else false
+=> (bool -> bool)
 \x:bool. x
+\f:bool -> bool. \x:bool. f x
+=> ((bool -> bool) -> bool -> bool)
+\f:bool -> bool. \x:bool. f x
+\f:bool -> bool. \x:bool. if f x then f else \y:bool. y
+=> ((bool -> bool) -> bool -> bool -> bool)
+\f:bool -> bool. \x:bool. if f x then f else \y:bool. y
+\f:bool -> bool. \x:bool. if x then x else f
+<stdin>:5:43-5:44: type error: expected type bool but got bool -> bool
+\f:bool -> bool. \x:bool. if f then f else x
+<stdin>:6:29-6:30: type error: expected type bool but got bool -> bool
+/\A. \f:A -> A. \x:A. f x
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \f:A -> A. \x:A. f x
+id = /\A. \x:A. x
+=> ((forall A. A -> A))
+/\A. \x:A. x
+Nat = (forall A. (A -> A) -> A -> A) (Type)
+succ = \x:Nat. /\A. \s:A -> A. \z:A. s (x A s z)
+=> ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A))
+\x:(forall A. (A -> A) -> A -> A). /\A. \s:A -> A. \z:A. s (x A s z)
+zero = /\A. \s:A -> A. \z:A. z
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. z
+one = succ zero
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s z
+plus = \x:Nat. \y:Nat. /\A. \s:A -> A. \z:A. x A s (y A s z)
+=> ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A))
+\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). /\A. \s:A -> A. \z:A. x A s (y A s z)
+two = plus one one
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s z)
+times = \x:Nat. \y:Nat. /\A. \s:A -> A. \z:A. x A (y A s) z
+=> ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A))
+\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). /\A. \s:A -> A. \z:A. x A (y A s) z
+three = succ two
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s (s z))
+six = times two (succ two)
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s (s (s (s (s z)))))
+sixteen = times two (times two (times two two))
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s z)))))))))))))))
+twenty = times (times two two) (plus three two)
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s z)))))))))))))))))))
+nine = times three three
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s (s (s (s (s (s (s (s z))))))))
+large = times twenty sixteen
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s z)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+small = times one six
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s (s (s (s (s z)))))
+four = times two two
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s (s (s z)))
+Bool = (forall A. A -> A -> A) (Type)
+tru = /\A. \t:A. \f:A. t
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. t
+fls = /\A. \t:A. \f:A. f
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. f
+ite = /\A. \c:Bool. \x:A. \y:A. c A x y
+=> ((forall A. (forall A. A -> A -> A) -> A -> A -> A))
+/\A. \c:(forall A. A -> A -> A). \x:A. \y:A. c A x y
+is_zero = \x:Nat. x Bool (\z:Bool. fls) tru
+=> ((forall A. (A -> A) -> A -> A) -> (forall A. A -> A -> A))
+\x:(forall A. (A -> A) -> A -> A). x (forall A. A -> A -> A) (\z:(forall A. A -> A -> A). /\A. \t:A. \f:A. f) (/\A. \t:A. \f:A. t)
+result = is_zero zero
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. t
+result_1 = is_zero one
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. f
+result_4 = is_zero four
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. f
+pair = /\A. /\B. \car:A. \cdr:B. /\C. \f:A -> B -> C. f car cdr
+=> ((forall A. (forall B. A -> B -> (forall C. (A -> B -> C) -> C))))
+/\A. /\B. \car:A. \cdr:B. /\C. \f:A -> B -> C. f car cdr
+fst = /\A. /\B. \p:(forall C. (A -> B -> C) -> C). p A (\x:A. \y:B. x)
+=> ((forall A. (forall B. (forall C. (A -> B -> C) -> C) -> A)))
+/\A. /\B. \p:(forall C. (A -> B -> C) -> C). p A (\x:A. \y:B. x)
+snd = /\A. /\B. \p:(forall C. (A -> B -> C) -> C). p B (\x:A. \y:B. y)
+=> ((forall A. (forall B. (forall C. (A -> B -> C) -> C) -> B)))
+/\A. /\B. \p:(forall C. (A -> B -> C) -> C). p B (\x:A. \y:B. y)
+NatPair = (forall C. (Nat -> Nat -> C) -> C) (Type)
+zerop = pair Nat Nat zero zero
+=> ((forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C))
+/\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. z) (/\A. \s:A -> A. \z:A. z)
+succp = \p:NatPair. pair Nat Nat (succ (fst Nat Nat p)) (fst Nat Nat p)
+=> ((forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C) -> (forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C))
+\p:(forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C). /\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. s (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). x) A s z)) (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). x))
+pred = \x:Nat. snd Nat Nat (x NatPair succp zerop)
+=> ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A))
+\x:(forall A. (A -> A) -> A -> A). x (forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C) (\p:(forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C). /\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. s (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). x) A s z)) (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). x))) (/\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. z) (/\A. \s:A -> A. \z:A. z)) (forall A. (A -> A) -> A -> A) (\x0:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). y)
+three = pred four
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s (s z))
+two = pred three
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s z)
+recoo = /\A. \n:A. pair A Nat n zero
+=> ((forall A. A -> (forall C. (A -> (forall A. (A -> A) -> A -> A) -> C) -> C)))
+/\A. \n:A. /\C. \f:A -> (forall A. (A -> A) -> A -> A) -> C. f n (/\A. \s:A -> A. \z:A. z)
+recss = /\A. \f:Nat -> A -> A. \p:(forall C. (A -> Nat -> C) -> C). pair A Nat (f (snd A Nat p) (fst A Nat p)) (succ (snd A Nat p))
+=> ((forall A. ((forall A. (A -> A) -> A -> A) -> A -> A) -> (forall C. (A -> (forall A. (A -> A) -> A -> A) -> C) -> C) -> (forall C. (A -> (forall A. (A -> A) -> A -> A) -> C) -> C)))
+/\A. \f:(forall A. (A -> A) -> A -> A) -> A -> A. \p:(forall C. (A -> (forall A. (A -> A) -> A -> A) -> C) -> C). /\C. \f0:A -> (forall A. (A -> A) -> A -> A) -> C. f0 (f (p (forall A. (A -> A) -> A -> A) (\x:A. \y:(forall A. (A -> A) -> A -> A). y)) (p A (\x:A. \y:(forall A. (A -> A) -> A -> A). x))) (/\A. \s:A -> A. \z:A. s (p (forall A. (A -> A) -> A -> A) (\x:A. \y:(forall A. (A -> A) -> A -> A). y) A s z))
+natrec = /\A. \f:Nat -> A -> A. \n:A. \m:Nat. fst A Nat (m (forall C. (A -> Nat -> C) -> C) (recss A f) (recoo A n))
+=> ((forall A. ((forall A. (A -> A) -> A -> A) -> A -> A) -> A -> (forall A. (A -> A) -> A -> A) -> A))
+/\A. \f:(forall A. (A -> A) -> A -> A) -> A -> A. \n:A. \m:(forall A. (A -> A) -> A -> A). m (forall C. (A -> (forall A. (A -> A) -> A -> A) -> C) -> C) (\p:(forall C. (A -> (forall A. (A -> A) -> A -> A) -> C) -> C). /\C. \f0:A -> (forall A. (A -> A) -> A -> A) -> C. f0 (f (p (forall A. (A -> A) -> A -> A) (\x:A. \y:(forall A. (A -> A) -> A -> A). y)) (p A (\x:A. \y:(forall A. (A -> A) -> A -> A). x))) (/\A. \s:A -> A. \z:A. s (p (forall A. (A -> A) -> A -> A) (\x:A. \y:(forall A. (A -> A) -> A -> A). y) A s z))) (/\C. \f:A -> (forall A. (A -> A) -> A -> A) -> C. f n (/\A. \s:A -> A. \z:A. z)) A (\x:A. \y:(forall A. (A -> A) -> A -> A). x)
+factorial = \n:Nat. natrec Nat (\p:Nat. \q:Nat. times (succ p) q) one n
+=> ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A))
+\n:(forall A. (A -> A) -> A -> A). n (forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C) (\p:(forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C). /\C. \f0:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f0 (/\A. \s:A -> A. \z:A. p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). x) A s (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). y) A (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). x) A s) z)) (/\A. \s:A -> A. \z:A. s (p (forall A. (A -> A) -> A -> A) (\x:A. \y:(forall A. (A -> A) -> A -> A). y) A s z))) (/\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. s z) (/\A. \s:A -> A. \z:A. z)) (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). x)
+twenty_four = factorial four
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s z)))))))))))))))))))))))
+six = factorial (succ two)
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s (s (s (s (s z)))))
+nil = /\A. /\B. \f:A -> B -> B. \x:B. x
+=> ((forall A. (forall B. (A -> B -> B) -> B -> B)))
+/\A. /\B. \f:A -> B -> B. \x:B. x
+cons = /\A. \x:A. \xs:(forall B. (A -> B -> B) -> B -> B). /\B. \f:A -> B -> B. \n:B. f x (xs B f n)
+=> ((forall A. A -> (forall B. (A -> B -> B) -> B -> B) -> (forall B. (A -> B -> B) -> B -> B)))
+/\A. \x:A. \xs:(forall B. (A -> B -> B) -> B -> B). /\B. \f:A -> B -> B. \n:B. f x (xs B f n)
+map = /\A. /\B. \f:A -> B. \xs:(forall B. (A -> B -> B) -> B -> B). xs (forall C. (B -> C -> C) -> C -> C) (\hd:A. \tl:(forall C. (B -> C -> C) -> C -> C). cons B (f hd) tl) (nil B)
+=> ((forall A. (forall B. (A -> B) -> (forall B. (A -> B -> B) -> B -> B) -> (forall C. (B -> C -> C) -> C -> C))))
+/\A. /\B. \f:A -> B. \xs:(forall B. (A -> B -> B) -> B -> B). xs (forall C. (B -> C -> C) -> C -> C) (\hd:A. \tl:(forall C. (B -> C -> C) -> C -> C). /\B0. \f0:B -> B0 -> B0. \n:B0. f0 (f hd) (tl B0 f0 n)) (/\B0. \f:B -> B0 -> B0. \x:B0. x)
+NatList = (forall B. (Nat -> B -> B) -> B -> B) (Type)
+NatNatListPair = (forall C. (Nat -> NatList -> C) -> C) (Type)
+seqO = pair Nat NatList zero (nil Nat)
+=> ((forall C. ((forall A. (A -> A) -> A -> A) -> (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) -> C) -> C))
+/\C. \f:(forall A. (A -> A) -> A -> A) -> (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) -> C. f (/\A. \s:A -> A. \z:A. z) (/\B. \f:(forall A. (A -> A) -> A -> A) -> B -> B. \x:B. x)
+seqS = \p:NatNatListPair. pair Nat NatList (succ (fst Nat NatList p)) (cons Nat (fst Nat NatList p) (snd Nat NatList p))
+=> ((forall C. ((forall A. (A -> A) -> A -> A) -> (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) -> C) -> C) -> (forall C. ((forall A. (A -> A) -> A -> A) -> (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) -> C) -> C))
+\p:(forall C. ((forall A. (A -> A) -> A -> A) -> (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) -> C) -> C). /\C. \f:(forall A. (A -> A) -> A -> A) -> (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) -> C. f (/\A. \s:A -> A. \z:A. s (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B). x) A s z)) (/\B. \f:(forall A. (A -> A) -> A -> A) -> B -> B. \n:B. f (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B). x)) (p (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) (\x:(forall A. (A -> A) -> A -> A). \y:(forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B). y) B f n))
+seq = \x:Nat. snd Nat NatList (x NatNatListPair seqS seqO)
+=> ((forall A. (A -> A) -> A -> A) -> (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B))
+\x:(forall A. (A -> A) -> A -> A). x (forall C. ((forall A. (A -> A) -> A -> A) -> (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) -> C) -> C) (\p:(forall C. ((forall A. (A -> A) -> A -> A) -> (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) -> C) -> C). /\C. \f:(forall A. (A -> A) -> A -> A) -> (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) -> C. f (/\A. \s:A -> A. \z:A. s (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B). x) A s z)) (/\B. \f:(forall A. (A -> A) -> A -> A) -> B -> B. \n:B. f (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B). x)) (p (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) (\x:(forall A. (A -> A) -> A -> A). \y:(forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B). y) B f n))) (/\C. \f:(forall A. (A -> A) -> A -> A) -> (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) -> C. f (/\A. \s:A -> A. \z:A. z) (/\B. \f:(forall A. (A -> A) -> A -> A) -> B -> B. \x:B. x)) (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) (\x0:(forall A. (A -> A) -> A -> A). \y:(forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B). y)
+seq0 = seq zero
+=> ((forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B))
+/\B. \f:(forall A. (A -> A) -> A -> A) -> B -> B. \x:B. x
+seq1 = seq one
+=> ((forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B))
+/\B. \f:(forall A. (A -> A) -> A -> A) -> B -> B. \n:B. f (/\A. \s:A -> A. \z:A. z) n
+seq2 = seq two
+=> ((forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B))
+/\B. \f:(forall A. (A -> A) -> A -> A) -> B -> B. \n:B. f (/\A. \s:A -> A. \z:A. s z) (f (/\A. \s:A -> A. \z:A. z) n)
+seq3 = seq three
+=> ((forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B))
+/\B. \f:(forall A. (A -> A) -> A -> A) -> B -> B. \n:B. f (/\A. \s:A -> A. \z:A. s (s z)) (f (/\A. \s:A -> A. \z:A. s z) (f (/\A. \s:A -> A. \z:A. z) n))
+seq4 = seq four
+=> ((forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B))
+/\B. \f:(forall A. (A -> A) -> A -> A) -> B -> B. \n:B. f (/\A. \s:A -> A. \z:A. s (s (s z))) (f (/\A. \s:A -> A. \z:A. s (s z)) (f (/\A. \s:A -> A. \z:A. s z) (f (/\A. \s:A -> A. \z:A. z) n)))
+length = /\A. \xs:(forall B. (A -> B -> B) -> B -> B). xs Nat (\hd:A. \tl:Nat. succ tl) zero
+=> ((forall A. (forall B. (A -> B -> B) -> B -> B) -> (forall A. (A -> A) -> A -> A)))
+/\A. \xs:(forall B. (A -> B -> B) -> B -> B). xs (forall A. (A -> A) -> A -> A) (\hd:A. \tl:(forall A. (A -> A) -> A -> A). /\A. \s:A -> A. \z:A. s (tl A s z)) (/\A. \s:A -> A. \z:A. z)
+l0 = length Nat seq0
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. z
+l1 = length Nat seq1
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s z
+l2 = length Nat seq2
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s z)
+l3 = length Nat seq3
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s (s z))
+l4 = length Nat seq4
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s (s (s z)))
+factorial_via_seq = \x:Nat. map Nat Nat succ (seq x) Nat (\hd:Nat. \tl:Nat. times hd tl) one
+=> ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A))
+\x:(forall A. (A -> A) -> A -> A). x (forall C. ((forall A. (A -> A) -> A -> A) -> (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) -> C) -> C) (\p:(forall C. ((forall A. (A -> A) -> A -> A) -> (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) -> C) -> C). /\C. \f:(forall A. (A -> A) -> A -> A) -> (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) -> C. f (/\A. \s:A -> A. \z:A. s (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B). x) A s z)) (/\B. \f:(forall A. (A -> A) -> A -> A) -> B -> B. \n:B. f (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B). x)) (p (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) (\x:(forall A. (A -> A) -> A -> A). \y:(forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B). y) B f n))) (/\C. \f:(forall A. (A -> A) -> A -> A) -> (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) -> C. f (/\A. \s:A -> A. \z:A. z) (/\B. \f:(forall A. (A -> A) -> A -> A) -> B -> B. \x:B. x)) (forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B) (\x0:(forall A. (A -> A) -> A -> A). \y:(forall B. ((forall A. (A -> A) -> A -> A) -> B -> B) -> B -> B). y) (forall C. ((forall A. (A -> A) -> A -> A) -> C -> C) -> C -> C) (\hd:(forall A. (A -> A) -> A -> A). \tl:(forall C. ((forall A. (A -> A) -> A -> A) -> C -> C) -> C -> C). /\B0. \f0:(forall A. (A -> A) -> A -> A) -> B0 -> B0. \n:B0. f0 (/\A. \s:A -> A. \z:A. s (hd A s z)) (tl B0 f0 n)) (/\B0. \f:(forall A. (A -> A) -> A -> A) -> B0 -> B0. \x0:B0. x0) (forall A. (A -> A) -> A -> A) (\hd:(forall A. (A -> A) -> A -> A). \tl:(forall A. (A -> A) -> A -> A). /\A. \s:A -> A. \z:A. hd A (tl A s) z) (/\A. \s:A -> A. \z:A. s z)
+factorial_via_seq four
+=> ((forall A. (A -> A) -> A -> A))
+/\A. \s:A -> A. \z:A. s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s (s z)))))))))))))))))))))))
+natcase = /\A. \f:Nat -> A. \x:A. \n:Nat. natrec A (\p:Nat. \q:A. p A (\y:A. f p) x) x n
+=> ((forall A. ((forall A. (A -> A) -> A -> A) -> A) -> A -> (forall A. (A -> A) -> A -> A) -> A))
+/\A. \f:(forall A. (A -> A) -> A -> A) -> A. \x:A. \n:(forall A. (A -> A) -> A -> A). n (forall C. (A -> (forall A. (A -> A) -> A -> A) -> C) -> C) (\p:(forall C. (A -> (forall A. (A -> A) -> A -> A) -> C) -> C). /\C. \f0:A -> (forall A. (A -> A) -> A -> A) -> C. f0 (p (forall A. (A -> A) -> A -> A) (\x0:A. \y:(forall A. (A -> A) -> A -> A). y) A (\y:A. f (p (forall A. (A -> A) -> A -> A) (\x0:A. \y:(forall A. (A -> A) -> A -> A). y))) x) (/\A. \s:A -> A. \z:A. s (p (forall A. (A -> A) -> A -> A) (\x0:A. \y:(forall A. (A -> A) -> A -> A). y) A s z))) (/\C. \f:A -> (forall A. (A -> A) -> A -> A) -> C. f x (/\A. \s:A -> A. \z:A. z)) A (\x0:A. \y:(forall A. (A -> A) -> A -> A). x0)
+and = \x:Bool. \y:Bool. x Bool y fls
+=> ((forall A. A -> A -> A) -> (forall A. A -> A -> A) -> (forall A. A -> A -> A))
+\x:(forall A. A -> A -> A). \y:(forall A. A -> A -> A). x (forall A. A -> A -> A) y (/\A. \t:A. \f:A. f)
+not = \x:Bool. x Bool fls tru
+=> ((forall A. A -> A -> A) -> (forall A. A -> A -> A))
+\x:(forall A. A -> A -> A). x (forall A. A -> A -> A) (/\A. \t:A. \f:A. f) (/\A. \t:A. \f:A. t)
+or = \x:Bool. \y:Bool. x Bool tru y
+=> ((forall A. A -> A -> A) -> (forall A. A -> A -> A) -> (forall A. A -> A -> A))
+\x:(forall A. A -> A -> A). \y:(forall A. A -> A -> A). x (forall A. A -> A -> A) (/\A. \t:A. \f:A. t) y
+and tru tru
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. t
+and fls tru
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. f
+or tru tru
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. t
+or fls tru
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. t
+or fls fls
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. f
+eq = \x:Nat. \y:Nat. and (is_zero (x Nat pred y)) (is_zero (y Nat pred x))
+=> ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> (forall A. A -> A -> A))
+\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). x (forall A. (A -> A) -> A -> A) (\x0:(forall A. (A -> A) -> A -> A). x0 (forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C) (\p:(forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C). /\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. s (p (forall A. (A -> A) -> A -> A) (\x0:(forall A. (A -> A) -> A -> A). \y1:(forall A. (A -> A) -> A -> A). x0) A s z)) (p (forall A. (A -> A) -> A -> A) (\x0:(forall A. (A -> A) -> A -> A). \y1:(forall A. (A -> A) -> A -> A). x0))) (/\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. z) (/\A. \s:A -> A. \z:A. z)) (forall A. (A -> A) -> A -> A) (\x00:(forall A. (A -> A) -> A -> A). \y1:(forall A. (A -> A) -> A -> A). y1)) y (forall A. A -> A -> A) (\z:(forall A. A -> A -> A). /\A. \t:A. \f:A. f) (/\A. \t:A. \f:A. t) (forall A. A -> A -> A) (y (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). x (forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C) (\p:(forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C). /\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. s (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). x) A s z)) (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). x))) (/\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. z) (/\A. \s:A -> A. \z:A. z)) (forall A. (A -> A) -> A -> A) (\x0:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). y)) x (forall A. A -> A -> A) (\z:(forall A. A -> A -> A). /\A. \t:A. \f:A. f) (/\A. \t:A. \f:A. t)) (/\A. \t:A. \f:A. f)
+eq one one
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. t
+eq two two
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. t
+eq three three
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. t
+eq four three
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. f
+eq (factorial four) (factorial_via_seq four)
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. t
+neq = \x:Nat. \y:Nat. not (eq x y)
+=> ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> (forall A. A -> A -> A))
+\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). x (forall A. (A -> A) -> A -> A) (\x0:(forall A. (A -> A) -> A -> A). x0 (forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C) (\p:(forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C). /\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. s (p (forall A. (A -> A) -> A -> A) (\x0:(forall A. (A -> A) -> A -> A). \y1:(forall A. (A -> A) -> A -> A). x0) A s z)) (p (forall A. (A -> A) -> A -> A) (\x0:(forall A. (A -> A) -> A -> A). \y1:(forall A. (A -> A) -> A -> A). x0))) (/\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. z) (/\A. \s:A -> A. \z:A. z)) (forall A. (A -> A) -> A -> A) (\x00:(forall A. (A -> A) -> A -> A). \y1:(forall A. (A -> A) -> A -> A). y1)) y (forall A. A -> A -> A) (\z:(forall A. A -> A -> A). /\A. \t:A. \f:A. f) (/\A. \t:A. \f:A. t) (forall A. A -> A -> A) (y (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). x (forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C) (\p:(forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C). /\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. s (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). x) A s z)) (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). x))) (/\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. z) (/\A. \s:A -> A. \z:A. z)) (forall A. (A -> A) -> A -> A) (\x0:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). y)) x (forall A. A -> A -> A) (\z:(forall A. A -> A -> A). /\A. \t:A. \f:A. f) (/\A. \t:A. \f:A. t)) (/\A. \t:A. \f:A. f) (forall A. A -> A -> A) (/\A. \t:A. \f:A. f) (/\A. \t:A. \f:A. t)
+neq one two
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. t
+neq two two
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. f
+le = \x:Nat. \y:Nat. or (eq x y) (is_zero (y Nat pred x))
+=> ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> (forall A. A -> A -> A))
+\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). x (forall A. (A -> A) -> A -> A) (\x0:(forall A. (A -> A) -> A -> A). x0 (forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C) (\p:(forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C). /\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. s (p (forall A. (A -> A) -> A -> A) (\x0:(forall A. (A -> A) -> A -> A). \y1:(forall A. (A -> A) -> A -> A). x0) A s z)) (p (forall A. (A -> A) -> A -> A) (\x0:(forall A. (A -> A) -> A -> A). \y1:(forall A. (A -> A) -> A -> A). x0))) (/\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. z) (/\A. \s:A -> A. \z:A. z)) (forall A. (A -> A) -> A -> A) (\x00:(forall A. (A -> A) -> A -> A). \y1:(forall A. (A -> A) -> A -> A). y1)) y (forall A. A -> A -> A) (\z:(forall A. A -> A -> A). /\A. \t:A. \f:A. f) (/\A. \t:A. \f:A. t) (forall A. A -> A -> A) (y (forall A. (A -> A) -> A -> A) (\x0:(forall A. (A -> A) -> A -> A). x0 (forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C) (\p:(forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C). /\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. s (p (forall A. (A -> A) -> A -> A) (\x0:(forall A. (A -> A) -> A -> A). \y1:(forall A. (A -> A) -> A -> A). x0) A s z)) (p (forall A. (A -> A) -> A -> A) (\x0:(forall A. (A -> A) -> A -> A). \y1:(forall A. (A -> A) -> A -> A). x0))) (/\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. z) (/\A. \s:A -> A. \z:A. z)) (forall A. (A -> A) -> A -> A) (\x00:(forall A. (A -> A) -> A -> A). \y1:(forall A. (A -> A) -> A -> A). y1)) x (forall A. A -> A -> A) (\z:(forall A. A -> A -> A). /\A. \t:A. \f:A. f) (/\A. \t:A. \f:A. t)) (/\A. \t:A. \f:A. f) (forall A. A -> A -> A) (/\A. \t:A. \f:A. t) (y (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). x (forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C) (\p:(forall C. ((forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C) -> C). /\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. s (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). x) A s z)) (p (forall A. (A -> A) -> A -> A) (\x:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). x))) (/\C. \f:(forall A. (A -> A) -> A -> A) -> (forall A. (A -> A) -> A -> A) -> C. f (/\A. \s:A -> A. \z:A. z) (/\A. \s:A -> A. \z:A. z)) (forall A. (A -> A) -> A -> A) (\x0:(forall A. (A -> A) -> A -> A). \y:(forall A. (A -> A) -> A -> A). y)) x (forall A. A -> A -> A) (\z:(forall A. A -> A -> A). /\A. \t:A. \f:A. f) (/\A. \t:A. \f:A. t))
+le two one
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. f
+le one two
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. t
+le one four
+=> ((forall A. A -> A -> A))
+/\A. \t:A. \f:A. t
 bye!
