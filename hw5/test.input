@@ -5,3 +5,134 @@
 \f:bool->bool. \x : bool. if x then x else f;;
 \f:bool->bool. \x : bool. if f then f else x;;
 /\A. \f : A -> A. \x : A. f x;;
+
+id = /\A. \x : A. x;;
+Nat = forall A. (A -> A) -> A -> A;;
+succ = \x : Nat. /\A. \s : A -> A. \z : A. s (x A s z);;
+zero = /\A. \s : (A -> A). \z : A. z;;
+one = succ zero;;
+
+plus = \x : Nat. \y : Nat. /\A. \s : A -> A. \z : A. x A s (y A s z);;
+two = plus one one;;
+
+times = \x : Nat.\y : Nat. /\A. \s : A -> A. \z : A. x A (y A s) z;;
+
+three = succ two;;
+
+six = times two (succ two);;
+sixteen = times two (times two (times two two));;
+twenty = times (times two two) (plus three two);;
+nine = times three three;;
+large = times twenty sixteen;;
+small = times one six;;
+
+four = times two two;;
+
+Bool = forall A. A -> A -> A;;
+tru = /\A. \t : A. \f : A. t;;
+fls = /\A. \t : A. \f : A. f;;
+
+ite = /\A. \c : Bool. \x : A. \y : A. c A x y;;
+is_zero = \x : Nat. x Bool (\z : Bool. fls) tru;;
+result = is_zero zero;;
+result_1 = is_zero one;;
+result_4 =is_zero four;;
+
+# Church encoding of a pair is a function that takes the first and second element of the pair and returns a function that operates the two elements. The function can be like `fst` or `snd`. 
+
+# pair : A -> B -> Pair A B
+# Pair A B : forall C. (A -> B -> C) -> C;;
+pair = /\A. /\B. \car : A. \cdr : B. /\C. \f : (A -> B -> C). f car cdr;;
+fst = /\A. /\B. \p : (forall C. (A -> B -> C) -> C). p A (\x : A. \y : B. x);;
+snd = /\A. /\B. \p : (forall C. (A -> B -> C) -> C). p B (\x : A. \y : B. y);;
+
+NatPair = forall C. (Nat -> Nat -> C) -> C;;
+
+zerop = pair Nat Nat zero zero;;
+succp = \p : NatPair. pair Nat Nat (succ (fst Nat Nat p)) (fst Nat Nat p);;
+
+pred = \x : Nat. snd Nat Nat (x NatPair succp zerop);;
+
+three = pred four;;
+two = pred three;;
+
+recoo = /\A. \n : A. pair A Nat n zero;;
+recss = /\A. \f : Nat -> A -> A. \p : (forall C. (A -> Nat -> C) -> C). pair A Nat (f (snd A Nat p) (fst A Nat p)) (succ (snd A Nat p));;
+
+natrec = /\A. \f : Nat -> A -> A. \n : A. \m : Nat. fst A Nat (m (forall C. (A -> Nat -> C) -> C) (recss A f) (recoo A n));;
+
+factorial = \n : Nat. natrec Nat (\p : Nat. \q : Nat. times (succ p) q) one n;;
+
+twenty_four = factorial four;;
+six = factorial (succ two);;
+
+# List A = forall B. (A -> B -> B) -> B -> B
+nil = /\A. /\B. \f : (A -> B -> B). \x : B. x;;
+cons = /\A. \x : A. \xs : (forall B. (A -> B -> B) -> B -> B). /\B. \f : A -> B -> B. \n : B. f x (xs B f n);;
+
+map = /\A. /\B. \f : (A -> B). \xs : (forall B. (A -> B -> B) -> B -> B). xs (forall C. (B -> C -> C) -> C -> C) (\hd : A. \tl : (forall C. (B -> C -> C) -> C -> C). cons B (f hd) tl) (nil B);;
+
+NatList = (forall B. (Nat -> B -> B) -> B -> B);;
+
+# seq : Nat -> NatList
+
+NatNatListPair = (forall C. (Nat -> NatList -> C) -> C);;
+
+seqO = pair Nat NatList zero (nil Nat);;
+seqS = \p : NatNatListPair. pair Nat NatList (succ (fst Nat NatList p)) (cons Nat (fst Nat NatList p) (snd Nat NatList p));;
+
+seq = \x : Nat. snd Nat NatList (x NatNatListPair seqS seqO);;
+
+seq0 = seq zero;;
+seq1 = seq one;;
+seq2 = seq two;;
+seq3 = seq three;;
+seq4 = seq four;;
+
+# length : forall A. List A -> Nat
+length = /\A. \xs : (forall B. (A -> B -> B) -> B -> B). xs Nat (\hd : A. \tl : Nat. succ tl) zero;;
+
+l0 = length Nat seq0;;
+l1 = length Nat seq1;;
+l2 = length Nat seq2;;
+l3 = length Nat seq3;;
+l4 = length Nat seq4;;
+
+# factorial_via_seq : Nat -> Nat
+factorial_via_seq = \x : Nat. (map Nat Nat succ (seq x)) Nat (\hd : Nat. \tl : Nat. times hd tl) one;;
+factorial_via_seq four;; # equals to factorial four
+
+# natcase : forall A. (Nat -> A) -> A -> Nat -> A
+natcase = /\A. \f : (Nat -> A). \x : A. \n : Nat. natrec A (\p : Nat. \q : A. p A (\y : A. f p) x) x n;;
+
+and = \x : Bool. \y : Bool. x Bool y fls;;
+not = \x : Bool. x Bool fls tru;;
+or  = \x : Bool. \y : Bool. x Bool tru y;;
+
+and tru tru;;
+and fls tru;;
+
+or tru tru;;
+or fls tru;;
+or fls fls;;
+
+eq = \x : Nat. \y : Nat. and (is_zero (x Nat pred y)) (is_zero (y Nat pred x));;
+
+eq one one;;
+eq two two;;
+eq three three;;
+eq four three;;
+
+eq (factorial four) (factorial_via_seq four);;
+
+neq = \x : Nat. \y : Nat. not (eq x y);;
+
+neq one two;;
+neq two two;;
+
+# le : Nat -> Nat -> Bool
+le = \x : Nat. \y : Nat. or (eq x y) (is_zero (y Nat pred x));;
+
+le two one;;
+le one two;;
+le one four;;

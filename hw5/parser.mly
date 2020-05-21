@@ -13,12 +13,13 @@
 
 %start <Syntax.binding option> main
 
-%right ARROW
 %left DOT
+%right ARROW
 
 %%
 
 main:
+| x = TVAR EQ e = ty DOUBLESEMI                    { Some (Syntax.Type (x, e)) }
 | x = ID EQ e = expr DOUBLESEMI                    { Some (Syntax.Val (x, e)) }
 | e = expr DOUBLESEMI                              { Some (Syntax.Eval e) }
 | EOF                                              { None }

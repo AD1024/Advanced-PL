@@ -206,15 +206,15 @@ let rec ty_subst (from : string) (to_ : Ty.t) (e : expr): expr =
     | Lambda (x, t, e) -> lambda x (Ty.subst from to_ t) (ty_subst from to_ e)
     | IfThenElse (cond, lb, rb) -> ifthenelse (ty_subst from to_ cond) (ty_subst from to_ lb) (ty_subst from to_ rb)
     | TypeApp (e, tau) -> typeapp (ty_subst from to_ e) (Ty.subst from to_ tau)
-    | LAMBDA (t, e) ->
+    | LAMBDA (t, e') ->
         if from = t then e
         else
           if StringSet.mem t (Ty.free_type_vars to_)
           then let fresh_name = fresh (StringSet.union (StringSet.singleton from) 
-                                        (StringSet.union (free_type_vars e) (Ty.free_type_vars to_))) t in
-              let body' = ty_subst t (with_no_loc (Ty.TypeVar fresh_name)) e in
+                                        (StringSet.union (free_type_vars e') (Ty.free_type_vars to_))) t in
+              let body' = ty_subst t (with_no_loc (Ty.TypeVar fresh_name)) e' in
               lam_forall fresh_name (ty_subst from to_ body')
-          else lam_forall t (ty_subst from to_ e)
+          else lam_forall t (ty_subst from to_ e')
 
 (* implements the small-step operational semantics of STLC *)
 let rec step (e : expr) : step_result =
@@ -268,7 +268,12 @@ let rec normalize (e : expr) : expr =
     end
   | Bool _ -> e
   | LAMBDA (t, e) -> lam_forall t (normalize e)
-  | TypeApp (e, t) -> typeapp (normalize e) t
+  | TypeApp (e, t) -> begin
+      let e' = normalize e in
+      match e'.value with
+        | LAMBDA (x, e) -> normalize (ty_subst x t e)
+        | _ -> typeapp e' t
+    end
   | IfThenElse (e1, e2, e3) ->
      let e1' = normalize e1 in
      match e1'.value with
@@ -330,4 +335,5 @@ let pretty e =
 
 type binding =
   | Val of string * expr
+  | Type of string * Ty.t
   | Eval of expr
