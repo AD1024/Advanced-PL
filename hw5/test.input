@@ -285,3 +285,58 @@ treerec = /\A. /\B.
                     -> B -> B). 
             \tree : (forall C. C -> (C -> A -> C -> C) -> C).
             snd (forall C. C -> (C -> A -> C -> C) -> C) B (tree (forall D. ((forall C. C -> (C -> A -> C -> C) -> C) -> B -> D) -> D) (treerecO B A x) (treerecS B A f));;
+
+BoolNatTreePair = (forall B. (Bool -> NatTree -> B) -> B);;
+insertTreeInit = pair Bool NatTree tru (leaf Nat);;
+
+is_leaf = \tree : NatTree. tree Bool tru (\l : Bool. \node : Nat. \r : Bool. fls);;
+
+is_leaf = \tree : NatTree. tree Bool tru (\l : Bool. \node : Nat. \r : Bool. fls);;
+
+is_leaf (leaf Nat);;
+is_leaf (natTree);;
+
+nat_branch = branch Nat;;
+nat_leaf = leaf Nat;;
+
+# insert_tree_helper : Nat -> NatTree -> NatTree
+insert_tree_helper = \x : Nat. \tree : NatTree.
+                snd Bool NatTree
+                (treerec Nat BoolNatTreePair insertTreeInit
+                    (\lson : NatTree. \ltree : BoolNatTreePair.
+                    \node : Nat.
+                    \rson : NatTree. \rtree : BoolNatTreePair.
+                    (le x node) BoolNatTreePair 
+                        (
+                            (fst Bool NatTree ltree) BoolNatTreePair
+                                (pair Bool NatTree fls (nat_branch (nat_branch nat_leaf x nat_leaf) node rson))
+                                (pair Bool NatTree fls (nat_branch (snd Bool NatTree ltree) node rson))
+                        )
+                        (
+                            (fst Bool NatTree rtree) BoolNatTreePair
+                                (pair Bool NatTree fls (nat_branch lson node (nat_branch nat_leaf x nat_leaf)))
+                                (pair Bool NatTree fls (nat_branch lson node (snd Bool NatTree rtree)))
+                        ))
+                    tree);;
+
+insert_tree = \x : Nat. \tree : NatTree.
+                (is_leaf tree) NatTree
+                (nat_branch nat_leaf x nat_leaf)
+                (insert_tree_helper x tree);;
+
+# insert_all_tree : NatList -> NatTree
+
+insert_all_tree = \xs : NatList. xs NatTree (\x : Nat. \tree : NatTree. insert_tree x tree) (leaf Nat);;
+
+insert_all_tree (seq four);;
+
+# tree_to_list : NatTree -> NatList
+tree_to_list = \tree : NatTree. tree NatList (nil Nat) 
+                (\lst : NatList. \node : Nat. \rst : NatList. append Nat lst (append  Nat (cons Nat node (nil Nat)) rst));;
+
+tree_to_list natTree;;
+
+# tree_sort : NatList -> NatList
+tree_sort = \xs : NatList. tree_to_list (insert_all_tree xs);;
+
+tree_sort (append Nat (seq four) (seq four));;
