@@ -78,10 +78,13 @@ NatList = (forall B. (Nat -> B -> B) -> B -> B);;
 
 NatNatListPair = (forall C. (Nat -> NatList -> C) -> C);;
 
-seqO = pair Nat NatList zero (nil Nat);;
-seqS = \p : NatNatListPair. pair Nat NatList (succ (fst Nat NatList p)) (cons Nat (fst Nat NatList p) (snd Nat NatList p));;
+seqO = \x : Nat. pair Nat NatList (pred x) (nil Nat);;
+seqS = \p : NatNatListPair. 
+        pair Nat NatList 
+            (pred (fst Nat NatList p)) 
+            (cons Nat (fst Nat NatList p) (snd Nat NatList p));;
 
-seq = \x : Nat. snd Nat NatList (x NatNatListPair seqS seqO);;
+seq = \x : Nat. snd Nat NatList (x NatNatListPair seqS (seqO x));;
 
 seq0 = seq zero;;
 seq1 = seq one;;
@@ -215,3 +218,70 @@ reverse Nat (insertion_sort lst);;
 
 append Nat (seq four) (seq four);;
 reverse Nat (append Nat (seq four) (seq four));;
+
+# Tree A = forall B. B -> (B -> A -> B -> B) -> B
+leaf = /\A. /\B. \l : B. \f : (B -> A -> B -> B). l;;
+
+# branch : forall A. Tree A -> A -> Tree A -> Tree A
+branch = /\A.
+        \lchild : (forall B. B -> (B -> A -> B -> B) -> B).
+        \node : A.
+        \rchild : (forall B. B -> (B -> A -> B -> B) -> B).
+            /\B. \l : B. \f : (B -> A -> B -> B).
+                f (lchild B l f) node (rchild B l f);;
+
+size = /\A. \tree : (forall B. B -> (B -> A -> B -> B) -> B).
+        tree Nat one (\lcnt : Nat. \y : A. \rcnt : Nat. succ (plus lcnt rcnt));;
+
+NatTree = forall B. B -> (B -> Nat -> B -> B) -> B;;
+
+natTree = (
+    branch Nat 
+    (branch Nat 
+        (leaf Nat) four 
+        (branch Nat 
+            (leaf Nat)
+            two
+            (leaf Nat)))
+    one
+    (leaf Nat)
+);;
+
+size Nat natTree;;
+
+# sum : NatTree -> Nat
+sum = \tree : NatTree.
+        tree Nat zero (\lsum : Nat. \node : Nat. \rsum : Nat. plus node (plus lsum rsum));;
+
+sum natTree;;
+
+# treerec : forall A. forall B. B -> (Tree A -> B -> A -> Tree A -> B -> B) -> Tree A -> B
+
+treerecO = /\B./\A. \n : B. 
+            pair (forall C. C -> (C -> A -> C -> C) -> C) B
+            (leaf A) n;;
+
+treerecS = /\B. /\A.
+            \f : (forall C. C -> (C -> A -> C -> C) -> C) -> B -> A
+              -> (forall C. C -> (C -> A -> C -> C) -> C) -> B -> B.
+            \lchild : (forall D. ((forall C. C -> (C -> A -> C -> C) -> C) -> B -> D) -> D).
+            \node : A.
+            \rchild : (forall D. ((forall C. C -> (C -> A -> C -> C) -> C) -> B -> D) -> D).
+            pair (forall C. C -> (C -> A -> C -> C) -> C) B
+                 (branch A (fst (forall C. C -> (C -> A -> C -> C) -> C) B lchild) node (fst (forall C. C -> (C -> A -> C -> C) -> C) B rchild))
+                 (f 
+                    (fst (forall C. C -> (C -> A -> C -> C) -> C) B lchild) 
+                    (snd (forall C. C -> (C -> A -> C -> C) -> C) B lchild)
+                    node
+                    (fst (forall C. C -> (C -> A -> C -> C) -> C) B rchild) 
+                    (snd (forall C. C -> (C -> A -> C -> C) -> C) B rchild));;
+
+
+treerec = /\A. /\B.
+            \x : B.
+            \f : ((forall C. C -> (C -> A -> C -> C) -> C)
+                    -> B -> A
+                    -> (forall C. C -> (C -> A -> C -> C) -> C)
+                    -> B -> B). 
+            \tree : (forall C. C -> (C -> A -> C -> C) -> C).
+            snd (forall C. C -> (C -> A -> C -> C) -> C) B (tree (forall D. ((forall C. C -> (C -> A -> C -> C) -> C) -> B -> D) -> D) (treerecO B A x) (treerecS B A f));;
