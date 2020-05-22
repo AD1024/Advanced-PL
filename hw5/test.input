@@ -340,3 +340,4 @@ tree_to_list natTree;;
 tree_sort = \xs : NatList. tree_to_list (insert_all_tree xs);;
 
 tree_sort (append Nat (seq four) (seq four));;
+tree_sort (reverse Nat (append Nat (seq four) (seq four)));;
