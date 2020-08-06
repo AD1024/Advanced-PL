@@ -1,11 +1,6 @@
 # CSE 490 P
 This is the Homework Repository of CSE 490P during Spring 2020.
 
-**Attention: If your are currently taking CSE 490P, it would be better to leave here since this repository contains solutions to all avaliable homework of this course (I also DO NOT guarantee solutions I save here are correct).**
-
-*Note: I reserve the right to argue about the solutions IF any similar copy appears online during Spring 2020*
-*Please take it at your own risk to decide whether REFER or not to solutions saved in this repository*
-
 # Homework Content
 ## Homework 1
 Type Checker and REPL of a simple language with Int and Bool
